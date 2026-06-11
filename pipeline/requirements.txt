@@ -1,0 +1,20 @@
+# Fantasy Football Draft Tool — pipeline deps
+supabase>=2.10.0
+python-dotenv>=1.0.0
+tenacity>=9.0.0          # retry/backoff for all external API calls
+rich>=13.9.0             # console output
+httpx>=0.27.0
+requests>=2.32.0
+pydantic>=2.9.0
+
+# Data sources
+nfl_data_py>=0.3.2       # nflverse historical stats / play-by-play
+pandas>=2.2.0
+numpy>=1.26.0            # regression projector (least-squares)
+feedparser>=6.0.11       # RSS news ingest (P4)
+praw>=7.7.1              # Reddit (P4)
+vaderSentiment>=3.3.2    # v1 sentiment scorer (P4)
+
+# Optional / later
+espn-api>=0.44.1         # ESPN league sync (P3); unofficial, may break
+anthropic>=0.40.0        # one-time weak-labeling of training corpus only

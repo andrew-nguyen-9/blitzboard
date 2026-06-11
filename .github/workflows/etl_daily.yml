@@ -1,0 +1,39 @@
+name: ETL — daily player & history refresh
+
+# Daily player universe + (offseason) history refresh. The waiver-window
+# sentiment cron (P4) is a SEPARATE workflow with its own conditional schedule.
+on:
+  schedule:
+    - cron: "0 11 * * *" # 11:00 UTC daily (~6am CT)
+  workflow_dispatch:
+    inputs:
+      seasons:
+        description: "Seasons for history_ingest (space-separated)"
+        required: false
+        default: "2022 2023 2024"
+
+jobs:
+  etl:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pipeline
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Ingest player universe (Sleeper)
+        run: python player_ingest.py --trending
+
+      - name: Ingest historical stats (nflverse)
+        run: python history_ingest.py --seasons ${{ github.event.inputs.seasons || '2022 2023 2024' }}
+
+      - name: Compute projections + player values (VORP, superflex-aware)
+        run: python value_engine_run.py --engine vorp

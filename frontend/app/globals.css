@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────
+   "Broadcast Deck" theme tokens.
+   Dark is the signature; light is the "daytime broadcast" adaptation.
+   data-theme on <html> selects the set (set pre-paint by ThemeScript).
+   --accent is runtime-derived per league (default volt-green here).
+   ───────────────────────────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  --bg: #0a0b0d;
+  --surface: #161a21;
+  --surface-elevated: #1a1f28;
+  --hairline: #272d38;
+  --ink: #e7eaf0;
+  --ink-muted: #8a93a6;
+  --accent: #8cff5a;
+  --accent-soft: rgba(140, 255, 90, 0.14);
+  --grain-opacity: 0.04;
+  --glow: 0 0 40px -8px var(--accent-soft);
+  --font-sans: "Inter";
+  --font-display: "Space Grotesk";
+  --font-mono: "JetBrains Mono";
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f4f2ec;
+  --surface: #ffffff;
+  --surface-elevated: #fbfaf6;
+  --hairline: #e2ded3;
+  --ink: #1a1c20;
+  --ink-muted: #6b7280;
+  --accent: #2f9e44;            /* retuned for contrast on paper */
+  --accent-soft: rgba(47, 158, 68, 0.12);
+  --grain-opacity: 0.02;
+  --glow: 0 8px 30px -12px rgba(0, 0, 0, 0.18);
+  color-scheme: light;
+}
+
+* {
+  border-color: var(--hairline);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Film-grain texture overlay (creative-dev) — fades with theme */
+.grain-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

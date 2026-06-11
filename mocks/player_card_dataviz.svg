@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" font-family="ui-sans-serif,system-ui,Arial">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0A0B0D"/><stop offset="1" stop-color="#10131A"/></linearGradient>
+    <linearGradient id="acc3" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8CFF5A"/><stop offset="1" stop-color="#33D17A"/></linearGradient>
+    <linearGradient id="dist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33D17A" stop-opacity="0.5"/><stop offset="1" stop-color="#33D17A" stop-opacity="0"/></linearGradient>
+    <style>
+      .p{fill:#161A21;stroke:#272D38;stroke-width:1}.t{fill:#E7EAF0;font-size:13px}.s{fill:#8A93A6;font-size:11px}
+      .h{fill:#8A93A6;font-size:11px;letter-spacing:2px;font-weight:700}
+      .num{fill:#fff;font-weight:700;font-family:ui-monospace,monospace}.acc{fill:#8CFF5A}
+    </style>
+  </defs>
+  <rect width="1100" height="560" fill="url(#bg3)"/>
+  <text x="40" y="44" fill="#fff" font-size="20" font-weight="800">PLAYER CARD — instrument readout</text>
+  <text x="40" y="66" class="s">Radial value gauge · Monte Carlo distribution (boom/bust) · trending sparkline · sentiment pulse</text>
+
+  <!-- card -->
+  <rect x="40" y="90" width="1020" height="440" rx="16" class="p"/>
+
+  <!-- identity -->
+  <rect x="64" y="116" width="220" height="220" rx="12" fill="#1A1F28" stroke="#2D3543"/>
+  <text x="174" y="240" text-anchor="middle" class="s">headshot</text>
+  <text x="64" y="372" fill="#fff" font-size="26" font-weight="800">Sam LaPorta</text>
+  <text x="64" y="396" class="s">TE · DET · Bye 5 · Age 24</text>
+  <rect x="64" y="412" width="86" height="24" rx="12" fill="#1A1F28" stroke="#33D17A"/><text x="78" y="428" class="s acc">TE1 upside</text>
+
+  <!-- radial value gauge -->
+  <text x="330" y="120" class="h">LEAGUE VALUE (VORP)</text>
+  <g transform="translate(420,250)">
+    <circle r="92" fill="none" stroke="#23303a" stroke-width="14"/>
+    <path d="M 0 -92 A 92 92 0 1 1 -75 53" fill="none" stroke="url(#acc3)" stroke-width="14" stroke-linecap="round"/>
+    <text y="-2" text-anchor="middle" class="num" font-size="40">88</text>
+    <text y="24" text-anchor="middle" class="s">VOR +11.2</text>
+    <text y="44" text-anchor="middle" class="s">replacement 142.3</text>
+  </g>
+
+  <!-- monte carlo distribution -->
+  <text x="600" y="120" class="h">SEASON OUTCOME · Monte Carlo (10k sims)</text>
+  <g transform="translate(600,150)">
+    <rect x="0" y="0" width="420" height="170" rx="8" fill="#10131A" stroke="#23303a"/>
+    <!-- distribution curve -->
+    <path d="M20,150 C90,150 110,120 150,80 C190,40 210,30 230,34 C260,40 290,90 330,120 C370,145 390,150 400,150 Z" fill="url(#dist)" stroke="#33D17A" stroke-width="2"/>
+    <!-- floor / mean / ceiling markers -->
+    <line x1="90" y1="30" x2="90" y2="150" stroke="#E0A33A" stroke-dasharray="4 3"/><text x="70" y="24" fill="#E0A33A" font-size="10">floor 168</text>
+    <line x1="230" y1="20" x2="230" y2="150" stroke="#8CFF5A"/><text x="210" y="16" class="acc" font-size="10">μ 214</text>
+    <line x1="350" y1="30" x2="350" y2="150" stroke="#5AB8FF" stroke-dasharray="4 3"/><text x="330" y="24" fill="#5AB8FF" font-size="10">ceil 268</text>
+  </g>
+  <text x="600" y="346" class="s">boom 21% · bust 14% · σ 28.4 — engine toggle swaps this for VORP point value</text>
+
+  <!-- trending sparkline -->
+  <text x="64" y="470" class="h">TRENDING (14d)</text>
+  <polyline points="64,510 110,506 156,512 202,498 248,500 294,486 340,470 386,452 432,430" fill="none" stroke="url(#acc3)" stroke-width="2.5"/>
+  <circle cx="432" cy="430" r="4" class="acc"/><text x="446" y="434" class="acc num" font-size="13">▲ +18%</text>
+
+  <!-- sentiment pulse -->
+  <text x="600" y="392" class="h">SENTIMENT PULSE (VADER · NFL lexicon)</text>
+  <rect x="600" y="404" width="420" height="10" rx="5" fill="#23303a"/>
+  <rect x="600" y="404" width="300" height="10" rx="5" fill="url(#acc3)"/>
+  <text x="600" y="436" class="s">+0.42 positive · opportunity_flag ✓ (target share up) · injury_flag ✗</text>
+  <text x="600" y="460" class="s">"Lions lean on LaPorta in 2-min..." — NBC Rotoworld · 2h ago</text>
+  <text x="600" y="484" class="s">"...red-zone looks trending up..." — r/fantasyfootball · 5h ago</text>
+</svg>

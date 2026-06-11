@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="680" viewBox="0 0 1100 680" font-family="ui-sans-serif,system-ui,Arial">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0A0B0D"/><stop offset="1" stop-color="#10131A"/></linearGradient>
+    <linearGradient id="accg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8CFF5A"/><stop offset="1" stop-color="#33D17A"/></linearGradient>
+    <style>
+      .p{fill:#161A21;stroke:#272D38;stroke-width:1}
+      .glass{fill:#1A1F28;stroke:#2D3543;stroke-width:1}
+      .t{fill:#E7EAF0;font-size:13px}.s{fill:#8A93A6;font-size:11px}
+      .num{fill:#fff;font-size:15px;font-weight:700;font-family:ui-monospace,monospace}
+      .h{fill:#8A93A6;font-size:11px;letter-spacing:2px;font-weight:700}
+      .acc{fill:#8CFF5A}
+    </style>
+  </defs>
+  <rect width="1100" height="680" fill="url(#bg2)"/>
+
+  <!-- top bar -->
+  <text x="40" y="46" fill="#fff" font-size="20" font-weight="800">DRAFT BOARD</text>
+  <rect x="200" y="30" width="118" height="24" rx="12" fill="#1A1F28" stroke="#33D17A"/><circle cx="214" cy="42" r="4" class="acc"/><text x="226" y="46" class="s" fill="#8CFF5A">ESPN · LIVE</text>
+  <rect x="328" y="30" width="120" height="24" rx="12" class="glass"/><text x="342" y="46" class="s">⚠ stall → Manual</text>
+  <!-- engine toggle -->
+  <rect x="820" y="28" width="240" height="28" rx="14" class="glass"/>
+  <rect x="822" y="30" width="118" height="24" rx="12" fill="url(#accg)"/><text x="852" y="46" font-size="11" font-weight="700" fill="#0A0B0D">VORP</text>
+  <text x="958" y="46" class="s">Monte Carlo</text>
+
+  <!-- LEFT: pick ticker -->
+  <text x="40" y="86" class="h">LIVE PICK TICKER</text>
+  <rect x="40" y="96" width="250" height="520" rx="12" class="p"/>
+  <g>
+    <rect x="54" y="110" width="222" height="44" rx="8" class="glass"/><text x="66" y="130" class="num acc">1.07</text><text x="120" y="128" class="t">Bijan Robinson</text><text x="120" y="144" class="s">RB · ATL</text>
+    <rect x="54" y="160" width="222" height="44" rx="8" class="glass"/><text x="66" y="180" class="num">1.08</text><text x="120" y="178" class="t">CeeDee Lamb</text><text x="120" y="194" class="s">WR · DAL</text>
+    <rect x="54" y="210" width="222" height="44" rx="8" class="glass"/><text x="66" y="230" class="num">1.09</text><text x="120" y="228" class="t">Tyreek Hill</text><text x="120" y="244" class="s">WR · MIA</text>
+    <rect x="54" y="260" width="222" height="44" rx="8" fill="#10131A" stroke="#3A4150" stroke-dasharray="4 3"/><text x="66" y="284" class="num s">1.10</text><text x="120" y="282" class="s">— on the clock —</text>
+    <text x="66" y="316" class="s" font-style="italic">YOUR PICK in 2</text>
+  </g>
+
+  <!-- CENTER: best available, recomputing -->
+  <text x="312" y="86" class="h">BEST AVAILABLE · recompute on each pick</text>
+  <rect x="312" y="96" width="470" height="520" rx="12" class="p"/>
+  <g font-size="13">
+    <!-- header -->
+    <text x="332" y="124" class="s">PLAYER</text><text x="600" y="124" class="s">POS</text><text x="650" y="124" class="s">VALUE</text><text x="720" y="124" class="s">Δ ADP</text>
+    <line x1="324" y1="134" x2="770" y2="134" stroke="#272D38"/>
+    <!-- rows w/ value bars -->
+    <g>
+      <text x="332" y="160" class="t">Garrett Wilson</text><text x="600" y="160" class="s">WR</text>
+      <rect x="650" y="150" width="60" height="6" rx="3" fill="#23303a"/><rect x="650" y="150" width="56" height="6" rx="3" fill="url(#accg)"/><text x="715" y="160" class="num">+8.1</text>
+    </g>
+    <g>
+      <text x="332" y="192" class="t">Breece Hall</text><text x="600" y="192" class="s">RB</text>
+      <rect x="650" y="182" width="60" height="6" rx="3" fill="#23303a"/><rect x="650" y="182" width="50" height="6" rx="3" fill="url(#accg)"/><text x="715" y="192" class="num">+6.4</text>
+    </g>
+    <g>
+      <text x="332" y="224" class="t">Sam LaPorta</text><text x="600" y="224" class="s">TE</text>
+      <rect x="650" y="214" width="60" height="6" rx="3" fill="#23303a"/><rect x="650" y="214" width="44" height="6" rx="3" fill="url(#accg)"/><text x="715" y="224" class="num acc">+11.2</text>
+    </g>
+    <g>
+      <text x="332" y="256" class="t">Jahmyr Gibbs</text><text x="600" y="256" class="s">RB</text>
+      <rect x="650" y="246" width="60" height="6" rx="3" fill="#23303a"/><rect x="650" y="246" width="40" height="6" rx="3" fill="url(#accg)"/><text x="715" y="256" class="num">+5.0</text>
+    </g>
+    <text x="332" y="296" class="s" font-style="italic">↳ reorders with Framer layout animation as picks land</text>
+  </g>
+  <!-- positional scarcity strip -->
+  <text x="332" y="430" class="h">POSITIONAL SCARCITY</text>
+  <g>
+    <text x="332" y="460" class="t">RB</text><rect x="370" y="450" width="200" height="10" rx="5" fill="#23303a"/><rect x="370" y="450" width="60" height="10" rx="5" fill="#E0573A"/><text x="580" y="460" class="s">tier break soon</text>
+    <text x="332" y="486" class="t">WR</text><rect x="370" y="476" width="200" height="10" rx="5" fill="#23303a"/><rect x="370" y="476" width="150" height="10" rx="5" fill="#33D17A"/><text x="580" y="486" class="s">deep</text>
+    <text x="332" y="512" class="t">TE</text><rect x="370" y="502" width="200" height="10" rx="5" fill="#23303a"/><rect x="370" y="502" width="42" height="10" rx="5" fill="#E0A33A"/><text x="580" y="512" class="s">elite cliff</text>
+  </g>
+  <rect x="332" y="546" width="120" height="34" rx="8" fill="url(#accg)"/><text x="392" y="568" text-anchor="middle" font-size="13" font-weight="700" fill="#0A0B0D">DRAFT</text>
+  <text x="470" y="568" class="s">↵ enter · burst on confirm</text>
+
+  <!-- RIGHT: my roster + needs -->
+  <text x="804" y="86" class="h">MY ROSTER &amp; NEEDS</text>
+  <rect x="804" y="96" width="256" height="320" rx="12" class="p"/>
+  <g font-size="12">
+    <text x="822" y="124" class="t">QB</text><text x="900" y="124" class="s">J. Allen</text>
+    <text x="822" y="150" class="t">RB</text><text x="900" y="150" class="s">Bijan Robinson</text>
+    <text x="822" y="176" class="t">RB</text><text x="900" y="176" class="acc">— need —</text>
+    <text x="822" y="202" class="t">WR</text><text x="900" y="202" class="s">A. St. Brown</text>
+    <text x="822" y="228" class="t">WR</text><text x="900" y="228" class="acc">— need —</text>
+    <text x="822" y="254" class="t">TE</text><text x="900" y="254" class="acc">— need —</text>
+    <text x="822" y="280" class="t">FLEX</text><text x="900" y="280" class="s">—</text>
+    <line x1="816" y1="298" x2="1048" y2="298" stroke="#272D38"/>
+    <text x="822" y="324" class="s">Proj. starters pts</text><text x="1000" y="324" class="num">1,742</text>
+    <text x="822" y="352" class="s">Roster strength</text>
+    <rect x="822" y="362" width="226" height="8" rx="4" fill="#23303a"/><rect x="822" y="362" width="150" height="8" rx="4" fill="url(#accg)"/>
+  </g>
+  <!-- trending lower-third -->
+  <text x="804" y="448" class="h">TRENDING (narrative ⊕ adds)</text>
+  <rect x="804" y="458" width="256" height="158" rx="12" class="p"/>
+  <g font-size="12">
+    <circle cx="824" cy="488" r="4" fill="#33D17A"/><text x="838" y="492" class="t">Jordan Mason</text><text x="1010" y="492" class="acc">▲ +18%</text>
+    <circle cx="824" cy="518" r="4" fill="#33D17A"/><text x="838" y="522" class="t">Jaylen Wright</text><text x="1010" y="522" class="acc">▲ +12%</text>
+    <circle cx="824" cy="548" r="4" fill="#E0573A"/><text x="838" y="552" class="t">N. Collins</text><text x="1014" y="552" fill="#E0573A">▼ inj</text>
+    <text x="822" y="588" class="s">sentiment pulse · Sleeper add velocity</text>
+    <rect x="822" y="596" width="226" height="6" rx="3" fill="#23303a"/><rect x="822" y="596" width="170" height="6" rx="3" fill="url(#accg)"/>
+  </g>
+</svg>
