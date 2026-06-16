@@ -14,6 +14,7 @@ from models import (
     LeagueRules, HistoryStore, HeuristicProjector, RegressionProjector,
     EnsembleProjector, KickerProjector, DefenseProjector, VorpEngine,
     score_stats, score_kicking, score_defense,
+    VaderScorer, PlayerMatcher,
 )
 
 # Smores 2025 rules (subset needed for offense scoring + superflex roster).
@@ -127,6 +128,23 @@ def main() -> None:
     assert kp and kp.mean > 0 and kp.stdev > 0
     assert dp and dp.mean > 0 and dp.stdev > dp.mean * 0.3  # D/ST widest σ
     print(f"✓ K projector mean={kp.mean} σ={kp.stdev} · DST mean={dp.mean} σ={dp.stdev}")
+
+    # 5) sentiment scorer + player entity matching (P4)
+    sc = VaderScorer()
+    inj = sc.score("Bijan Robinson ruled out with a hamstring injury, did not practice")
+    opp = sc.score("Jordan Mason is the every-down workhorse now, target share up, breakout")
+    assert inj.sentiment < -0.3 and inj.injury_flag and not inj.opportunity_flag
+    assert opp.sentiment > 0.3 and opp.opportunity_flag and not opp.injury_flag
+    print(f"✓ sentiment: injury {inj.sentiment:+.2f}(flag={inj.injury_flag}) · "
+          f"opportunity {opp.sentiment:+.2f}(flag={opp.opportunity_flag})")
+    matcher = PlayerMatcher([
+        {"id": "p1", "full_name": "Bijan Robinson"},
+        {"id": "p2", "full_name": "Jordan Mason"},
+        {"id": "p3", "full_name": "Josh Allen"},  # must NOT match bare "Josh"
+    ])
+    assert matcher.match("Bijan Robinson and Jordan Mason both active") == {"p1", "p2"}
+    assert matcher.match("Josh looked good") == set()  # surname/firstname alone → no match
+    print("✓ player matcher: full-name match, no bare-name false positives")
     print("\nALL SELFTEST CHECKS PASSED ✅")
 
 

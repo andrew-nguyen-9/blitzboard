@@ -20,8 +20,9 @@
   --accent-soft: rgba(140, 255, 90, 0.14);
   --grain-opacity: 0.04;
   --glow: 0 0 40px -8px var(--accent-soft);
-  --font-sans: "Inter";
-  --font-display: "Space Grotesk";
+  --font-sans: "Hanken Grotesk";
+  --font-display: "Bricolage Grotesque";
+  --font-scoreboard: "Anton";
   --font-mono: "JetBrains Mono";
   color-scheme: dark;
 }
@@ -66,7 +67,64 @@ body {
   border-radius: 1rem;
 }
 
+/* ── Custom broadcast cursor ─────────────────────────────────────────────── */
+@media (pointer: fine) {
+  body { cursor: none; }
+  a, button, [data-cursor], input, select, textarea { cursor: none; }
+}
+.cursor-ring {
+  position: fixed; top: 0; left: 0; z-index: 60; pointer-events: none;
+  width: 38px; height: 38px; margin: -19px 0 0 -19px;
+  border: 1.5px solid var(--accent); border-radius: 999px;
+  display: grid; place-items: center;
+  transition: width .25s ease, height .25s ease, background-color .25s ease, border-radius .25s ease;
+  mix-blend-mode: difference;
+}
+.cursor-dot {
+  position: fixed; top: 0; left: 0; z-index: 61; pointer-events: none;
+  width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+  background: var(--accent); border-radius: 999px;
+}
+.cursor-label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--bg); opacity: 0; white-space: nowrap;
+}
+body.cursor-hover .cursor-ring {
+  width: 84px; height: 84px; margin: -42px 0 0 -42px;
+  background: var(--accent); border-radius: 14px;
+}
+body.cursor-hover .cursor-label { opacity: 1; transition: opacity .2s ease .05s; }
+body.cursor-hover .cursor-dot { opacity: 0; }
+
+/* ── Broadcast marquee ticker ────────────────────────────────────────────── */
+.marquee { display: flex; overflow: hidden; user-select: none; gap: 0; }
+.marquee__track { display: flex; flex-shrink: 0; gap: 0; min-width: 100%;
+  animation: marquee var(--marquee-dur, 40s) linear infinite; }
+.marquee:hover .marquee__track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-100%); } }
+
+/* ── Kinetic link underline (wipe) ───────────────────────────────────────── */
+.link-wipe { position: relative; }
+.link-wipe::after {
+  content: ""; position: absolute; left: 0; bottom: -2px; height: 1.5px; width: 100%;
+  background: var(--accent); transform: scaleX(0); transform-origin: right;
+  transition: transform .4s cubic-bezier(.6,0,.2,1);
+}
+.link-wipe:hover::after { transform: scaleX(1); transform-origin: left; }
+
+/* ── Scanline sweep (broadcast) ──────────────────────────────────────────── */
+.scanline { position: relative; overflow: hidden; }
+.scanline::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent) 8%, transparent), transparent);
+  height: 40%; transform: translateY(-120%); animation: scan 6s ease-in-out infinite;
+}
+@keyframes scan { 0%,100% { transform: translateY(-120%); } 50% { transform: translateY(320%); } }
+
 @media (prefers-reduced-motion: reduce) {
+  body { cursor: auto !important; }
+  .cursor-ring, .cursor-dot { display: none !important; }
+  .marquee__track, .scanline::before { animation: none !important; }
   * {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;

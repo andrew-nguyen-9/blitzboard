@@ -25,19 +25,60 @@ from models import (
     DefenseProjector,
     VorpEngine,
     load_league_rules,
+    fetch_ffc_adp,
 )
 
 CURRENT_YEAR = dt.date.today().year
 
 
 def _load_players(sb) -> list[dict]:
-    return fetch_all("players", "id,full_name,position,nfl_team,age")
+    return fetch_all("players", "id,full_name,position,nfl_team,age,years_exp,metadata")
 
 
 def _load_history(sb) -> list[dict]:
     # season aggregates only (week is null) — seasonal projections for P1
     return fetch_all("player_stats_history", "player_id,season,stats",
                      apply=lambda q: q.is_("week", "null"))
+
+
+def enrich_byes(sb, season: int) -> None:
+    """Populate players.bye_week from the NFL schedule (needed for bench/bye logic).
+
+    A team's bye = the regular-season week (1..N) it has no game. Tries the target
+    season, falls back to the most recent schedule available (offseason safety)."""
+    try:
+        import nfl_data_py as nfl
+        sched = None
+        for yr in (season, season - 1):
+            try:
+                df = nfl.import_schedules([yr])
+                if len(df):
+                    sched = df[df["game_type"] == "REG"]
+                    season_used = yr
+                    break
+            except Exception:
+                continue
+        if sched is None or not len(sched):
+            console.print("[yellow]⚠ no schedule available — byes left null[/yellow]")
+            return
+        weeks = sorted(sched["week"].unique())
+        full = set(range(1, max(weeks) + 1))
+        played: dict[str, set] = {}
+        for _, r in sched.iterrows():
+            for t in (r["home_team"], r["away_team"]):
+                played.setdefault(t, set()).add(int(r["week"]))
+        # nflverse team codes → Sleeper codes (Rams differ; others align)
+        REMAP = {"LA": "LAR", "OAK": "LV", "SD": "LAC", "STL": "LAR"}
+        byes = {t: (sorted(full - wk)[0] if (full - wk) else None) for t, wk in played.items()}
+        n = 0
+        for team, bye in byes.items():
+            if bye:
+                code = REMAP.get(team, team)
+                sb.table("players").update({"bye_week": bye}).eq("nfl_team", code).execute()
+                n += 1
+        console.print(f"[green]✓ byes set for {n} teams (schedule {season_used})[/green]")
+    except Exception as e:
+        console.print(f"[yellow]⚠ bye enrichment failed: {e}[/yellow]")
 
 
 def build_store(rules, players: list[dict], history: list[dict]) -> HistoryStore:
@@ -74,6 +115,7 @@ def main() -> None:
     if rules is None:
         return
 
+    enrich_byes(sb, args.season)
     players = _load_players(sb)
     history = _load_history(sb)
     console.print(f"[cyan]{len(players)} players · {len(history)} season lines[/cyan]")
@@ -128,13 +170,33 @@ def main() -> None:
         .eq("scoring_profile", "default").eq("season", args.season).execute()
     upsert("projections", proj_rows, on_conflict="player_id,season,week,source,scoring_profile")
 
-    # VORP (superflex-aware replacement levels via LeagueRules)
-    values = VorpEngine().compute(projections, positions, rules)
+    # build meta (age + ADP) for future-value shaping & draft realism
+    adp = fetch_ffc_adp(rules.league_size, "half-ppr", args.season) if not args.no_consensus else {}
+    by_name = {(p.get("full_name") or "").lower(): p["id"] for p in players}
+    adp_by_pid: dict[str, float] = {}
+    for nm, e in adp.items():
+        pos = e.get("position")
+        if pos in ("PK", "DEF"):  # K/DST: ADP carries a team field
+            for p in players:
+                if (p.get("position") in (("K",) if pos == "PK" else ("DST", "DEF"))) and \
+                   (e.get("team", "").upper() == (p.get("nfl_team") or "").upper()):
+                    adp_by_pid[p["id"]] = e.get("adp")
+        else:
+            pid = by_name.get(nm)
+            if pid:
+                adp_by_pid[pid] = e.get("adp")
+    meta = {p["id"]: {"age": p.get("age"), "years_exp": p.get("years_exp"),
+                      "adp": adp_by_pid.get(p["id"]),
+                      "search_rank": (p.get("metadata") or {}).get("search_rank")}
+            for p in players}
+
+    # VORP (superflex-aware replacement levels + non-linear future-value shaping)
+    values = VorpEngine().compute(projections, positions, rules, meta)
     value_rows = [{
         "player_id": v.player_id, "league_id": rules.league_id, "engine": v.engine,
         "scoring_profile": "default", "value": round(v.value, 2), "vor": round(v.vor, 2),
         "replacement": round(v.replacement, 2), "boom": v.boom, "bust": v.bust,
-        "rank": v.rank,
+        "adp": v.adp, "rank": v.rank,
     } for v in values]
     upsert("player_value", value_rows, on_conflict="player_id,league_id,engine,scoring_profile")
     console.print(f"[green]✓ wrote {len(value_rows)} {args.engine} values[/green]")

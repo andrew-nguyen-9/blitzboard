@@ -64,6 +64,10 @@ def normalize(sleeper_id: str, p: dict) -> dict | None:
         "metadata": {
             "fantasy_positions": p.get("fantasy_positions"),
             "depth_chart_order": p.get("depth_chart_order"),
+            "depth_chart_position": p.get("depth_chart_position"),
+            # Sleeper's composite consensus rank (lower=better, 999=irrelevant);
+            # 98% coverage → orders the deep/bench pool sensibly (#2 more data).
+            "search_rank": p.get("search_rank"),
             "number": p.get("number"),
         },
     }

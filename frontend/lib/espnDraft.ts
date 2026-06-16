@@ -14,11 +14,25 @@ export interface EspnDraftResp {
   meta: { teams: number | null; status: string };
 }
 
-export async function fetchEspnDraft(leagueId?: string, season?: string): Promise<EspnDraftResp> {
+export interface EspnCreds {
+  s2?: string;
+  swid?: string;
+}
+
+export async function fetchEspnDraft(
+  leagueId?: string,
+  season?: string,
+  creds?: EspnCreds,
+): Promise<EspnDraftResp> {
   const qs = new URLSearchParams();
   if (leagueId) qs.set("leagueId", leagueId);
   if (season) qs.set("season", season);
-  const r = await fetch(`/api/espn/draft?${qs.toString()}`, { cache: "no-store" });
+  // Cookies (private leagues) travel in headers, never the URL/query, so they
+  // stay out of logs. The server proxy reads them and attaches the Cookie header.
+  const headers: Record<string, string> = {};
+  if (creds?.s2) headers["x-espn-s2"] = creds.s2;
+  if (creds?.swid) headers["x-espn-swid"] = creds.swid;
+  const r = await fetch(`/api/espn/draft?${qs.toString()}`, { cache: "no-store", headers });
   if (!r.ok) {
     let msg = `espn ${r.status}`;
     try {

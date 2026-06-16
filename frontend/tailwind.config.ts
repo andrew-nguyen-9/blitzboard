@@ -25,16 +25,19 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         display: ["var(--font-display)", "system-ui", "sans-serif"],
+        scoreboard: ["var(--font-scoreboard)", "Impact", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       fontSize: {
-        "display-xl": ["clamp(3.5rem, 10vw, 7.5rem)", { lineHeight: "0.95", letterSpacing: "-0.03em", fontWeight: "800" }],
-        "display-lg": ["clamp(2.5rem, 6vw, 5rem)", { lineHeight: "1.0", letterSpacing: "-0.02em", fontWeight: "700" }],
-        "display-md": ["clamp(1.75rem, 3.5vw, 3rem)", { lineHeight: "1.05", letterSpacing: "-0.01em", fontWeight: "600" }],
-        heading: ["clamp(1.25rem, 2.2vw, 2rem)", { lineHeight: "1.15", fontWeight: "600" }],
-        "body-lg": ["1.125rem", { lineHeight: "1.6" }],
+        // scoreboard = Anton, condensed athletic → huge ultra-tight numerals
+        "score-xl": ["clamp(5rem, 18vw, 16rem)", { lineHeight: "0.82", letterSpacing: "-0.02em", fontWeight: "400" }],
+        "display-xl": ["clamp(3.25rem, 9vw, 7rem)", { lineHeight: "0.92", letterSpacing: "-0.035em", fontWeight: "700" }],
+        "display-lg": ["clamp(2.5rem, 6vw, 5rem)", { lineHeight: "0.98", letterSpacing: "-0.03em", fontWeight: "700" }],
+        "display-md": ["clamp(1.75rem, 3.5vw, 3rem)", { lineHeight: "1.02", letterSpacing: "-0.02em", fontWeight: "600" }],
+        heading: ["clamp(1.25rem, 2.2vw, 2rem)", { lineHeight: "1.12", letterSpacing: "-0.01em", fontWeight: "600" }],
+        "body-lg": ["1.1875rem", { lineHeight: "1.55", letterSpacing: "-0.01em" }],
         body: ["1rem", { lineHeight: "1.6" }],
-        label: ["0.8125rem", { lineHeight: "1.2", letterSpacing: "0.06em", fontWeight: "600" }],
+        label: ["0.75rem", { lineHeight: "1.2", letterSpacing: "0.14em", fontWeight: "600" }],
       },
       maxWidth: { wide: "1440px" },
       keyframes: {

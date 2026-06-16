@@ -47,21 +47,27 @@ export interface RosterFill {
 }
 
 // Greedily fit a set of players (best value first) into the starting lineup,
-// preferring dedicated slots before FLEX/OP, remainder → bench.
-export function fillRoster(players: PlayerWithValue[]): RosterFill {
+// preferring dedicated slots before FLEX/OP, remainder → bench. The roster shape
+// defaults to SMORES but accepts any imported league's slots.
+export function fillRoster(
+  players: PlayerWithValue[],
+  roster: RosterSlot[] = SMORES_ROSTER,
+): RosterFill {
   const ordered = [...players].sort(
     (a, b) => (b.value?.vor ?? -999) - (a.value?.vor ?? -999),
   );
-  const starters = SMORES_ROSTER.map((s) => ({ slot: s.slot, player: null as PlayerWithValue | null }));
+  const starters = roster.map((s) => ({ slot: s.slot, player: null as PlayerWithValue | null }));
   const bench: PlayerWithValue[] = [];
 
   for (const p of ordered) {
     const pos = p.position ?? "";
-    // dedicated slot first (FLEX/OP last so studs don't burn flex early)
-    const order = [...starters.keys()].sort((i, j) => rank(starters[i].slot) - rank(starters[j].slot));
+    // dedicated slot first (multi-position flexes last so studs don't burn flex)
+    const order = [...starters.keys()].sort(
+      (i, j) => rank(roster[i].eligible) - rank(roster[j].eligible),
+    );
     let placed = false;
     for (const i of order) {
-      if (!starters[i].player && SMORES_ROSTER[i].eligible.includes(pos)) {
+      if (!starters[i].player && roster[i].eligible.includes(pos)) {
         starters[i].player = p;
         placed = true;
         break;
@@ -71,18 +77,25 @@ export function fillRoster(players: PlayerWithValue[]): RosterFill {
   }
 
   const needs = starters.filter((s) => !s.player).map((s) => s.slot);
+  // Team strength = REAL projected fantasy points of the starting lineup
+  // (vor + replacement = the mean projection), NOT shaped draft value. Shaped
+  // value has the elite-convex premium which makes early-pick teams look far
+  // stronger than they really are; real points keep slot comparison fair.
   const projectedPoints = starters.reduce(
-    (sum, s) => sum + (s.player?.value?.value ?? 0),
+    (sum, s) => sum + (s.player ? (s.player.value?.vor ?? 0) + (s.player.value?.replacement ?? 0) : 0),
     0,
   );
   return { starters, bench, needs, projectedPoints };
 }
 
-// dedicated positions before flexible ones
-function rank(slot: string): number {
-  if (slot === "OP") return 3;
-  if (slot === "FLEX") return 2;
-  return 1;
+// dedicated positions before flexible ones (fewer eligible positions = fill first)
+function rank(eligible: string[]): number {
+  return eligible.length;
+}
+
+// Normalize defense naming so DEF/DST count as one bucket.
+function normPos(pos: string | null | undefined): string {
+  return pos === "DEF" ? "DST" : pos ?? "?";
 }
 
 // Starter-caliber players remaining at each position (vor > 0) → scarcity signal.
@@ -90,7 +103,7 @@ export function scarcity(available: PlayerWithValue[]): Record<string, number> {
   const out: Record<string, number> = {};
   for (const p of available) {
     if ((p.value?.vor ?? 0) > 0) {
-      const pos = p.position ?? "?";
+      const pos = normPos(p.position);
       out[pos] = (out[pos] ?? 0) + 1;
     }
   }

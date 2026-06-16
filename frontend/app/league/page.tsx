@@ -3,6 +3,7 @@ import { getLeagueOverview } from "@/lib/queries";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const metadata = { title: "League Overview" };
+export const dynamic = "force-dynamic"; // reflects latest league_sync
 
 // P3: the connected ESPN league — standings + teams. Populated by
 // pipeline/league_sync.py (ESPN cookie auth). Read-only enrichment (D1).

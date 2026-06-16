@@ -14,6 +14,12 @@ export interface Player {
   years_exp: number | null;
   status: string | null;
   injury_status: string | null;
+  metadata?: {
+    depth_chart_order?: number | null;
+    depth_chart_position?: string | null;
+    search_rank?: number | null;
+    [k: string]: unknown;
+  } | null;
 }
 
 export interface PlayerValue {

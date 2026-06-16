@@ -6,10 +6,10 @@ import ThemeToggle from "./ThemeToggle";
 export const SECTIONS = [
   { href: "/", label: "Home", ready: true },
   { href: "/players", label: "Players", ready: true },
-  { href: "/draft", label: "Draft", ready: false },
-  { href: "/league", label: "League", ready: false },
-  { href: "/waivers", label: "Waivers", ready: false },
-  { href: "/trades", label: "Trades", ready: false },
+  { href: "/draft", label: "Draft", ready: true },
+  { href: "/league", label: "League", ready: true },
+  { href: "/waivers", label: "Waivers", ready: true },
+  { href: "/trades", label: "Trades", ready: true },
 ] as const;
 
 export default function Nav() {

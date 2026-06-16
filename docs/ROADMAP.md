@@ -48,16 +48,34 @@ P0 Foundation
 - ✅ `rosters` schema extended (espn_team_id, standings, abbrev/logo/division).
 - ⬜ Live run needs ESPN_S2/SWID cookies + `python league_sync.py` (offseason data will be sparse).
 
-### P4 — Waiver Wire Tool + News/Sentiment engine *(season start)*
-- `news_sentiment.py` (RSS + Reddit + VADER NFL lexicon), waiver-window cron.
-- `news_articles` archiving begins (training corpus).
-- Trending = sentiment ⊕ Sleeper add/drop. Waiver ranking = marginal value to my roster × trending.
+### P4 — Waiver Wire Tool + News/Sentiment engine ✅
+- ✅ `models/sentiment.py`: `VaderScorer` (NFL lexicon: injury terms negative, usage terms
+  positive; phrase normalization) + `PlayerMatcher` (n-gram entity resolution, no bare-name
+  false positives). Interface = FinBERT swap point.
+- ✅ `news_sentiment.py`: RSS (ESPN/PFT/Yahoo/CBS) + Reddit → `news_articles` (training corpus)
+  + blended `trending` (0.55·tanh(add velocity) + 0.45·sentiment − injury penalty).
+- ✅ `.github/workflows/sentiment.yml`: 30-min cron gated to 08:00–01:00 + waiver-relevant days.
+- ✅ `/waivers` page: FAAB **bid** recommendations (% of remaining budget × trend) + live news pulse.
+- Ran live: 139 articles, 67 matched, 205 trending players. selftest covers it.
 
-### P5 — Trade Optimizer
-- Pareto-improving swap finder across rosters using league scoring + positional need.
+### P5 — Trade Optimizer ✅
+- ✅ `lib/trade.ts`: `findTrades()` — Pareto-improving swaps (both lineups improve), need-aware
+  via `fillRoster` (benched depth worth less than a started starter); 1-for-1 / 2-for-1 / 2-for-2,
+  ranked by your gain + fairness.
+- ✅ `/trades`: pick my team ↔ partner, ranked proposal cards (give/get, both deltas, fairness%).
+- ✅ `league_sync.py` mapping fixed via nflverse crosswalk (ESPN id→Sleeper id→our id): 73→179
+  rostered players mapped (~15/team). Ran against real Smores 2025 rosters.
+- Verified: real Pareto trades found between live rosters (e.g. surplus-QB → needed-RB swap).
 
-### P6 — Homepage *(shell early for nav; cinematic polish last)*
-- Creative-dev "Broadcast Deck" hero + scroll story tying the tools together.
+### P6 — Creative overhaul (site-wide) ✅
+- ✅ **Type revamp**: Bricolage Grotesque (display) + Anton (scoreboard numerals) + Hanken
+  Grotesk (body) + JetBrains Mono — replaced Inter/Space Grotesk. New tighter display scale.
+- ✅ **Physics 404** (`FootballPit`): draggable footballs, gravity, ball↔ball elastic collisions,
+  circle↔AABB collisions vs the live text/button bounding boxes; throw-to-release; reduced-motion static.
+- ✅ **Motion toolkit**: `SmoothScroll` (Lenis), `Cursor` (broadcast reticle + contextual label),
+  `motion.tsx` (Reveal / SplitText / Magnetic / CountUp), `Marquee` (broadcast ticker), `TiltCard`
+  (3D tilt + cursor glare). All honor `prefers-reduced-motion`.
+- ✅ Homepage rebuilt: kinetic split-text hero, magnetic CTAs, live ticker, scoreboard CountUp band, tilt-card deck.
 
 ### P7 — Monte Carlo engine
 - `MonteCarloEngine` swapped behind `ValueEngine`; UI toggle VORP ⇄ Monte Carlo.

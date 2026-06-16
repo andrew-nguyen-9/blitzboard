@@ -12,8 +12,10 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const leagueId = url.searchParams.get("leagueId") || process.env.ESPN_LEAGUE_ID;
   const season = url.searchParams.get("season") || process.env.ESPN_SEASON || "2025";
-  const s2 = process.env.ESPN_S2;
-  const swid = process.env.ESPN_SWID;
+  // User-supplied cookies (private leagues) arrive as headers from our own
+  // client; fall back to server env. Never read cookies from the query string.
+  const s2 = req.headers.get("x-espn-s2") || process.env.ESPN_S2;
+  const swid = req.headers.get("x-espn-swid") || process.env.ESPN_SWID;
 
   if (!leagueId) {
     return NextResponse.json({ error: "no ESPN league id (set ESPN_LEAGUE_ID)" }, { status: 400 });

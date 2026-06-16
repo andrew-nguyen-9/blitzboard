@@ -21,9 +21,36 @@ from common import console, get_supabase, retry_api, upsert, fetch_all
 
 
 def _espn_player_id_map(sb) -> dict[str, str]:
-    """ESPN player id (str) → our players.id."""
-    rows = fetch_all("players", "id,espn_id")
-    return {str(r["espn_id"]): r["id"] for r in rows if r.get("espn_id")}
+    """ESPN player id (str) → our players.id.
+
+    Sleeper's own espn_id coverage is spotty, so bridge through the nflverse
+    crosswalk: ESPN id → Sleeper id → our players.id (we have sleeper_id for every
+    player). Direct espn_id matches overlay on top. Same fix that rescued the
+    history join (mapping rate ~6/team → ~full rosters)."""
+    rows = fetch_all("players", "id,espn_id,sleeper_id")
+    by_sleeper = {str(r["sleeper_id"]): r["id"] for r in rows if r.get("sleeper_id")}
+
+    out: dict[str, str] = {}
+    # crosswalk: ESPN id → Sleeper id (nflverse), then → our id
+    try:
+        import nfl_data_py as nfl
+        import pandas as pd
+        ids = nfl.import_ids()
+        for _, r in ids.iterrows():
+            e, s = r.get("espn_id"), r.get("sleeper_id")
+            if pd.notna(e) and pd.notna(s):
+                e_str = str(int(e)) if isinstance(e, float) else str(e).strip()
+                s_str = str(int(s)) if isinstance(s, float) else str(s).strip()
+                our = by_sleeper.get(s_str)
+                if our:
+                    out[e_str] = our
+    except Exception as e:
+        console.print(f"[yellow]⚠ crosswalk failed ({e}); direct espn_id only[/yellow]")
+    # direct espn_id matches overlay (authoritative where present)
+    for r in rows:
+        if r.get("espn_id"):
+            out[str(r["espn_id"])] = r["id"]
+    return out
 
 
 @retry_api

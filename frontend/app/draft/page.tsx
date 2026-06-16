@@ -1,6 +1,6 @@
 import EmptyState from "@/components/EmptyState";
 import DraftRoom from "@/components/DraftRoom";
-import { getPlayersByValue } from "@/lib/queries";
+import { getAllPlayersByValue } from "@/lib/queries";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const metadata = { title: "Draft Board" };
@@ -10,7 +10,7 @@ export const metadata = { title: "Draft Board" };
 // and degrades back to this exact board on any feed stall.
 export default async function DraftPage() {
   const live = isSupabaseConfigured();
-  const players = live ? await getPlayersByValue("vorp", 400) : [];
+  const players = live ? await getAllPlayersByValue("vorp") : [];
 
   if (!players.length) {
     return (

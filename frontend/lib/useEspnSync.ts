@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { fetchEspnDraft, type EspnNormPick } from "./espnDraft";
+import { fetchEspnDraft, type EspnNormPick, type EspnCreds } from "./espnDraft";
 import type { SyncStatus } from "./useSleeperSync";
 
 // Polls our ESPN proxy while `enabled`. Same resilience contract as Sleeper:
@@ -12,6 +12,7 @@ export function useEspnSync(
   enabled: boolean,
   leagueId?: string,
   season?: string,
+  creds?: EspnCreds,
   intervalMs = 5000,
 ) {
   const [picks, setPicks] = useState<EspnNormPick[]>([]);
@@ -31,7 +32,7 @@ export function useEspnSync(
 
     async function tick() {
       try {
-        const d = await fetchEspnDraft(leagueId, season);
+        const d = await fetchEspnDraft(leagueId, season, creds);
         if (!active) return;
         setPicks(d.picks);
         setMeta(d.meta);
@@ -51,7 +52,8 @@ export function useEspnSync(
       active = false;
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [enabled, leagueId, season, intervalMs]);
+    // creds spread to primitives so identity churn doesn't restart the poller
+  }, [enabled, leagueId, season, creds?.s2, creds?.swid, intervalMs]);
 
   return { picks, meta, status, error, lastSync };
 }
