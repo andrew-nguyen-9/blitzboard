@@ -20,18 +20,32 @@ function useMounted() {
   return mounted;
 }
 
+/**
+ * Arm a scroll-entrance only for content that starts BELOW the fold, measured
+ * once after mount. Above-the-fold content is left in its resting state and
+ * never hidden — so it can't flicker when useInView's IntersectionObserver
+ * reports its first (false) reading a frame after hydration. Returns false on
+ * the server / first paint and under reduced motion.
+ */
+function useArmedBelowFold(ref: React.RefObject<HTMLElement | null>, reduced: boolean) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (reduced) return;
+    const el = ref.current;
+    if (el && el.getBoundingClientRect().top > window.innerHeight) setArmed(true);
+  }, [ref, reduced]);
+  return armed;
+}
+
 // ── Reveal: mask-up entrance on scroll-into-view ─────────────────────────────
 export function Reveal({ children, delay = 0, y = 28, className }: {
   children: ReactNode; delay?: number; y?: number; className?: string;
 }) {
   const reduced = useReducedMotion();
-  const mounted = useMounted();
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-12% 0px" });
-  // Hidden only when enhancing AND not yet on screen. Until mounted (SSR + first
-  // paint) and under reduced motion the element sits at rest, fully visible.
-  const enhance = mounted && !reduced;
-  const hidden = enhance && !inView;
+  const armed = useArmedBelowFold(ref, reduced);
+  const hidden = armed && !inView;
   return (
     <motion.div
       ref={ref}
@@ -91,21 +105,24 @@ export function CountUp({ to, decimals = 0, className, suffix = "" }: {
   to: number; decimals?: number; className?: string; suffix?: string;
 }) {
   const reduced = useReducedMotion();
-  const mounted = useMounted();
-  const ref = useRef(null);
+  const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true });
-  const [val, setVal] = useState(0);
+  // Final number by default — correct for SSR, no-JS, reduced motion, and any
+  // count already on screen at load (no "final → 0 → count" flash). Only a count
+  // armed below the fold drops to 0 to tally up when scrolled into view.
+  const [val, setVal] = useState(to);
+  const armed = useArmedBelowFold(ref, reduced);
   useEffect(() => {
-    if (reduced || !mounted || !inView) return;
+    if (armed) setVal(0);
+  }, [armed]);
+  useEffect(() => {
+    if (!armed || !inView) return;
     const controls = animate(0, to, { duration: 1.2, ease: EASE, onUpdate: (v) => setVal(v) });
     return () => controls.stop();
-  }, [reduced, mounted, inView, to]);
-  // Show the final number on the server, for no-JS, and under reduced motion;
-  // only the live animation drives the intermediate value.
-  const display = mounted && !reduced ? val : to;
+  }, [armed, inView, to]);
   return (
     <span ref={ref} className={className}>
-      {display.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
+      {val.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
       {suffix}
     </span>
   );

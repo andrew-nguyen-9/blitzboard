@@ -342,8 +342,9 @@ body.cursor-hover .cursor-dot { opacity: 0; }
    `overflow-x: clip` on <main> swallows the sub-pixel 100vw-vs-scrollbar rounding
    so no horizontal scroll seam appears. `clip` (not `hidden`) creates no scroll
    container, so the sticky <header> Nav — which lives outside <main> — is
-   unaffected. */
-main { overflow-x: clip; }
+   unaffected. Scoped with :has() to pages that actually contain a full-bleed
+   band, so other routes' overflow (wide tables, edge popovers) is never clipped. */
+main:has(.full-bleed) { overflow-x: clip; }
 .full-bleed { width: 100vw; margin-inline: calc(50% - 50vw); }
 
 /* Hero media: a single-pole wash + soft accent glow that meets the viewport edge
@@ -379,11 +380,6 @@ main { overflow-x: clip; }
 }
 @keyframes hero-rise { from { transform: translateY(0.5em); } }
 
-/* Reduced motion: the hero lands in its resting state — gradient fully shown (no
-   wipe), words at rest (no rise). Mirrors the per-component still-state contract
-   used by the kit above; the global `animation-duration: .001ms` reset alone can
-   leave a clip-path mid-wipe or a staggered word offset, so we null these
-   explicitly under both the OS pref and the in-app data-motion override. */
 /* SCROLL affordance: a thin track with an accent pulse travelling down it. The
    anchor itself is always operable (keyboard + no-JS); only the pulse animates. */
 .scroll-cue__line {
