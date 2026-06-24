@@ -13,14 +13,23 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Canonical OKLCH tokens (source of truth — see app/globals.css).
         accent: "var(--accent)",
+        "accent-ink": "var(--accent-ink)",
         "accent-soft": "var(--accent-soft)",
-        bg: "var(--bg)",
-        surface: "var(--surface)",
-        "surface-elevated": "var(--surface-elevated)",
-        hairline: "var(--hairline)",
-        ink: "var(--ink)",
-        "ink-muted": "var(--ink-muted)",
+        bg: "var(--bg-0)",
+        surface: "var(--bg-1)",
+        "surface-elevated": "var(--bg-2)",
+        line: "var(--line)",
+        ink: "var(--ink-0)",
+        "ink-1": "var(--ink-1)",
+        pos: "var(--pos)",
+        neg: "var(--neg)",
+        warn: "var(--warn)",
+        // Legacy aliases (deprecated; map onto the canonical ladder until
+        // components migrate in v2.1+).
+        hairline: "var(--line)",
+        "ink-muted": "var(--ink-2)",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
