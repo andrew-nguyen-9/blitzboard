@@ -9,10 +9,14 @@ import SmoothScroll from "@/components/SmoothScroll";
 // Self-hosted at build time via next/font (no render-blocking <link>, no layout
 // shift, clears @next/next/no-page-custom-font). Each exposes a CSS variable the
 // token layer consumes (globals.css: --font-display/-scoreboard/-sans/-mono).
+// Only the two above-the-fold faces — Bricolage (hero headline) and Hanken
+// (body) — are preloaded; Anton (scoreboard) and JetBrains (mono numerals)
+// appear lower on the page, so preloading them would queue ahead of and delay
+// the LCP text font on slow connections. They still load on demand (swap).
 const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", display: "swap" });
-const scoreboard = Anton({ subsets: ["latin"], weight: "400", variable: "--font-anton", display: "swap" });
+const scoreboard = Anton({ subsets: ["latin"], weight: "400", variable: "--font-anton", display: "swap", preload: false });
 const body = Hanken_Grotesk({ subsets: ["latin"], variable: "--font-hanken", display: "swap" });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
+const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap", preload: false });
 
 const fontVars = `${display.variable} ${scoreboard.variable} ${body.variable} ${mono.variable}`;
 
