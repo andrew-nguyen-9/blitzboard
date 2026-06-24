@@ -11,6 +11,37 @@
    removed as components migrate to canonical tokens in v2.1+.
    data-theme on <html> selects the set (set pre-paint by ThemeScript).
    ───────────────────────────────────────────────────────────── */
+
+/* Theme-independent scale tokens: fluid type, space, radii, motion.
+   Defined once on :root (identical in every theme). */
+:root {
+  /* type — fluid clamp scale */
+  --step--1: clamp(0.83rem, 0.8rem + 0.15vw, 0.9rem);
+  --step-0: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --step-1: clamp(1.33rem, 1.2rem + 0.6vw, 1.6rem);
+  --step-2: clamp(1.77rem, 1.5rem + 1.2vw, 2.4rem);
+  --step-3: clamp(2.37rem, 1.9rem + 2.2vw, 3.6rem);
+  --display: clamp(3rem, 2rem + 6vw, 9rem); /* hero scoreboard */
+
+  /* space & radii — fluid */
+  --space-2xs: clamp(0.31rem, 0.3rem + 0.05vw, 0.34rem);
+  --space-s: clamp(0.69rem, 0.65rem + 0.2vw, 0.81rem);
+  --space-m: clamp(1.13rem, 1.05rem + 0.4vw, 1.35rem);
+  --space-l: clamp(1.5rem, 1.35rem + 0.75vw, 2rem);
+  --space-xl: clamp(2.25rem, 1.9rem + 1.7vw, 3.5rem);
+  --radius: 0.75rem;
+  --radius-lg: 1.25rem;
+
+  /* motion (reduced-motion collapses these — see media query below) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 140ms;
+  --dur: 240ms;
+  --dur-slow: 480ms;
+
+  --blur: 14px; /* backdrop-filter on glass panels */
+}
+
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
@@ -84,7 +115,14 @@
 body {
   background: var(--bg-0);
   color: var(--ink-0);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+
+/* Tabular numerals — the instrument signal. Default-on in tables so stat
+   columns align at every breakpoint; use Tailwind's `tabular-nums` utility
+   for mono stat cells outside tables. */
+table {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Film-grain texture overlay (creative-dev) — fades with theme */
