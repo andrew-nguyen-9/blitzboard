@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getPlayerCount } from "@/lib/queries";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { Reveal, Magnetic, CountUp } from "@/components/motion";
+import { StatCell } from "@/components/StatTable";
 import HeroHeadline from "@/components/HeroHeadline";
 import ScrollCue from "@/components/ScrollCue";
 import TiltCard from "@/components/TiltCard";
@@ -84,19 +85,18 @@ export default async function Home() {
         <Marquee items={ticker} duration={38} />
       </div>
 
-      {/* ── SCOREBOARD STAT BAND ─────────────────────────────────────── */}
+      {/* ── SCOREBOARD STAT BAND ─────────────────────────────────────────────
+          StatCell gives mono/tabular cells that reserve ch-width for the final
+          value, so the CountUp tally never clips or reflows (CLS≈0). */}
       <section className="mt-16 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
         {[
-          { n: count, label: "Players ranked", suffix: "" },
-          { n: 12, label: "Teams synced", suffix: "" },
-          { n: 0.5, label: "PPR scoring", suffix: "", dec: 1 },
-          { n: 2, label: "Value engines", suffix: "" },
+          { n: count, label: "Players ranked" },
+          { n: 12, label: "Teams synced" },
+          { n: 0.5, label: "PPR scoring", dec: 1 },
+          { n: 2, label: "Value engines" },
         ].map((s, i) => (
           <div key={i} className="bg-bg p-6">
-            <div className="font-scoreboard text-score-xl text-[clamp(2.5rem,6vw,4.5rem)] leading-none text-ink">
-              <CountUp to={s.n} decimals={s.dec ?? 0} suffix={s.suffix} />
-            </div>
-            <div className="mt-1 text-label uppercase text-ink-2">{s.label}</div>
+            <StatCell count size="lg" value={s.n} decimals={s.dec ?? 0} label={s.label} />
           </div>
         ))}
       </section>
