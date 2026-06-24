@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getPlayerCount } from "@/lib/queries";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { SplitText, Magnetic, Reveal, CountUp } from "@/components/motion";
+import { Reveal, CountUp } from "@/components/motion";
 import TiltCard from "@/components/TiltCard";
 import Marquee from "@/components/Marquee";
 
@@ -28,44 +28,48 @@ export default async function Home() {
 
   return (
     <div className="pb-24">
-      {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section className="scanline relative pt-20 md:pt-28">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-hairline px-3 py-1.5 text-label uppercase text-ink-muted">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-          </span>
-          {live ? <><CountUp to={count} /> players in the universe</> : "Offline mode"}
-        </div>
+      {/* ── HERO ─────────────────────────────────────────────────────────────
+          Full-bleed band: .full-bleed breaks out of the padded <main>; the media
+          layer's wash meets the viewport edge (no container seam). The headline
+          is static, server-rendered text — it is the LCP element and never waits
+          on JS. The mask-wipe (.hero-media) and kinetic word reveal are CSS-only,
+          so they run deterministically without blocking first paint. */}
+      <section className="full-bleed relative isolate overflow-hidden">
+        <div className="hero-media" aria-hidden />
+        <div className="relative mx-auto max-w-wide px-5 pb-20 pt-20 md:px-8 md:pb-28 md:pt-28">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-3 py-1.5 text-label uppercase text-ink-2 backdrop-blur">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+            </span>
+            {live ? <><CountUp to={count} /> players in the universe</> : "Offline mode"}
+          </div>
 
-        <h1 className="font-display text-display-xl leading-[0.9]">
-          <SplitText text="Your fantasy" />
-          <br />
-          <span className="text-accent"><SplitText text="war room." delay={0.18} /></span>
-        </h1>
+          <h1 className="font-display text-display-xl leading-[0.9]">
+            Your fantasy
+            <br />
+            <span className="text-accent">war room.</span>
+          </h1>
 
-        <Reveal delay={0.5} className="mt-7 max-w-2xl">
-          <p className="text-body-lg text-ink-muted">
-            Player intelligence, live draft assistance, and trade &amp; waiver optimization —
-            tuned to your league&apos;s exact rules. Superflex VORP, Monte&nbsp;Carlo distributions,
-            news-sentiment trending. One broadcast deck.
-          </p>
-        </Reveal>
+          <Reveal delay={0.2} className="mt-7 max-w-2xl">
+            <p className="text-body-lg text-ink-1">
+              Player intelligence, live draft assistance, and trade &amp; waiver optimization —
+              tuned to your league&apos;s exact rules. Superflex VORP, Monte&nbsp;Carlo distributions,
+              news-sentiment trending. One broadcast deck.
+            </p>
+          </Reveal>
 
-        <Reveal delay={0.62} className="mt-9 flex flex-wrap gap-3">
-          <Magnetic>
+          <Reveal delay={0.3} className="mt-9 flex flex-wrap gap-3">
             <Link href="/players" data-cursor="explore"
-              className="inline-block rounded-full bg-accent px-6 py-3 font-semibold text-bg transition hover:brightness-110">
+              className="inline-block rounded-full bg-accent px-6 py-3 font-semibold text-accent-ink transition hover:brightness-110">
               Explore players
             </Link>
-          </Magnetic>
-          <Magnetic>
             <Link href="/draft" data-cursor="draft"
-              className="inline-block rounded-full border border-hairline px-6 py-3 font-semibold text-ink transition hover:bg-surface-elevated">
+              className="inline-block rounded-full border border-line px-6 py-3 font-semibold text-ink transition hover:bg-surface-elevated">
               Open the draft board →
             </Link>
-          </Magnetic>
-        </Reveal>
+          </Reveal>
+        </div>
       </section>
 
       {/* ── BROADCAST TICKER ─────────────────────────────────────────── */}
@@ -74,7 +78,7 @@ export default async function Home() {
       </div>
 
       {/* ── SCOREBOARD STAT BAND ─────────────────────────────────────── */}
-      <section className="mt-16 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-hairline bg-hairline md:grid-cols-4">
+      <section className="mt-16 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
         {[
           { n: count, label: "Players ranked", suffix: "" },
           { n: 12, label: "Teams synced", suffix: "" },
@@ -85,7 +89,7 @@ export default async function Home() {
             <div className="font-scoreboard text-score-xl text-[clamp(2.5rem,6vw,4.5rem)] leading-none text-ink">
               <CountUp to={s.n} decimals={s.dec ?? 0} suffix={s.suffix} />
             </div>
-            <div className="mt-1 text-label uppercase text-ink-muted">{s.label}</div>
+            <div className="mt-1 text-label uppercase text-ink-2">{s.label}</div>
           </div>
         ))}
       </section>
@@ -94,7 +98,7 @@ export default async function Home() {
       <section className="mt-16">
         <Reveal className="mb-6 flex items-baseline justify-between">
           <h2 className="font-display text-display-md">The deck</h2>
-          <span className="text-label uppercase text-ink-muted">seven tools, one spine</span>
+          <span className="text-label uppercase text-ink-2">seven tools, one spine</span>
         </Reveal>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {tiles.map((t, i) => (

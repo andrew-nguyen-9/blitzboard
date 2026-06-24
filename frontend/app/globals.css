@@ -73,11 +73,13 @@
   /* elevation / glass */
   --glass: oklch(from var(--bg-1) l c h / 0.6);
   --glow: 0 0 0 1px var(--line), 0 8px 40px oklch(0 0 0 / 0.4);
-  /* type faces (theme-independent; applied via :root) */
-  --font-sans: "Hanken Grotesk";
-  --font-display: "Bricolage Grotesque";
-  --font-scoreboard: "Anton";
-  --font-mono: "JetBrains Mono";
+  /* type faces (theme-independent; applied via :root). next/font exposes each
+     family as a self-hosted CSS variable on <html> (zero layout shift, no render-
+     blocking <link>); the quoted name is a fallback if the variable is absent. */
+  --font-sans: var(--font-hanken), "Hanken Grotesk";
+  --font-display: var(--font-bricolage), "Bricolage Grotesque";
+  --font-scoreboard: var(--font-anton), "Anton";
+  --font-mono: var(--font-jetbrains), "JetBrains Mono";
 
   /* ── legacy aliases (deprecated; remove as components migrate, v2.1+) ── */
   --bg: var(--bg-0);
@@ -328,6 +330,45 @@ body.cursor-hover .cursor-dot { opacity: 0; }
 }
 [data-motion="reduce"] .ridge-curve { display: none; }
 [data-motion="reduce"] .ridge-bar { display: block; }
+
+/* ── Homepage hero (v2.1.2) ──────────────────────────────────────────────────
+   "Full-bleed without seams": the hero must reach the viewport edge, but layout
+   wraps every page in <main class="mx-auto max-w-wide px-…"> (centred + padded).
+   .full-bleed breaks a child out of that box to a true 100vw band; the matching
+   `overflow-x: clip` on <main> swallows the sub-pixel 100vw-vs-scrollbar rounding
+   so no horizontal scroll seam appears. `clip` (not `hidden`) creates no scroll
+   container, so the sticky <header> Nav — which lives outside <main> — is
+   unaffected. */
+main { overflow-x: clip; }
+.full-bleed { width: 100vw; margin-inline: calc(50% - 50vw); }
+
+/* Hero media: a single-pole wash + soft accent glow that meets the viewport edge
+   (no panel edge showing through). Revealed with a clip-path mask-wipe AFTER the
+   static text has painted — this layer is decorative (aria-hidden) and never the
+   LCP element, so the wipe costs nothing on first paint. */
+.hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(125% 85% at 50% -15%, var(--accent-soft), transparent 58%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-0) 72%);
+  animation: hero-wipe var(--dur-slow) var(--ease-out) both;
+}
+@keyframes hero-wipe {
+  from { clip-path: inset(0 0 100% 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* Reduced motion: the hero lands in its resting state — gradient fully shown, no
+   wipe. Mirrors the per-component still-state contract used by the kit above
+   (the global `animation-duration: .001ms` reset alone can leave a clip-path
+   mid-wipe, so we null the animation explicitly). */
+@media (prefers-reduced-motion: reduce) {
+  .hero-media { animation: none; clip-path: none; }
+}
+[data-motion="reduce"] .hero-media { animation: none; clip-path: none; }
 
 @media (prefers-reduced-motion: reduce) {
   body { cursor: auto !important; }
