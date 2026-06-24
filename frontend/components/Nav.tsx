@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
+import A11ySettings from "./A11ySettings";
 
 // The seven sections. `ready: false` routes render a "coming soon" empty state
 // (graceful degradation, inherited pattern) until their phase ships.
@@ -32,7 +33,10 @@ export default function Nav() {
             </li>
           ))}
         </ul>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <A11ySettings />
+          <ThemeToggle />
+        </div>
       </nav>
     </header>
   );
