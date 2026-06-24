@@ -24,6 +24,7 @@ from models import (
     KickerProjector,
     DefenseProjector,
     VorpEngine,
+    MonteCarloEngine,
     load_league_rules,
     fetch_ffc_adp,
 )
@@ -101,7 +102,7 @@ def build_store(rules, players: list[dict], history: list[dict]) -> HistoryStore
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Compute projections + player values.")
-    ap.add_argument("--engine", default="vorp", choices=["vorp"])  # monte_carlo = P7
+    ap.add_argument("--engine", default="vorp", choices=["vorp", "monte_carlo"])
     ap.add_argument("--season", type=int, default=CURRENT_YEAR)
     ap.add_argument("--league", default=None, help="league_id (default: the one seeded league)")
     ap.add_argument("--no-consensus", action="store_true", help="skip FFC ADP fetch")
@@ -190,8 +191,13 @@ def main() -> None:
                       "search_rank": (p.get("metadata") or {}).get("search_rank")}
             for p in players}
 
-    # VORP (superflex-aware replacement levels + non-linear future-value shaping)
-    values = VorpEngine().compute(projections, positions, rules, meta)
+    engine = (
+        MonteCarloEngine()
+        if args.engine == "monte_carlo"
+        else VorpEngine()
+    )
+    console.print(f"[cyan]running {engine.name} engine …[/cyan]")
+    values = engine.compute(projections, positions, rules, meta)
     value_rows = [{
         "player_id": v.player_id, "league_id": rules.league_id, "engine": v.engine,
         "scoring_profile": "default", "value": round(v.value, 2), "vor": round(v.vor, 2),
@@ -200,9 +206,9 @@ def main() -> None:
     } for v in values]
     upsert("player_value", value_rows, on_conflict="player_id,league_id,engine,scoring_profile")
     console.print(f"[green]✓ wrote {len(value_rows)} {args.engine} values[/green]")
-    # show the top of the board as a sanity check
+    label = "VOR" if args.engine == "vorp" else "MC-VOR"
     for v in values[:12]:
-        console.print(f"  {v.rank:>2}. {positions.get(v.player_id):<3} VOR {v.vor:+.1f}")
+        console.print(f"  {v.rank:>2}. {positions.get(v.player_id):<3} {label} {v.vor:+.1f}")
 
 
 if __name__ == "__main__":

@@ -7,8 +7,8 @@ export interface RosterSlot {
   eligible: string[];
 }
 
-// Smores 2025 starting lineup (OP = superflex). DST eligible covers Sleeper's "DEF".
-export const SMORES_ROSTER: RosterSlot[] = [
+// Example Superflex League starting lineup (OP = superflex). DST eligible covers Sleeper's "DEF".
+export const SUPERFLEX_ROSTER: RosterSlot[] = [
   { slot: "QB", eligible: ["QB"] },
   { slot: "RB", eligible: ["RB"] },
   { slot: "RB", eligible: ["RB"] },
@@ -48,10 +48,10 @@ export interface RosterFill {
 
 // Greedily fit a set of players (best value first) into the starting lineup,
 // preferring dedicated slots before FLEX/OP, remainder → bench. The roster shape
-// defaults to SMORES but accepts any imported league's slots.
+// defaults to the superflex preset but accepts any imported league's slots.
 export function fillRoster(
   players: PlayerWithValue[],
-  roster: RosterSlot[] = SMORES_ROSTER,
+  roster: RosterSlot[] = SUPERFLEX_ROSTER,
 ): RosterFill {
   const ordered = [...players].sort(
     (a, b) => (b.value?.vor ?? -999) - (a.value?.vor ?? -999),

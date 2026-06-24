@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
+import A11ySettings from "./A11ySettings";
 
 // The seven sections. `ready: false` routes render a "coming soon" empty state
 // (graceful degradation, inherited pattern) until their phase ships.
@@ -15,7 +16,7 @@ export const SECTIONS = [
 export default function Nav() {
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-bg/80 backdrop-blur">
-      <nav className="mx-auto flex max-w-wide items-center justify-between px-5 py-3 md:px-8">
+      <nav aria-label="Primary" className="mx-auto flex max-w-wide items-center justify-between px-5 py-3 md:px-8">
         <Link href="/" className="font-display text-heading font-bold tracking-tight">
           <span className="text-accent">▲</span> FFDT
         </Link>
@@ -32,7 +33,10 @@ export default function Nav() {
             </li>
           ))}
         </ul>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <A11ySettings />
+          <ThemeToggle />
+        </div>
       </nav>
     </header>
   );

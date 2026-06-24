@@ -1,0 +1,73 @@
+name: CI
+
+# Gates every PR (and pushes to the long-lived branches). Build + typecheck +
+# lint are blocking; the axe smoke runs green (shell is axe-clean as of v2.0.3)
+# but is kept non-blocking for now — remove continue-on-error to make it a gate
+# (see docs/brainstorming/v2.0-ideas.md).
+on:
+  pull_request:
+  push:
+    branches: [main, v2]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  identity-guard:
+    name: no personal identity (D18)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Grep product surfaces for personal identity
+        working-directory: ${{ github.workspace }}
+        run: bash .github/scripts/check-no-personal-identity.sh
+
+  build:
+    name: build · typecheck · lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+
+  a11y-smoke:
+    name: axe smoke (non-blocking; flip to gate — see v2.0 brainstorm)
+    needs: build
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - name: Start app and run axe smoke
+        run: |
+          npm run start &
+          server=$!
+          trap 'kill "$server" 2>/dev/null' EXIT
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000 >/dev/null && break
+            sleep 1
+            [ "$i" = 30 ] && { echo "app did not start"; exit 1; }
+          done
+          node scripts/axe-smoke.mjs

@@ -3,8 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Engine } from "@/lib/types";
 
-// VORP ⇄ Monte Carlo toggle (D5). Monte Carlo is precomputed in P7; until then
-// it's shown disabled so the UI is ready the moment those values land.
+// VORP ⇄ Monte Carlo toggle (P7). Both engines write to player_value; toggle switches engine= param.
 export default function EngineToggle({ active }: { active: Engine }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -24,11 +23,10 @@ export default function EngineToggle({ active }: { active: Engine }) {
         VORP
       </button>
       <button
-        disabled
-        title="Monte Carlo lands in Phase 7"
-        className="cursor-not-allowed rounded-full px-3 py-1 text-ink-muted/50"
+        onClick={() => set("monte_carlo")}
+        className={`rounded-full px-3 py-1 transition ${active === "monte_carlo" ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}
       >
-        Monte Carlo <span className="text-[10px]">soon</span>
+        Monte Carlo
       </button>
     </div>
   );
