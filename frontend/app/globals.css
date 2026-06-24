@@ -361,14 +361,31 @@ main { overflow-x: clip; }
   to { clip-path: inset(0 0 0 0); }
 }
 
-/* Reduced motion: the hero lands in its resting state — gradient fully shown, no
-   wipe. Mirrors the per-component still-state contract used by the kit above
-   (the global `animation-duration: .001ms` reset alone can leave a clip-path
-   mid-wipe, so we null the animation explicitly). */
+/* Kinetic headline (HeroHeadline): each static word rises into place with a
+   staggered delay (--w). Transform-only and fully opaque from the first frame,
+   so the LCP text is painted immediately — the motion is decoration on top of an
+   already-visible element, never a fade-from-nothing that would defer LCP.
+   .hero-line is the per-line block; words are inline-block so they still wrap. */
+.hero-line { display: block; }
+.hero-word {
+  display: inline-block;
+  will-change: transform;
+  animation: hero-rise 0.7s var(--ease-out) both;
+  animation-delay: calc(var(--w, 0) * 0.024s);
+}
+@keyframes hero-rise { from { transform: translateY(0.5em); } }
+
+/* Reduced motion: the hero lands in its resting state — gradient fully shown (no
+   wipe), words at rest (no rise). Mirrors the per-component still-state contract
+   used by the kit above; the global `animation-duration: .001ms` reset alone can
+   leave a clip-path mid-wipe or a staggered word offset, so we null these
+   explicitly under both the OS pref and the in-app data-motion override. */
 @media (prefers-reduced-motion: reduce) {
   .hero-media { animation: none; clip-path: none; }
+  .hero-word { animation: none; transform: none; }
 }
 [data-motion="reduce"] .hero-media { animation: none; clip-path: none; }
+[data-motion="reduce"] .hero-word { animation: none; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
   body { cursor: auto !important; }

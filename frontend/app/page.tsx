@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getPlayerCount } from "@/lib/queries";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { Reveal, CountUp } from "@/components/motion";
+import { Reveal, Magnetic, CountUp } from "@/components/motion";
+import HeroHeadline from "@/components/HeroHeadline";
 import TiltCard from "@/components/TiltCard";
 import Marquee from "@/components/Marquee";
 
@@ -45,11 +46,10 @@ export default async function Home() {
             {live ? <><CountUp to={count} /> players in the universe</> : "Offline mode"}
           </div>
 
-          <h1 className="font-display text-display-xl leading-[0.9]">
-            Your fantasy
-            <br />
-            <span className="text-accent">war room.</span>
-          </h1>
+          <HeroHeadline
+            className="font-display text-display-xl leading-[0.9]"
+            lines={[{ text: "Your fantasy" }, { text: "war room.", accent: true }]}
+          />
 
           <Reveal delay={0.2} className="mt-7 max-w-2xl">
             <p className="text-body-lg text-ink-1">
@@ -60,14 +60,18 @@ export default async function Home() {
           </Reveal>
 
           <Reveal delay={0.3} className="mt-9 flex flex-wrap gap-3">
-            <Link href="/players" data-cursor="explore"
-              className="inline-block rounded-full bg-accent px-6 py-3 font-semibold text-accent-ink transition hover:brightness-110">
-              Explore players
-            </Link>
-            <Link href="/draft" data-cursor="draft"
-              className="inline-block rounded-full border border-line px-6 py-3 font-semibold text-ink transition hover:bg-surface-elevated">
-              Open the draft board →
-            </Link>
+            <Magnetic>
+              <Link href="/players" data-cursor="explore"
+                className="inline-block rounded-full bg-accent px-6 py-3 font-semibold text-accent-ink transition hover:brightness-110">
+                Explore players
+              </Link>
+            </Magnetic>
+            <Magnetic>
+              <Link href="/draft" data-cursor="draft"
+                className="inline-block rounded-full border border-line px-6 py-3 font-semibold text-ink transition hover:bg-surface-elevated">
+                Open the draft board →
+              </Link>
+            </Magnetic>
           </Reveal>
         </div>
       </section>
