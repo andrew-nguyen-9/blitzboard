@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import type Lenis from "lenis";
+import { setLenis } from "@/lib/lenis";
 
 // Site-wide smooth scroll. Lenis is dynamically imported so the motion library
 // stays out of the global bundle (loaded client-side, after paint). Honors
@@ -25,6 +26,7 @@ export default function SmoothScroll() {
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         smoothWheel: true,
       });
+      setLenis(lenis); // share with the scroll story (SCROLL cue, GSAP later)
       const loop = (time: number) => {
         lenis?.raf(time);
         raf = requestAnimationFrame(loop);
@@ -36,6 +38,7 @@ export default function SmoothScroll() {
       cancelled = true;
       cancelAnimationFrame(raf);
       lenis?.destroy();
+      setLenis(null);
     };
   }, []);
   return null;
