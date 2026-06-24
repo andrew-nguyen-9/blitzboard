@@ -1,65 +1,61 @@
-# Fantasy Football Draft Tool
+# Fantasy Football Tool
 
-An autonomous, pipeline-driven web app for NFL fantasy football: player intelligence,
-draft assistance (live + offline), trade and waiver optimization, and real-time
-news-sentiment trending. Built for one league first, architected to open up to anyone.
+A pipeline-driven web app for NFL fantasy football: player intelligence, draft assistance
+(live + offline), trade and waiver optimization, and real-time news-sentiment trending.
+Next.js 15 (App Router) + Supabase (Postgres) + a Python cron pipeline.
 
-Spun off the `music-festival-analyzer` infrastructure (Next.js 15 App Router + Supabase +
-Python pipeline on GitHub Actions cron), with independent API keys.
+> **Status: v2 in planning.** v1 (P0–P7) shipped and is frozen as **v1.0.0** under
+> `docs/archive/v1/`. We are building **v2.0.0+** — a high-end, accessible, secure, multi-user
+> revamp. See `docs/overview/VISION.md` and `docs/phases/v2/PHASES_OVERVIEW.md`.
 
-## What this folder is
+## Documentation map
 
-This is the **planning workspace** — gameplan, locked decisions, architecture, design
-direction, mock visuals, and roadmap — written before code so the build has a spine.
+| Area | Where |
+|------|-------|
+| **Vision (v2)** | [docs/overview/VISION.md](docs/overview/VISION.md) |
+| **Decisions (v2 ADRs)** | [docs/decisions/DECISIONS_V2.md](docs/decisions/DECISIONS_V2.md) |
+| **Architecture** | [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) · [DATA_TRANSFER.md](docs/architecture/DATA_TRANSFER.md) |
+| **Design system** | [DESIGN_GUIDELINE.md](docs/design-system/DESIGN_GUIDELINE.md) · [TOKENS](docs/design-system/TOKENS.md) · [ACCESSIBILITY](docs/design-system/ACCESSIBILITY.md) · [MOTION](docs/design-system/MOTION.md) |
+| **Modeling** | [SCORING.md](docs/modeling/SCORING.md) · [VALUE_ENGINE.md](docs/modeling/VALUE_ENGINE.md) · [DRAFT_LOGIC.md](docs/modeling/DRAFT_LOGIC.md) |
+| **Security** | [SECURITY.md](docs/security/SECURITY.md) · [MULTI_LEAGUE.md](docs/security/MULTI_LEAGUE.md) |
+| **Phases (v2)** | [docs/phases/v2/](docs/phases/v2/PHASES_OVERVIEW.md) — v2.0 … v2.7, full detail |
+| **Workflow** | [VERSIONING](docs/workflow/VERSIONING.md) · [GIT_WORKFLOW](docs/workflow/GIT_WORKFLOW.md) · [DEFINITION_OF_DONE](docs/workflow/DEFINITION_OF_DONE.md) |
+| **Brainstorming** | [docs/brainstorming/v2-ideas.md](docs/brainstorming/v2-ideas.md) |
+| **Design research** | [mocks/v2-research/findings.md](mocks/v2-research/findings.md) — teardown of 12 reference sites |
+| **v1 archive** | [docs/archive/v1/](docs/archive/v1/README.md) — frozen v1.0.0 record |
+| **Contributing / AI dev** | [CONTRIBUTING.md](CONTRIBUTING.md) · [CLAUDE.md](CLAUDE.md) |
 
-| File | Purpose |
-|------|---------|
-| [docs/GAMEPLAN.md](docs/GAMEPLAN.md) | The plan in one page: what we're building and why |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | Locked decisions from the design interview (the "why") |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, the core abstractions, data flow |
-| [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) | Sleeper / nflverse / ESPN / RSS+Reddit — what each provides |
-| [docs/DESIGN.md](docs/DESIGN.md) | UI/UX art direction (creative-dev), inspiration, motion |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Phased build order with shippable milestones |
-| [db/schema.sql](db/schema.sql) | First-pass database schema |
-| [mocks/](mocks/) | Architecture, data-flow, ER, and UI wireframe mockups (SVG) |
+## What v2 delivers
 
-## The seven sections
-
-a) Homepage · b) League Overview (ESPN connect) · c) Draft Simulator (offline/bots) ·
-d) Player Explorer · e) Live + Offline Draft Tool · f) Trade Optimizer · g) Waiver Wire Tool
-
-## Status
-
-**P0 (Foundation) — scaffolded & building.** Next.js frontend (7 routes, dark/light/system
-theme, offline empty states), Python pipeline (Sleeper + nflverse ingest), the core model
-interfaces (`LeagueRules` / `Projector` / `ValueEngine`, superflex-aware), DB schema + league
-seed, and the daily ETL workflow. Builds with **no keys** (renders empty states). Next: P1 Player Explorer with real data — see [docs/ROADMAP.md](docs/ROADMAP.md).
+Homepage + Players revamp · honest scoring (kickers/defenses no longer overvalued) ·
+draft logic redone and backtested on 2021–2025 · Google/email accounts with an encrypted
+ESPN/Sleeper credential vault and per-user isolation · multi-league with rules import ·
+public waivers/trades for anyone · a real design system that works beautifully on every
+screen and is accessible by construction.
 
 ## Running it
 
 ```bash
-# Frontend (builds & runs with no backend — offline empty states)
-cd frontend
-npm install
+# Frontend (builds & runs with no backend — renders empty states)
+cd frontend && npm install
 cp .env.local.example .env.local   # add Supabase URL + anon key when ready
 npm run dev                        # http://localhost:3000
 
-# Backend / pipeline
-cd pipeline
-python -m venv .venv && source .venv/bin/activate
+# Pipeline
+cd pipeline && python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env               # add Supabase service-role + ESPN cookies
-python player_ingest.py --trending           # Sleeper → players
-python history_ingest.py --seasons 2022 2023 2024   # nflverse → history
-
-# Database (run once in Supabase SQL editor)
-#   db/schema.sql           — tables + RLS
-#   db/seed_league_smores.sql — my league rules (superflex half-PPR)
+cp .env.example .env               # add keys when ready
 ```
 
 ## Stack
 
-- **Frontend**: Next.js 15 (App Router), Tailwind, Framer Motion (+ GSAP/canvas where creative-dev calls for it)
-- **Backend/DB**: Supabase (Postgres + auto-REST), RLS, anon-read / service-role-write
-- **Pipeline**: Python 3.11, GitHub Actions cron (tenacity + rich + dotenv, idempotent upserts)
-- **Hosting**: Vercel (frontend) + Supabase (data)
+Next.js 15 (App Router), Tailwind, Framer Motion + **Rive** + GSAP/Lenis for motion ·
+Supabase (Postgres, RLS) + **Auth.js** for accounts · Python 3.11 pipeline on GitHub Actions
+cron · Vercel hosting + CDN-cached data snapshots.
+
+## Workflow at a glance
+
+Versioning is `v[phase].[segment].[task]`. A phase is a branch; a segment is a sub-branch
+(build→test→QA→`/code-review`→commit→push to parent); a phase finishes with an 8-step ritual
+ending in merge-to-`main`, tag, doc archival, and a brainstorming file. Never commit to `main`
+directly. Details in [CONTRIBUTING.md](CONTRIBUTING.md).

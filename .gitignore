@@ -24,3 +24,6 @@ next-env.d.ts
 # ── Misc ────────────────────────────────────────────────
 .DS_Store
 *.log
+
+# Playwright MCP scratch output
+.playwright-mcp/
