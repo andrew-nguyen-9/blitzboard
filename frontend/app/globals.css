@@ -3,51 +3,87 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────────
-   "Broadcast Deck" theme tokens.
-   Dark is the signature; light is the "daytime broadcast" adaptation.
+   Design tokens — v2 "Broadcast Instrument" (spec: docs/design-system/TOKENS.md).
+   Colors are OKLCH so light/dark and accent derivation stay perceptually uniform.
+   Canonical tokens (--bg-0/1/2, --ink-0/1/2, --line, --accent, --pos/neg/warn) are
+   the source of truth; the LEGACY ALIASES below map the v1 names onto the same
+   ladder so existing components keep rendering. The aliases are deprecated and get
+   removed as components migrate to canonical tokens in v2.1+.
    data-theme on <html> selects the set (set pre-paint by ThemeScript).
-   --accent is runtime-derived per league (default volt-green here).
    ───────────────────────────────────────────────────────────── */
 :root,
 [data-theme="dark"] {
-  --bg: #0a0b0d;
-  --surface: #161a21;
-  --surface-elevated: #1a1f28;
-  --hairline: #272d38;
-  --ink: #e7eaf0;
-  --ink-muted: #8a93a6;
-  --accent: #8cff5a;
-  --accent-soft: rgba(140, 255, 90, 0.14);
-  --grain-opacity: 0.04;
-  --glow: 0 0 40px -8px var(--accent-soft);
+  color-scheme: dark;
+  /* base ladder — lightness ramps, constant hue/chroma */
+  --bg-0: oklch(0.16 0.012 250); /* page */
+  --bg-1: oklch(0.2 0.014 250); /* panel */
+  --bg-2: oklch(0.25 0.016 250); /* raised */
+  --line: oklch(0.32 0.02 250 / 0.6);
+  --ink-0: oklch(0.97 0.01 250); /* primary text */
+  --ink-1: oklch(0.78 0.012 250); /* secondary */
+  --ink-2: oklch(0.58 0.012 250); /* tertiary / labels */
+  /* accent — default electric volt (hue-derived in v2.0.2.3) */
+  --accent: oklch(0.78 0.17 145);
+  --accent-ink: oklch(0.18 0.02 145);
+  /* semantic */
+  --pos: oklch(0.8 0.16 150); /* good / value-add */
+  --neg: oklch(0.65 0.2 25); /* bad / risk */
+  --warn: oklch(0.82 0.16 75);
+  /* elevation / glass */
+  --glass: oklch(from var(--bg-1) l c h / 0.6);
+  --glow: 0 0 0 1px var(--line), 0 8px 40px oklch(0 0 0 / 0.4);
+  /* type faces (theme-independent; applied via :root) */
   --font-sans: "Hanken Grotesk";
   --font-display: "Bricolage Grotesque";
   --font-scoreboard: "Anton";
   --font-mono: "JetBrains Mono";
-  color-scheme: dark;
+
+  /* ── legacy aliases (deprecated; remove as components migrate, v2.1+) ── */
+  --bg: var(--bg-0);
+  --surface: var(--bg-1);
+  --surface-elevated: var(--bg-2);
+  --hairline: var(--line);
+  --ink: var(--ink-0);
+  --ink-muted: var(--ink-2);
+  --accent-soft: oklch(from var(--accent) l c h / 0.14);
+  --grain-opacity: 0.04;
 }
 
 [data-theme="light"] {
-  --bg: #f4f2ec;
-  --surface: #ffffff;
-  --surface-elevated: #fbfaf6;
-  --hairline: #e2ded3;
-  --ink: #1a1c20;
-  --ink-muted: #6b7280;
-  --accent: #2f9e44;            /* retuned for contrast on paper */
-  --accent-soft: rgba(47, 158, 68, 0.12);
-  --grain-opacity: 0.02;
-  --glow: 0 8px 30px -12px rgba(0, 0, 0, 0.18);
   color-scheme: light;
+  --bg-0: oklch(0.96 0.008 90); /* warm paper */
+  --bg-1: oklch(0.99 0.006 90);
+  --bg-2: oklch(0.93 0.01 90);
+  --line: oklch(0.55 0.02 90 / 0.25);
+  --ink-0: oklch(0.22 0.02 250);
+  --ink-1: oklch(0.4 0.02 250);
+  --ink-2: oklch(0.52 0.02 250);
+  --accent: oklch(0.62 0.17 145); /* same hue, retuned L/C for paper */
+  --accent-ink: oklch(0.98 0.01 145);
+  --pos: oklch(0.55 0.15 150);
+  --neg: oklch(0.55 0.2 25);
+  --warn: oklch(0.62 0.15 75);
+  --glass: oklch(from var(--bg-1) l c h / 0.7);
+  --glow: 0 8px 30px -12px oklch(0 0 0 / 0.18);
+
+  /* legacy aliases */
+  --bg: var(--bg-0);
+  --surface: var(--bg-1);
+  --surface-elevated: var(--bg-2);
+  --hairline: var(--line);
+  --ink: var(--ink-0);
+  --ink-muted: var(--ink-2);
+  --accent-soft: oklch(from var(--accent) l c h / 0.12);
+  --grain-opacity: 0.02;
 }
 
 * {
-  border-color: var(--hairline);
+  border-color: var(--line);
 }
 
 body {
-  background: var(--bg);
-  color: var(--ink);
+  background: var(--bg-0);
+  color: var(--ink-0);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -62,8 +98,8 @@ body {
 }
 
 .glass {
-  background: var(--surface);
-  border: 1px solid var(--hairline);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
   border-radius: 1rem;
 }
 
@@ -87,7 +123,7 @@ body {
 }
 .cursor-label {
   font-family: var(--font-mono); font-size: 9px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--bg); opacity: 0; white-space: nowrap;
+  text-transform: uppercase; color: var(--bg-0); opacity: 0; white-space: nowrap;
 }
 body.cursor-hover .cursor-ring {
   width: 84px; height: 84px; margin: -42px 0 0 -42px;
