@@ -7,7 +7,7 @@ import { chromium } from "playwright";
 import { AxeBuilder } from "@axe-core/playwright";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
-const ROUTES = ["/"]; // expand as the shell grows; v2.0.3 adds the full shell audit
+const ROUTES = ["/", "/kit"]; // /kit = v2.1 instrument component kit
 const BLOCKING_IMPACTS = new Set(["serious", "critical"]);
 
 const browser = await chromium.launch();
