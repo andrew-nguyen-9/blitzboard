@@ -1,8 +1,9 @@
 name: CI
 
 # Gates every PR (and pushes to the long-lived branches). Build + typecheck +
-# lint are blocking; the axe smoke is non-blocking until the shell is made
-# axe-clean in v2.0.3, then `continue-on-error` is removed to make it a gate.
+# lint are blocking; the axe smoke runs green (shell is axe-clean as of v2.0.3)
+# but is kept non-blocking for now — remove continue-on-error to make it a gate
+# (see docs/brainstorming/v2.0-ideas.md).
 on:
   pull_request:
   push:
@@ -45,7 +46,7 @@ jobs:
       - run: npm run build
 
   a11y-smoke:
-    name: axe smoke (non-blocking until v2.0.3)
+    name: axe smoke (non-blocking; flip to gate — see v2.0 brainstorm)
     needs: build
     runs-on: ubuntu-latest
     continue-on-error: true

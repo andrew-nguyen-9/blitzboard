@@ -5,7 +5,7 @@ with the 8-step ritual (`docs/workflow/GIT_WORKFLOW.md`). Versioning: `v[phase].
 
 | Phase | Branch | Name | Requirements | Status |
 |-------|--------|------|--------------|--------|
-| [v2.0](v2.0-foundation.md) | `v2` (+ `v2.0-*`) | Foundation & De-Andrew-ification | #8, workflow, tokens, a11y/motion scaffold | Planned |
+| [v2.0](../../archive/v2/v2.0-foundation.md) | `v2` (+ `v2.0-*`) | Foundation & De-Andrew-ification | #8, workflow, tokens, a11y/motion scaffold | **Shipped (v2.0.0)** |
 | [v2.1](v2.1-design-homepage.md) | `v2.1-*` | Design System & Homepage revamp | #1 | Planned |
 | [v2.2](v2.2-scoring.md) | `v2.2-*` | Scoring & Value-Engine upgrade | #3 | Planned |
 | [v2.3](v2.3-player-data.md) | `v2.3-*` | Player Data Layer & Players tab | #2 | Planned |
