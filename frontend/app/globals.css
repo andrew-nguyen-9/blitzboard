@@ -277,6 +277,58 @@ body.cursor-hover .cursor-dot { opacity: 0; }
 }
 @keyframes scan { 0%,100% { transform: translateY(-120%); } 50% { transform: translateY(320%); } }
 
+/* ── Instrument kit (v2.1) ───────────────────────────────────────────────── */
+/* ValueDial: sweep the accent arc in from empty. Rests at the element's inline
+   stroke-dashoffset (its final value); --dial-arc is the empty offset. The
+   reduced-motion rules below collapse the duration so it lands static. */
+@keyframes dial-fill { from { stroke-dashoffset: var(--dial-arc); } }
+.dial-fill { animation: dial-fill var(--dur-slow) var(--ease-out) both; }
+
+/* Ticker: list-reset the marquee tracks, pause on hover/focus. */
+.ticker__live { white-space: nowrap; }
+.ticker__viewport .marquee__track { list-style: none; margin: 0; padding: 0; align-items: center; }
+.ticker:hover .marquee__track,
+.ticker:focus-within .marquee__track { animation-play-state: paused; }
+/* Reduced motion: stop scrolling, drop the duplicate, make it a scrollable list. */
+@media (prefers-reduced-motion: reduce) {
+  .ticker__viewport { overflow-x: auto; }
+  .ticker__viewport .marquee__track[aria-hidden] { display: none; }
+}
+[data-motion="reduce"] .ticker__viewport { overflow-x: auto; }
+[data-motion="reduce"] .ticker__viewport .marquee__track[aria-hidden] { display: none; }
+
+/* DistributionRidge: the smooth violin draws in; under reduced motion we swap to
+   a static range bar instead (information-equivalent, no animation). */
+.ridge-bar { display: none; }
+.ridge-curve__path { animation: ridge-rise var(--dur-slow) var(--ease-out) both; transform-origin: bottom; }
+@keyframes ridge-rise { from { transform: scaleY(0); opacity: 0; } }
+
+/* StatTable: stack into labelled stat rows under 640px (no horizontal scroll).
+   Each cell shows its column label via data-label; the visual header is hidden
+   but kept in the DOM for screen readers (still a real table semantically). */
+@media (max-width: 639px) {
+  .stat-table thead {
+    position: absolute;
+    width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .stat-table tr { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2xs) var(--space-s); padding: var(--space-s) 0; }
+  .stat-table td, .stat-table th { display: flex; justify-content: space-between; padding: var(--space-2xs) 0; text-align: left !important; }
+  .stat-table td::before, .stat-table th[scope="row"]::before {
+    content: attr(data-label);
+    font-family: var(--font-mono); font-size: var(--step--1);
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2);
+  }
+  .stat-table th[scope="row"] { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ridge-curve { display: none; }
+  .ridge-bar { display: block; }
+}
+[data-motion="reduce"] .ridge-curve { display: none; }
+[data-motion="reduce"] .ridge-bar { display: block; }
+
 @media (prefers-reduced-motion: reduce) {
   body { cursor: auto !important; }
   .cursor-ring, .cursor-dot { display: none !important; }

@@ -70,6 +70,7 @@ export default async function PlayerDetailPage({ params }: { params: Promise<{ i
         <div className="glass grid place-items-center p-6" style={{ boxShadow: "var(--glow)" }}>
           <ValueDial
             fraction={dialFraction}
+            size={220}
             label="OVERALL"
             value={value?.rank ? `#${value.rank}` : "—"}
             sub={value?.vor != null ? `VOR ${value.vor >= 0 ? "+" : ""}${value.vor.toFixed(1)}` : undefined}
