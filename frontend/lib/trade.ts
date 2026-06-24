@@ -5,10 +5,10 @@
 // a WR when you start a replacement-level one is worth a lot. That positional-need
 // sensitivity is what makes suggestions realistic instead of pure point-chasing.
 import type { PlayerWithValue } from "./types";
-import { fillRoster, SMORES_ROSTER, type RosterSlot } from "./draft";
+import { fillRoster, SUPERFLEX_ROSTER, type RosterSlot } from "./draft";
 
 // Starting-lineup value of a roster = sum of starters' value (need-aware via slotting).
-export function rosterValue(players: PlayerWithValue[], roster: RosterSlot[] = SMORES_ROSTER): number {
+export function rosterValue(players: PlayerWithValue[], roster: RosterSlot[] = SUPERFLEX_ROSTER): number {
   return fillRoster(players, roster).projectedPoints;
 }
 
@@ -43,7 +43,7 @@ export function findTrades(
   theirs: PlayerWithValue[],
   opts: { maxPerSide?: number; limit?: number; minDelta?: number; roster?: RosterSlot[] } = {},
 ): TradeProposal[] {
-  const { maxPerSide = 2, limit = 25, minDelta = 0.5, roster = SMORES_ROSTER } = opts;
+  const { maxPerSide = 2, limit = 25, minDelta = 0.5, roster = SUPERFLEX_ROSTER } = opts;
   const baseMine = rosterValue(mine, roster);
   const baseTheirs = rosterValue(theirs, roster);
 

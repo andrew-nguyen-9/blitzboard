@@ -47,7 +47,7 @@ create table if not exists player_stats_history (
 );
 
 -- ------------------------------------------------------------
--- LEAGUES + RULES (multi-tenant-ready; v1 = my league)
+-- LEAGUES + RULES (multi-tenant-ready)
 -- ------------------------------------------------------------
 create table if not exists leagues (
   id           uuid primary key default uuid_generate_v4(),

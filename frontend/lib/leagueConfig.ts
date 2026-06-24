@@ -1,12 +1,12 @@
 // Normalized league configuration shared by the whole draft surface.
 // A LeagueConfig is the single source of truth for roster shape, team count,
 // team names, scoring, and (when imported) the live draft id. It can come from
-// three places: the built-in SMORES default, a Sleeper username/league import,
+// three places: the built-in superflex default, a Sleeper username/league import,
 // or an ESPN league id. Everything downstream (board, sim AI, scarcity,
 // analysis) reads from this shape so adding a platform never touches the UI.
 
 import type { RosterSlot } from "./draft";
-import { SMORES_ROSTER, BENCH_SIZE } from "./draft";
+import { SUPERFLEX_ROSTER, BENCH_SIZE } from "./draft";
 
 export type LeagueSource = "manual" | "sleeper" | "espn";
 
@@ -29,14 +29,14 @@ export interface LeagueConfig {
   draftType?: string; // snake | linear | auction
 }
 
-// The always-available default (Smores 2025 superflex).
+// The always-available default (example superflex preset).
 export function defaultConfig(numTeams = 12): LeagueConfig {
   return {
     source: "manual",
     leagueId: null,
     name: "Manual Draft",
     numTeams,
-    rosterSlots: SMORES_ROSTER,
+    rosterSlots: SUPERFLEX_ROSTER,
     benchSize: BENCH_SIZE,
     scoringLabel: "Custom · Superflex",
     teams: defaultTeams(numTeams),
@@ -83,7 +83,7 @@ export function rosterFromSleeper(positions: string[]): { slots: RosterSlot[]; b
     const m = SLEEPER_SLOT_MAP[code];
     if (m) slots.push({ slot: m.slot, eligible: m.eligible });
   }
-  return { slots: slots.length ? slots : SMORES_ROSTER, bench };
+  return { slots: slots.length ? slots : SUPERFLEX_ROSTER, bench };
 }
 
 // Summarize Sleeper scoring into a short label (PPR detection + superflex flag).

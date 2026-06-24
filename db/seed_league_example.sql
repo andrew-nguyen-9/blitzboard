@@ -1,5 +1,5 @@
 -- ============================================================
--- Seed: "Smores 2025" — my ESPN league (the v1 league).
+-- Seed: "Example Superflex League" — a generic example preset (not a real league).
 -- 12-team, snake, 0.5 PPR, with an OP (superflex) slot.
 -- Run after schema.sql. Idempotent via ON CONFLICT.
 -- NOTE: ESPN league_id + cookies live in pipeline .env, not here.
@@ -7,10 +7,10 @@
 
 insert into leagues (platform, external_id, season, name, accent_color, settings)
 values (
-  'espn',
-  '1850367545',
+  'manual',
+  'example-superflex',
   2025,
-  'Smores 2025',
+  'Example Superflex League',
   '#8CFF5A',
   jsonb_build_object(
     'format', 'head_to_head_points',
@@ -82,7 +82,7 @@ select l.id,
   12,
   'faab'
 from leagues l
-where l.platform='espn' and l.season=2025 and l.name='Smores 2025'
+where l.platform='manual' and l.season=2025 and l.name='Example Superflex League'
 on conflict (league_id) do update
   set scoring = excluded.scoring, roster_slots = excluded.roster_slots,
       league_size = excluded.league_size, waiver_type = excluded.waiver_type;
