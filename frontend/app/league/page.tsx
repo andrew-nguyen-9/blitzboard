@@ -16,7 +16,7 @@ export default async function LeaguePage() {
       <EmptyState title="League Overview" phase="Phase 3">
         {live
           ? "League row found but no teams synced yet. Run pipeline/league_sync.py with your ESPN_S2 / ESPN_SWID cookies."
-          : "Connect Supabase and run league_sync.py to pull “Smores 2025” — standings, rosters, and settings."}
+          : "Connect Supabase and run league_sync.py to pull “Example Superflex League” — standings, rosters, and settings."}
       </EmptyState>
     );
   }

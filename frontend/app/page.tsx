@@ -14,7 +14,7 @@ export default async function Home() {
   const tiles = [
     { href: "/players", label: "Player Explorer", desc: "Search the universe, ranked by superflex value" },
     { href: "/draft", label: "Draft Board", desc: "Live ESPN + Sleeper sync, offline manual, draft AI" },
-    { href: "/league", label: "League Overview", desc: "Smores 2025 — rosters, standings, settings" },
+    { href: "/league", label: "League Overview", desc: "Example Superflex League — rosters, standings, settings" },
     { href: "/waivers", label: "Waiver Wire", desc: "FAAB bids × news-sentiment trending" },
     { href: "/trades", label: "Trade Optimizer", desc: "Pareto-improving, need-aware swaps" },
     { href: "/players", label: "Value Engines", desc: "VORP now · Monte Carlo distributions next" },

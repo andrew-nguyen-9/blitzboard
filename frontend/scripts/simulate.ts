@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { pickForTeam } from "../lib/draftAI";
-import { fillRoster, teamOnClock, SMORES_ROSTER, BENCH_SIZE } from "../lib/draft";
+import { fillRoster, teamOnClock, SUPERFLEX_ROSTER, BENCH_SIZE } from "../lib/draft";
 import type { PlayerWithValue } from "../lib/types";
 import type { MappedPick } from "../lib/sleeperDraft";
 
@@ -36,13 +36,13 @@ const points = (p: PlayerWithValue) => (p.value?.vor ?? 0) + (p.value?.replaceme
 
 function lineupPoints(roster: PlayerWithValue[]): number {
   // sum projected POINTS of the optimal starting lineup (need-aware)
-  const fill = fillRoster(roster, SMORES_ROSTER);
+  const fill = fillRoster(roster, SUPERFLEX_ROSTER);
   return fill.starters.reduce((s, slot) => s + (slot.player ? points(slot.player) : 0), 0);
 }
 
 async function main() {
   const numTeams = 12;
-  const ROSTER_SPOTS = SMORES_ROSTER.length + BENCH_SIZE;
+  const ROSTER_SPOTS = SUPERFLEX_ROSTER.length + BENCH_SIZE;
   const totalSpots = numTeams * ROSTER_SPOTS;
   const players = await loadPlayers();
   console.log(`loaded ${players.length} players · ${numTeams} teams × ${ROSTER_SPOTS} = ${totalSpots} picks\n`);
@@ -57,7 +57,7 @@ async function main() {
     const pool = players.filter((p) => !taken.has(p.id));
     const teamPicks = picks.filter((p) => p.team === team).map((p) => p.player);
     const player = pickForTeam({
-      pool, teamPicks, roster: SMORES_ROSTER, benchSize: BENCH_SIZE, allPicks: picks,
+      pool, teamPicks, roster: SUPERFLEX_ROSTER, benchSize: BENCH_SIZE, allPicks: picks,
       numTeams, picksUntilNext: nextPickAfter(team, pickNo) - pickNo,
       round: Math.ceil(pickNo / numTeams), totalRounds: ROSTER_SPOTS, randomness: 0.05,
     }) ?? pool[0];
@@ -71,9 +71,9 @@ async function main() {
   for (let slot = 1; slot <= numTeams; slot++) {
     const roster = picks.filter((p) => p.team === slot).map((p) => p.player);
     const pts = lineupPoints(roster);
-    const shaped = fillRoster(roster, SMORES_ROSTER).projectedPoints;
+    const shaped = fillRoster(roster, SUPERFLEX_ROSTER).projectedPoints;
     rows.push({ slot, pts, shaped });
-    const starters = fillRoster(roster, SMORES_ROSTER).starters.filter((s) => s.player).map((s) => `${s.slot}:${s.player!.full_name.split(" ").pop()}`).join(" ");
+    const starters = fillRoster(roster, SUPERFLEX_ROSTER).starters.filter((s) => s.player).map((s) => `${s.slot}:${s.player!.full_name.split(" ").pop()}`).join(" ");
     console.log(`${String(slot).padStart(3)}  ${pts.toFixed(0).padStart(8)}  ${shaped.toFixed(0).padStart(10)}   ${starters}`);
   }
   const early = rows.slice(0, 5), late = rows.slice(5);

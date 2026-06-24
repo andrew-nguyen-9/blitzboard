@@ -20,6 +20,15 @@ defaults:
     working-directory: frontend
 
 jobs:
+  identity-guard:
+    name: no personal identity (D18)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Grep product surfaces for personal identity
+        working-directory: ${{ github.workspace }}
+        run: bash .github/scripts/check-no-personal-identity.sh
+
   build:
     name: build · typecheck · lint
     runs-on: ubuntu-latest

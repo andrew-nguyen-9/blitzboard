@@ -1,1 +1,0 @@
-{"nodes": [{"id": "picks_route_sleeper_picks_get", "label": "Sleeper Draft Picks API Route GET", "file_type": "code", "source_file": "frontend/app/api/sleeper/draft/[draftId]/picks/route.ts", "source_location": "line 8", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

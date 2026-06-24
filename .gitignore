@@ -27,3 +27,6 @@ next-env.d.ts
 
 # Playwright MCP scratch output
 .playwright-mcp/
+
+# Generated graph-analysis artifacts (regenerable; carried personal abs paths)
+graphify-out/
