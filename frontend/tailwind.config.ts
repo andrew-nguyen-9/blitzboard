@@ -23,6 +23,7 @@ const config: Config = {
         line: "var(--line)",
         ink: "var(--ink-0)",
         "ink-1": "var(--ink-1)",
+        "ink-2": "var(--ink-2)",
         pos: "var(--pos)",
         neg: "var(--neg)",
         warn: "var(--warn)",

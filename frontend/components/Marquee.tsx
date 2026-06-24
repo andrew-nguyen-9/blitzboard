@@ -12,7 +12,7 @@ export default function Marquee({
   const Track = () => (
     <div className="marquee__track" style={{ ["--marquee-dur" as any]: `${duration}s` }}>
       {items.map((it, i) => (
-        <span key={i} className="flex items-center whitespace-nowrap px-6 py-2 text-label uppercase tracking-[0.18em] text-ink-muted">
+        <span key={i} className="flex items-center whitespace-nowrap px-6 py-2 text-label uppercase tracking-[0.18em] text-ink-2">
           <span className="mr-6 inline-block h-1.5 w-1.5 rounded-full bg-accent" />
           {it}
         </span>
@@ -20,7 +20,7 @@ export default function Marquee({
     </div>
   );
   return (
-    <div className={`marquee border-y border-hairline ${className}`}>
+    <div className={`marquee border-y border-line ${className}`}>
       <Track />
       <Track />
     </div>

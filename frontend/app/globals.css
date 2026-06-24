@@ -73,11 +73,13 @@
   /* elevation / glass */
   --glass: oklch(from var(--bg-1) l c h / 0.6);
   --glow: 0 0 0 1px var(--line), 0 8px 40px oklch(0 0 0 / 0.4);
-  /* type faces (theme-independent; applied via :root) */
-  --font-sans: "Hanken Grotesk";
-  --font-display: "Bricolage Grotesque";
-  --font-scoreboard: "Anton";
-  --font-mono: "JetBrains Mono";
+  /* type faces (theme-independent; applied via :root). next/font exposes each
+     family as a self-hosted CSS variable on <html> (zero layout shift, no render-
+     blocking <link>); the quoted name is a fallback if the variable is absent. */
+  --font-sans: var(--font-hanken), "Hanken Grotesk";
+  --font-display: var(--font-bricolage), "Bricolage Grotesque";
+  --font-scoreboard: var(--font-anton), "Anton";
+  --font-mono: var(--font-jetbrains), "JetBrains Mono";
 
   /* ── legacy aliases (deprecated; remove as components migrate, v2.1+) ── */
   --bg: var(--bg-0);
@@ -99,7 +101,11 @@
   --ink-0: oklch(0.22 0.02 250);
   --ink-1: oklch(0.4 0.02 250);
   --ink-2: oklch(0.46 0.02 250); /* darkened for AA muted text on raised paper */
-  --accent: oklch(0.62 0.17 var(--accent-h)); /* same hue, retuned L/C for paper */
+  /* Deepened from L0.62 → L0.52 so the accent carries AA text on warm paper:
+     white --accent-ink on the fill clears 4.5:1 (was 3.2:1) and accent-as-text /
+     "war room." on paper clears 4.5:1 (was 3.0:1). Same hue, just a richer green
+     for the daytime-broadcast theme; the dark theme accent is unchanged. */
+  --accent: oklch(0.52 0.17 var(--accent-h));
   --accent-ink: oklch(0.98 0.01 var(--accent-h));
   --pos: oklch(0.55 0.15 150);
   --neg: oklch(0.55 0.2 25);
@@ -276,6 +282,142 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   height: 40%; transform: translateY(-120%); animation: scan 6s ease-in-out infinite;
 }
 @keyframes scan { 0%,100% { transform: translateY(-120%); } 50% { transform: translateY(320%); } }
+
+/* ── Instrument kit (v2.1) ───────────────────────────────────────────────── */
+/* ValueDial: sweep the accent arc in from empty. Rests at the element's inline
+   stroke-dashoffset (its final value); --dial-arc is the empty offset. The
+   reduced-motion rules below collapse the duration so it lands static. */
+@keyframes dial-fill { from { stroke-dashoffset: var(--dial-arc); } }
+.dial-fill { animation: dial-fill var(--dur-slow) var(--ease-out) both; }
+
+/* Ticker: list-reset the marquee tracks, pause on hover/focus. */
+.ticker__live { white-space: nowrap; }
+.ticker__viewport .marquee__track { list-style: none; margin: 0; padding: 0; align-items: center; }
+.ticker:hover .marquee__track,
+.ticker:focus-within .marquee__track { animation-play-state: paused; }
+/* Reduced motion: stop scrolling, drop the duplicate, make it a scrollable list. */
+@media (prefers-reduced-motion: reduce) {
+  .ticker__viewport { overflow-x: auto; }
+  .ticker__viewport .marquee__track[aria-hidden] { display: none; }
+}
+[data-motion="reduce"] .ticker__viewport { overflow-x: auto; }
+[data-motion="reduce"] .ticker__viewport .marquee__track[aria-hidden] { display: none; }
+
+/* DistributionRidge: the smooth violin draws in; under reduced motion we swap to
+   a static range bar instead (information-equivalent, no animation). */
+.ridge-bar { display: none; }
+.ridge-curve__path { animation: ridge-rise var(--dur-slow) var(--ease-out) both; transform-origin: bottom; }
+@keyframes ridge-rise { from { transform: scaleY(0); opacity: 0; } }
+
+/* StatTable: stack into labelled stat rows under 640px (no horizontal scroll).
+   Each cell shows its column label via data-label; the visual header is hidden
+   but kept in the DOM for screen readers (still a real table semantically). */
+@media (max-width: 639px) {
+  .stat-table thead {
+    position: absolute;
+    width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .stat-table tr { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2xs) var(--space-s); padding: var(--space-s) 0; }
+  .stat-table td, .stat-table th { display: flex; justify-content: space-between; padding: var(--space-2xs) 0; text-align: left !important; }
+  .stat-table td::before, .stat-table th[scope="row"]::before {
+    content: attr(data-label);
+    font-family: var(--font-mono); font-size: var(--step--1);
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2);
+  }
+  .stat-table th[scope="row"] { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ridge-curve { display: none; }
+  .ridge-bar { display: block; }
+}
+[data-motion="reduce"] .ridge-curve { display: none; }
+[data-motion="reduce"] .ridge-bar { display: block; }
+
+/* ── Homepage hero (v2.1.2) ──────────────────────────────────────────────────
+   "Full-bleed without seams": the hero must reach the viewport edge, but layout
+   wraps every page in <main class="mx-auto max-w-wide px-…"> (centred + padded).
+   .full-bleed breaks a child out of that box to a true 100vw band; the matching
+   `overflow-x: clip` on <main> swallows the sub-pixel 100vw-vs-scrollbar rounding
+   so no horizontal scroll seam appears. `clip` (not `hidden`) creates no scroll
+   container, so the sticky <header> Nav — which lives outside <main> — is
+   unaffected. Scoped with :has() to pages that actually contain a full-bleed
+   band, so other routes' overflow (wide tables, edge popovers) is never clipped. */
+main:has(.full-bleed) { overflow-x: clip; }
+.full-bleed { width: 100vw; margin-inline: calc(50% - 50vw); }
+
+/* Hero media: a single-pole wash + soft accent glow that meets the viewport edge
+   (no panel edge showing through). Revealed with a clip-path mask-wipe AFTER the
+   static text has painted — this layer is decorative (aria-hidden) and never the
+   LCP element, so the wipe costs nothing on first paint. */
+.hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(125% 85% at 50% -15%, var(--accent-soft), transparent 58%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-0) 72%);
+  animation: hero-wipe var(--dur-slow) var(--ease-out) both;
+}
+@keyframes hero-wipe {
+  from { clip-path: inset(0 0 100% 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* Kinetic headline (HeroHeadline): each static word rises into place with a
+   staggered delay (--w). Transform-only and fully opaque from the first frame,
+   so the LCP text is painted immediately — the motion is decoration on top of an
+   already-visible element, never a fade-from-nothing that would defer LCP.
+   .hero-line is the per-line block; words are inline-block so they still wrap. */
+.hero-line { display: block; }
+.hero-word {
+  display: inline-block;
+  will-change: transform;
+  animation: hero-rise 0.7s var(--ease-out) both;
+  animation-delay: calc(var(--w, 0) * 0.024s);
+}
+@keyframes hero-rise { from { transform: translateY(0.5em); } }
+
+/* SCROLL affordance: a thin track with an accent pulse travelling down it. The
+   anchor itself is always operable (keyboard + no-JS); only the pulse animates. */
+.scroll-cue__line {
+  position: relative;
+  width: 1px;
+  height: 42px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--ink-2) 35%, transparent);
+}
+.scroll-cue__line::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 14px;
+  background: var(--accent);
+  animation: scroll-travel 1.9s var(--ease-inout) infinite;
+}
+@keyframes scroll-travel {
+  0% { transform: translateY(-14px); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(42px); opacity: 0; }
+}
+
+/* Reduced motion: the hero lands in its resting state — gradient fully shown (no
+   wipe), words at rest (no rise), and the SCROLL pulse stilled to a static accent
+   tick. Mirrors the per-component still-state contract used by the kit above; the
+   global `animation-duration: .001ms` reset alone can leave a clip-path mid-wipe
+   or a staggered offset, so we null these explicitly under both the OS pref and
+   the in-app data-motion override. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-media { animation: none; clip-path: none; }
+  .hero-word { animation: none; transform: none; }
+  .scroll-cue__line::after { animation: none; transform: none; opacity: 0.7; }
+}
+[data-motion="reduce"] .hero-media { animation: none; clip-path: none; }
+[data-motion="reduce"] .hero-word { animation: none; transform: none; }
+[data-motion="reduce"] .scroll-cue__line::after { animation: none; transform: none; opacity: 0.7; }
 
 @media (prefers-reduced-motion: reduce) {
   body { cursor: auto !important; }

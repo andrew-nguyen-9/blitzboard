@@ -32,7 +32,7 @@ emerging best practice on fcporto's memorial site). No per-component color branc
   --ink-0: oklch(0.22 0.02 250);
   --ink-1: oklch(0.40 0.02 250);
   --ink-2: oklch(0.52 0.02 250);
-  --accent: oklch(0.62 0.17 145);  /* same hue, retuned L/C for paper */
+  --accent: oklch(0.52 0.17 145);  /* same hue, deepened for AA text on paper */
   --accent-ink: oklch(0.98 0.01 145);
   --pos: oklch(0.55 0.15 150);
   --neg: oklch(0.55 0.20 25);
