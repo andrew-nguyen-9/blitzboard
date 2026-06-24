@@ -31,23 +31,26 @@ export function SplitText({ text, className, delay = 0, stagger = 0.03 }: {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
   return (
-    <span ref={ref} className={className} style={{ display: "inline-block" }} aria-label={text}>
-      {text.split(/(\s+)/).map((word, wi) => (
-        <span key={wi} style={{ display: "inline-block", whiteSpace: "pre", overflow: "hidden", verticalAlign: "top" }}>
-          {word.split("").map((ch, ci) => (
-            <motion.span
-              key={ci}
-              aria-hidden
-              style={{ display: "inline-block", willChange: "transform" }}
-              initial={{ y: "115%", rotate: 6 }}
-              animate={inView ? { y: 0, rotate: 0 } : {}}
-              transition={{ duration: 0.85, ease: EASE, delay: delay + (wi * 3 + ci) * stagger }}
-            >
-              {ch}
-            </motion.span>
-          ))}
-        </span>
-      ))}
+    <span ref={ref} className={className} style={{ display: "inline-block" }}>
+      {/* Accessible name for screen readers; the animated glyphs are decorative. */}
+      <span className="sr-only">{text}</span>
+      <span aria-hidden style={{ display: "inline-block" }}>
+        {text.split(/(\s+)/).map((word, wi) => (
+          <span key={wi} style={{ display: "inline-block", whiteSpace: "pre", overflow: "hidden", verticalAlign: "top" }}>
+            {word.split("").map((ch, ci) => (
+              <motion.span
+                key={ci}
+                style={{ display: "inline-block", willChange: "transform" }}
+                initial={{ y: "115%", rotate: 6 }}
+                animate={inView ? { y: 0, rotate: 0 } : {}}
+                transition={{ duration: 0.85, ease: EASE, delay: delay + (wi * 3 + ci) * stagger }}
+              >
+                {ch}
+              </motion.span>
+            ))}
+          </span>
+        ))}
+      </span>
     </span>
   );
 }

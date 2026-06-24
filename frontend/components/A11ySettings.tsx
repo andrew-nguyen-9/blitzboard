@@ -90,7 +90,7 @@ export default function A11ySettings() {
             {SCALES.map((s) => (
               <label
                 key={s.v}
-                className={`flex-1 cursor-pointer rounded-md border border-line py-1.5 text-center text-label ${
+                className={`flex-1 cursor-pointer rounded-md border border-line py-1.5 text-center text-label outline-accent focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 ${
                   scale === s.v ? "bg-accent text-accent-ink" : "text-ink-muted hover:text-ink"
                 }`}
               >
