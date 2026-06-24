@@ -165,10 +165,14 @@ def _assign_tiers(vs: list[PlayerValue]) -> None:
 
 
 class MonteCarloEngine(ValueEngine):
-    """Simulate N drafts/seasons from projection distributions + opponent behavior.
+    """Simulate N seasons from projection distributions → percentile-based value.
 
-    Superflex opponent model (QB-hungry drafting) lives here. Implemented in P7;
-    Projector already emits distributions so this isn't blocked."""
+    Unlike VORP's deterministic mean−replacement, MC samples the full
+    distribution N times so variance becomes an explicit input to value:
+      value = E[VOR] + UPSIDE_W × (P90_VOR − E[VOR]) × youth_factor
+    boom/bust = P90/P10 VOR across simulations (not projection bounds).
+    Superflex replacement levels are the same as VORP (from LeagueRules).
+    """
 
     name = "monte_carlo"
 
@@ -176,4 +180,86 @@ class MonteCarloEngine(ValueEngine):
         self.n_sims = n_sims
 
     def compute(self, projections, positions, rules, meta=None):
-        raise NotImplementedError("MonteCarloEngine lands in P7 (Projector already emits dists)")
+        try:
+            import numpy as np
+        except ImportError:
+            raise RuntimeError("MonteCarloEngine requires numpy (`pip install numpy`)")
+
+        meta = meta or {}
+        repl_rank = rules.replacement_ranks()
+
+        # Only score positions VORP handles (K/DST have thin distributions; skip)
+        eligible = {
+            pid: proj for pid, proj in projections.items()
+            if positions.get(pid) in BASE_POSITIONS
+        }
+        pids = list(eligible.keys())
+        if not pids:
+            return []
+
+        means = np.array([eligible[p].mean for p in pids], dtype=float)
+        stdevs = np.array([eligible[p].stdev for p in pids], dtype=float)
+        floors = np.array([eligible[p].floor for p in pids], dtype=float)
+        ceilings = np.array([eligible[p].ceiling for p in pids], dtype=float)
+        pos_arr = np.array([positions.get(p, "?") for p in pids])
+
+        # Draw n_sims season totals per player; clip approximates truncated normal
+        # (Projector sets floor/ceiling at ±1.28σ so clipping ≈ 80th-pct bounds)
+        rng = np.random.default_rng()
+        samples = np.clip(
+            rng.normal(means, stdevs, (self.n_sims, len(pids))),
+            floors, ceilings,
+        )  # shape: (n_sims, n_players)
+
+        # Per-simulation replacement level per position
+        repl_sim = np.zeros_like(samples)
+        repl_scalar: dict[str, float] = {}
+        sim_pos = [pos for pos in BASE_POSITIONS if pos in pos_arr]
+        for pos in sim_pos:
+            mask = pos_arr == pos
+            n = repl_rank.get(pos, 1)
+            pos_samp = samples[:, mask]                        # (n_sims, n_pos)
+            sorted_desc = np.sort(pos_samp, axis=1)[:, ::-1]  # best-first per sim
+            idx = min(n - 1, sorted_desc.shape[1] - 1)
+            repl_sim[:, mask] = sorted_desc[:, idx : idx + 1]
+            # scalar replacement (from means) for the PlayerValue.replacement field
+            pos_means = sorted(means[mask].tolist(), reverse=True)
+            repl_scalar[pos] = pos_means[idx] if pos_means else 0.0
+
+        vor_sim = samples - repl_sim   # (n_sims, n_players)
+
+        mean_vor = vor_sim.mean(axis=0)
+        p10_vor = np.percentile(vor_sim, 10, axis=0)
+        p90_vor = np.percentile(vor_sim, 90, axis=0)
+        # Asymmetric upside: only the part of P90 above the mean is rewarded
+        upside_spread = np.maximum(0.0, p90_vor - mean_vor)
+
+        out: list[PlayerValue] = []
+        for i, pid in enumerate(pids):
+            pos = positions.get(pid)
+            if pos not in BASE_POSITIONS:
+                continue
+            m = meta.get(pid, {})
+            youth = _youth_factor(pos, m.get("age"))
+            mc_val = (float(mean_vor[i]) + UPSIDE_W * float(upside_spread[i])) * youth
+            out.append(PlayerValue(
+                player_id=pid,
+                engine=self.name,
+                value=round(mc_val, 2),
+                vor=round(float(mean_vor[i]), 2),
+                replacement=round(repl_scalar.get(pos, 0.0), 2),
+                rank=0,
+                boom=round(float(p90_vor[i]), 2),
+                bust=round(float(p10_vor[i]), 2),
+                adp=m.get("adp"),
+            ))
+
+        out.sort(key=lambda v: v.value, reverse=True)
+        for i, v in enumerate(out, 1):
+            v.rank = i
+        by_pos_vals: dict[str, list[PlayerValue]] = {}
+        for v in out:
+            by_pos_vals.setdefault(positions.get(v.player_id, "?"), []).append(v)
+        for vs in by_pos_vals.values():
+            _assign_tiers(vs)
+        return out
