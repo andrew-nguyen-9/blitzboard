@@ -28,11 +28,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen font-sans antialiased">
+        <a href="#main" className="skip-link">Skip to content</a>
         <div className="grain-overlay" aria-hidden />
         <SmoothScroll />
         <Cursor />
         <Nav />
-        <main className="mx-auto max-w-wide px-5 md:px-8">{children}</main>
+        <main id="main" className="mx-auto max-w-wide px-5 md:px-8">{children}</main>
         <footer className="mx-auto mt-24 max-w-wide border-t border-hairline px-5 py-10 text-label text-ink-muted md:px-8">
           FFDT · Data from Sleeper, nflverse &amp; ESPN · Built with Next.js + Supabase
         </footer>
