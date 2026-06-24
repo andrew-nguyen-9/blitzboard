@@ -62,7 +62,7 @@
   --line: oklch(0.32 0.02 250 / 0.6);
   --ink-0: oklch(0.97 0.01 250); /* primary text */
   --ink-1: oklch(0.78 0.012 250); /* secondary */
-  --ink-2: oklch(0.58 0.012 250); /* tertiary / labels */
+  --ink-2: oklch(0.65 0.012 250); /* tertiary / labels — AA on raised surfaces */
   /* accent — derived from the source hue, retuned L/C for the dark ladder */
   --accent: oklch(0.78 0.17 var(--accent-h));
   --accent-ink: oklch(0.18 0.02 var(--accent-h));
@@ -98,7 +98,7 @@
   --line: oklch(0.55 0.02 90 / 0.25);
   --ink-0: oklch(0.22 0.02 250);
   --ink-1: oklch(0.4 0.02 250);
-  --ink-2: oklch(0.52 0.02 250);
+  --ink-2: oklch(0.46 0.02 250); /* darkened for AA muted text on raised paper */
   --accent: oklch(0.62 0.17 var(--accent-h)); /* same hue, retuned L/C for paper */
   --accent-ink: oklch(0.98 0.01 var(--accent-h));
   --pos: oklch(0.55 0.15 150);
