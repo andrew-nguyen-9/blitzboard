@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { getPlayerCount } from "@/lib/queries";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { Reveal, Magnetic, CountUp } from "@/components/motion";
 import { StatCell } from "@/components/StatTable";
+import PrefetchLink from "@/components/PrefetchLink";
 import HeroHeadline from "@/components/HeroHeadline";
 import ScrollCue from "@/components/ScrollCue";
 import TiltCard from "@/components/TiltCard";
@@ -63,16 +63,16 @@ export default async function Home() {
 
           <Reveal delay={0.3} className="mt-9 flex flex-wrap gap-3">
             <Magnetic>
-              <Link href="/players" data-cursor="explore"
+              <PrefetchLink href="/players" data-cursor="explore"
                 className="inline-block rounded-full bg-accent px-6 py-3 font-semibold text-accent-ink transition-shadow hover:shadow-[0_12px_30px_-10px_var(--accent)]">
                 Explore players
-              </Link>
+              </PrefetchLink>
             </Magnetic>
             <Magnetic>
-              <Link href="/draft" data-cursor="draft"
+              <PrefetchLink href="/draft" data-cursor="draft"
                 className="inline-block rounded-full border border-line px-6 py-3 font-semibold text-ink transition hover:bg-surface-elevated">
                 Open the draft board →
-              </Link>
+              </PrefetchLink>
             </Magnetic>
           </Reveal>
 

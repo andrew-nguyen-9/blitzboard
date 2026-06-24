@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Reveal } from "@/components/motion";
 import { useReducedMotion } from "@/lib/reducedMotion";
+import { usePrefetchOnIntent } from "@/lib/usePrefetchOnIntent";
 
 // 3D tilt card with a cursor-tracking glare — the homepage section tiles.
 // The scroll-in entrance is delegated to Reveal (SSR-visible, reduced-motion
@@ -18,6 +19,7 @@ export default function TiltCard({
   href: string; label: string; desc: string; index?: number;
 }) {
   const reduced = useReducedMotion();
+  const prefetch = usePrefetchOnIntent(href);
   const [enabled, setEnabled] = useState(false);
   useEffect(() => {
     setEnabled(!reduced && window.matchMedia("(pointer: fine)").matches);
@@ -45,8 +47,11 @@ export default function TiltCard({
       <Link
         ref={ref}
         href={href}
+        prefetch={false}
         data-cursor="open"
         onPointerMove={onMove}
+        onPointerEnter={prefetch.onPointerEnter}
+        onFocus={prefetch.onFocus}
         onPointerLeave={() => { mx.set(0.5); my.set(0.5); }}
         className="group relative block"
       >
