@@ -3,6 +3,7 @@ import { getPlayerCount } from "@/lib/queries";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { Reveal, Magnetic, CountUp } from "@/components/motion";
 import HeroHeadline from "@/components/HeroHeadline";
+import ScrollCue from "@/components/ScrollCue";
 import TiltCard from "@/components/TiltCard";
 import Marquee from "@/components/Marquee";
 
@@ -73,11 +74,13 @@ export default async function Home() {
               </Link>
             </Magnetic>
           </Reveal>
+
+          <ScrollCue target="#trending" />
         </div>
       </section>
 
       {/* ── BROADCAST TICKER ─────────────────────────────────────────── */}
-      <div className="mt-16">
+      <div id="trending" className="mt-16 scroll-mt-24">
         <Marquee items={ticker} duration={38} />
       </div>
 

@@ -380,12 +380,44 @@ main { overflow-x: clip; }
    used by the kit above; the global `animation-duration: .001ms` reset alone can
    leave a clip-path mid-wipe or a staggered word offset, so we null these
    explicitly under both the OS pref and the in-app data-motion override. */
+/* SCROLL affordance: a thin track with an accent pulse travelling down it. The
+   anchor itself is always operable (keyboard + no-JS); only the pulse animates. */
+.scroll-cue__line {
+  position: relative;
+  width: 1px;
+  height: 42px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--ink-2) 35%, transparent);
+}
+.scroll-cue__line::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 14px;
+  background: var(--accent);
+  animation: scroll-travel 1.9s var(--ease-inout) infinite;
+}
+@keyframes scroll-travel {
+  0% { transform: translateY(-14px); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(42px); opacity: 0; }
+}
+
+/* Reduced motion: the hero lands in its resting state — gradient fully shown (no
+   wipe), words at rest (no rise), and the SCROLL pulse stilled to a static accent
+   tick. Mirrors the per-component still-state contract used by the kit above; the
+   global `animation-duration: .001ms` reset alone can leave a clip-path mid-wipe
+   or a staggered offset, so we null these explicitly under both the OS pref and
+   the in-app data-motion override. */
 @media (prefers-reduced-motion: reduce) {
   .hero-media { animation: none; clip-path: none; }
   .hero-word { animation: none; transform: none; }
+  .scroll-cue__line::after { animation: none; transform: none; opacity: 0.7; }
 }
 [data-motion="reduce"] .hero-media { animation: none; clip-path: none; }
 [data-motion="reduce"] .hero-word { animation: none; transform: none; }
+[data-motion="reduce"] .scroll-cue__line::after { animation: none; transform: none; opacity: 0.7; }
 
 @media (prefers-reduced-motion: reduce) {
   body { cursor: auto !important; }
