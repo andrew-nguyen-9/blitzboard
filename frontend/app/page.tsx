@@ -63,7 +63,7 @@ export default async function Home() {
           <Reveal delay={0.3} className="mt-9 flex flex-wrap gap-3">
             <Magnetic>
               <Link href="/players" data-cursor="explore"
-                className="inline-block rounded-full bg-accent px-6 py-3 font-semibold text-accent-ink transition hover:brightness-110">
+                className="inline-block rounded-full bg-accent px-6 py-3 font-semibold text-accent-ink transition-shadow hover:shadow-[0_12px_30px_-10px_var(--accent)]">
                 Explore players
               </Link>
             </Magnetic>
