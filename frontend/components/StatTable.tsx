@@ -1,4 +1,5 @@
 import { formatStat, type StatFormat } from "@/lib/viz";
+import { CountUp } from "@/components/motion";
 
 // StatCell + StatTable — the instrument's tabular primitives.
 //
@@ -16,12 +17,16 @@ export function StatCell({
   suffix,
   size = "md",
   align = "start",
+  count = false,
   className,
 }: {
   value: number | null | undefined;
   label?: string;
   size?: "sm" | "md" | "lg";
   align?: "start" | "end" | "center";
+  /** Tally the value up from 0 when it scrolls into view (CountUp). The cell
+   *  still reserves width for the FINAL value, so the count never reflows. */
+  count?: boolean;
   className?: string;
 } & StatFormat) {
   const text = formatStat(value, { decimals, sign, suffix });
@@ -31,6 +36,8 @@ export function StatCell({
       : size === "sm"
         ? "text-[var(--step-0)] leading-tight"
         : "text-[clamp(1.25rem,2.5vw,2rem)] leading-tight";
+  // Count only real numbers; null/non-finite stay the static em dash.
+  const counting = count && typeof value === "number" && Number.isFinite(value);
 
   return (
     <div className={`flex flex-col gap-1 ${className ?? ""}`} style={{ textAlign: align }}>
@@ -40,7 +47,7 @@ export function StatCell({
         // never clips. +0.5ch breathing room for the decimal point / sign.
         style={{ minWidth: `${text.length + 0.5}ch`, display: "inline-block" }}
       >
-        {text}
+        {counting ? <CountUp to={value} decimals={decimals} suffix={suffix} /> : text}
       </span>
       {label && <span className="text-label uppercase text-ink-2">{label}</span>}
     </div>
