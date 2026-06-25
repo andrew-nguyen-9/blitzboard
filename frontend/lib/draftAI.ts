@@ -189,6 +189,78 @@ export function marginalStarterValue(
   return Math.max(0, candDelta - repDelta);
 }
 
+// Distinct same-position starter byes this candidate could fill — one start each.
+export function byeCover(cand: PlayerWithValue, starters: PlayerWithValue[]): number {
+  const pos = norm(cand.position);
+  const byes = new Set(
+    starters.filter((s) => s && norm(s.position) === pos && s.bye_week != null).map((s) => s.bye_week),
+  );
+  return byes.size;
+}
+
+// Expected games filling in for an injured starter; amplified for a same-team handcuff,
+// which starts precisely when its starter is out (negative availability correlation).
+export function injuryCover(
+  cand: PlayerWithValue,
+  coveredStarter: PlayerWithValue | null,
+  isHandcuff: boolean,
+  params: PolicyParams,
+): number {
+  if (!coveredStarter) return 0;
+  const pos = norm(cand.position);
+  const games = (params.injuryRate[pos] ?? 0.1) * STARTABLE_WEEKS;
+  return isHandcuff ? games * params.handcuffAmplify : games;
+}
+
+// Weeks the candidate's ceiling outscores a weak marginal starter — the upside term.
+export function ceilingWeeks(
+  cand: PlayerWithValue,
+  marginalStarterProj: number,
+  params: PolicyParams,
+): number {
+  const boom = cand.value?.boom ?? proj(cand);
+  const edge = boom - marginalStarterProj;
+  if (edge <= 0) return 0;
+  return Math.min(params.maxCeilingWeeks, (edge / (Math.abs(marginalStarterProj) + 1)) * params.ceilingScale);
+}
+
+// Health/role availability prior, discounted for a deeply buried depth-chart role.
+export function availability(cand: PlayerWithValue, params: PolicyParams): number {
+  const order = cand.metadata?.depth_chart_order ?? 1;
+  return order >= 3 ? params.availabilityPrior * 0.9 : params.availabilityPrior;
+}
+
+// Bench worth = expected starts × per-game value when started × availability (season points).
+export function benchValue(
+  cand: PlayerWithValue,
+  ctx: AIContext,
+  params: PolicyParams = DEFAULT_POLICY,
+): number {
+  const fill = fillRoster(ctx.teamPicks, ctx.roster);
+  const starters = fill.starters.map((s) => s.player).filter((p): p is PlayerWithValue => !!p);
+  const pos = norm(cand.position);
+
+  const samePos = ctx.teamPicks.filter((p) => norm(p.position) === pos).sort((a, b) => proj(b) - proj(a));
+  const coveredStarter = samePos[0] ?? null;
+  const isHandcuff = !!cand.nfl_team && coveredStarter?.nfl_team === cand.nfl_team;
+  // weakest same-eligible starter is the bar the candidate's ceiling must clear
+  const marginalStarter = starters
+    .filter((s) => norm(s.position) === pos)
+    .sort((a, b) => proj(a) - proj(b))[0];
+  const marginalStarterProj = marginalStarter ? proj(marginalStarter) : 0;
+
+  const eStarts =
+    params.benchByeWeight * byeCover(cand, starters) +
+    params.benchInjuryWeight * injuryCover(cand, coveredStarter, isHandcuff, params) +
+    params.benchCeilingWeight * ceilingWeeks(cand, marginalStarterProj, params);
+
+  const mean = proj(cand);
+  const boom = cand.value?.boom ?? mean;
+  const valuePerGame = ((1 - params.boomWeight) * mean + params.boomWeight * boom) / STARTABLE_WEEKS;
+
+  return eStarts * valuePerGame * availability(cand, params);
+}
+
 export interface ScoredPick {
   player: PlayerWithValue;
   score: number;

@@ -6,6 +6,11 @@ import {
   marginalStarterValue,
   DEFAULT_POLICY,
   detectRuns,
+  byeCover,
+  injuryCover,
+  ceilingWeeks,
+  availability,
+  benchValue,
 } from "./draftAI";
 import { SUPERFLEX_ROSTER } from "./draft";
 import type { PlayerWithValue } from "./types";
@@ -99,5 +104,63 @@ describe("marginalStarterValue", () => {
     ];
     const weakRb = mk("rb5", "RB", 50);
     expect(marginalStarterValue(weakRb, ctx([weakRb], team))).toBe(0);
+  });
+});
+
+describe("byeCover", () => {
+  it("counts one start per distinct same-position starter bye", () => {
+    const cand = mk("wr4", "WR", 120);
+    const starters = [mk("wr1", "WR", 240, { bye_week: 7 }), mk("wr2", "WR", 230, { bye_week: 11 })];
+    expect(byeCover(cand, starters)).toBe(2);
+  });
+  it("is 0 when no same-position starter has a bye", () => {
+    expect(byeCover(mk("wr4", "WR", 120), [mk("rb1", "RB", 240, { bye_week: 7 })])).toBe(0);
+  });
+});
+
+describe("injuryCover", () => {
+  it("is 0 with no starter to cover", () => {
+    expect(injuryCover(mk("rb3", "RB", 100), null, false, DEFAULT_POLICY)).toBe(0);
+  });
+  it("amplifies a same-team handcuff over a generic backup", () => {
+    const cand = mk("rb-hc", "RB", 100, { nfl_team: "KC" });
+    const starter = mk("rb1", "RB", 240, { nfl_team: "KC" });
+    const hc = injuryCover(cand, starter, true, DEFAULT_POLICY);
+    const generic = injuryCover(cand, starter, false, DEFAULT_POLICY);
+    expect(hc).toBeGreaterThan(generic);
+  });
+});
+
+describe("ceilingWeeks", () => {
+  it("rewards a candidate whose boom beats a weak marginal starter", () => {
+    const boomy = mk("wr4", "WR", 120, { boom: 240 });
+    expect(ceilingWeeks(boomy, 130, DEFAULT_POLICY)).toBeGreaterThan(0);
+  });
+  it("is 0 when the ceiling cannot beat the marginal starter", () => {
+    const flat = mk("wr5", "WR", 90, { boom: 95 });
+    expect(ceilingWeeks(flat, 200, DEFAULT_POLICY)).toBe(0);
+  });
+});
+
+describe("benchValue", () => {
+  function ctx(teamPicks: PlayerWithValue[]): any {
+    return { pool: [], teamPicks, roster: SUPERFLEX_ROSTER, benchSize: 6, allPicks: [], numTeams: 12, picksUntilNext: 1, round: 8, totalRounds: 16 };
+  }
+  it("ranks a high-ceiling WR4 above a second kicker", () => {
+    const team = [
+      mk("qb1", "QB", 300), mk("rb1", "RB", 250, { nfl_team: "KC" }), mk("rb2", "RB", 240),
+      mk("wr1", "WR", 240, { bye_week: 7 }), mk("wr2", "WR", 230), mk("te1", "TE", 180),
+      mk("k1", "K", 130),
+    ];
+    const wr4 = mk("wr4", "WR", 120, { boom: 230, bye_week: 11 });
+    const k2 = mk("k2", "K", 125, { boom: 135 });
+    expect(benchValue(wr4, ctx(team))).toBeGreaterThan(benchValue(k2, ctx(team)));
+  });
+});
+
+describe("availability", () => {
+  it("discounts a deeply buried role below the prior", () => {
+    expect(availability(mk("x", "RB", 80, { depth: 4 }), DEFAULT_POLICY)).toBeLessThan(DEFAULT_POLICY.availabilityPrior);
+    expect(availability(mk("y", "RB", 80, { depth: 1 }), DEFAULT_POLICY)).toBe(DEFAULT_POLICY.availabilityPrior);
   });
 });
