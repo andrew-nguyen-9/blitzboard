@@ -11,8 +11,13 @@ import {
   ceilingWeeks,
   availability,
   benchValue,
+  isCapped,
+  overfillPenalty,
+  scoreBoard,
+  norm,
 } from "./draftAI";
 import { SUPERFLEX_ROSTER } from "./draft";
+import { runSnakeDraft, mulberry32 } from "./snakeDraft";
 import type { PlayerWithValue } from "./types";
 
 // Minimal player factory — only the fields the policy reads. Value-fields (boom, vor,
@@ -162,5 +167,78 @@ describe("availability", () => {
   it("discounts a deeply buried role below the prior", () => {
     expect(availability(mk("x", "RB", 80, { depth: 4 }), DEFAULT_POLICY)).toBeLessThan(DEFAULT_POLICY.availabilityPrior);
     expect(availability(mk("y", "RB", 80, { depth: 1 }), DEFAULT_POLICY)).toBe(DEFAULT_POLICY.availabilityPrior);
+  });
+});
+
+describe("isCapped (hard K/DST gate)", () => {
+  it("blocks a 2nd K before the final rounds and allows it inside them", () => {
+    expect(isCapped(mk("k2", "K", 120), { K: 1 }, false)).toBe(true);
+    expect(isCapped(mk("k2", "K", 120), { K: 1 }, true)).toBe(false);
+    expect(isCapped(mk("k1", "K", 120), { K: 0 }, false)).toBe(false);
+  });
+});
+
+describe("overfillPenalty", () => {
+  function ctx(teamPicks: PlayerWithValue[]): any {
+    return { pool: [], teamPicks, roster: SUPERFLEX_ROSTER, benchSize: 6, allPicks: [], numTeams: 12, picksUntilNext: 1, round: 9, totalRounds: 16 };
+  }
+  it("penalizes a position past its reasonable depth", () => {
+    const team = Array.from({ length: 5 }, (_, i) => mk(`rb${i}`, "RB", 150 - i));
+    expect(overfillPenalty(mk("rb5", "RB", 90), ctx(team), DEFAULT_POLICY)).toBeGreaterThan(0);
+  });
+  it("is 0 within depth", () => {
+    expect(overfillPenalty(mk("rb1", "RB", 150), ctx([]), DEFAULT_POLICY)).toBe(0);
+  });
+});
+
+describe("scoreBoard assembly", () => {
+  function ctx(pool: PlayerWithValue[], teamPicks: PlayerWithValue[], round = 1): any {
+    return { pool, teamPicks, roster: SUPERFLEX_ROSTER, benchSize: 6, allPicks: [], numTeams: 12, picksUntilNext: 1, round, totalRounds: 16 };
+  }
+  it("does not surface a 2nd K/DST before the final rounds", () => {
+    const pool = [mk("k2", "K", 300), mk("wr3", "WR", 120)];
+    const team = [mk("k1", "K", 130)];
+    const ranked = scoreBoard(ctx(pool, team, 5));
+    expect(norm(ranked[0].player.position)).not.toBe("K");
+  });
+});
+
+describe("full-draft regression", () => {
+  it("no team holds 2+ K or 2+ DST before the final 2 rounds (the anti-hoarding cap)", () => {
+    // Realistic pool: offense is plentiful and high-value; K/DST are few and low-value
+    // (~110-140 pts, as in real leagues). The policy defers K/DST on value, and the hard
+    // cap prevents a 2nd before the final rounds. [pos, count, topProj, bottomProj]
+    const spec: [string, number, number, number][] = [
+      ["QB", 60, 300, 120],
+      ["RB", 110, 290, 40],
+      ["WR", 130, 285, 30],
+      ["TE", 45, 230, 50],
+      ["K", 24, 140, 118],
+      ["DST", 24, 135, 108],
+    ];
+    const players: PlayerWithValue[] = [];
+    let n = 0;
+    for (const [pos, count, top, bot] of spec) {
+      for (let k = 0; k < count; k++) {
+        const projPts = Math.round(top - ((top - bot) * k) / Math.max(1, count - 1));
+        players.push(mk(`${pos}${k}`, pos, projPts, { bye_week: (n % 14) + 1, nfl_team: `T${n % 32}` }));
+        n++;
+      }
+    }
+    const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(42), randomness: 0 });
+    const totalRounds = picks.length / 12;
+    const earlyByTeam: Record<number, { K: number; DST: number }> = {};
+    for (const p of picks) {
+      if (Math.ceil(p.pickNo / 12) > totalRounds - 2) continue; // final 2 rounds are exempt
+      const pos = norm(p.player.position);
+      if (pos === "K" || pos === "DST") {
+        earlyByTeam[p.team] ??= { K: 0, DST: 0 };
+        earlyByTeam[p.team][pos as "K" | "DST"] += 1;
+      }
+    }
+    for (const counts of Object.values(earlyByTeam)) {
+      expect(counts.K).toBeLessThanOrEqual(1);
+      expect(counts.DST).toBeLessThanOrEqual(1);
+    }
   });
 });
