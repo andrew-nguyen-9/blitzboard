@@ -1,0 +1,23 @@
+{
+  "league_size": 12,
+  "waiver_type": "faab",
+  "scoring": {
+    "passing": {"yds_per_pt": 25, "pt_per_yd": 0.04, "td": 4, "int": -2, "two_pt": 2},
+    "rushing": {"pt_per_yd": 0.1, "td": 6, "two_pt": 2},
+    "receiving": {"pt_per_yd": 0.1, "ppr": 0.5, "td": 6, "two_pt": 2},
+    "misc": {"fumble_lost": -2, "fumble_rec_td": 6},
+    "kicking": {"pat": 1, "pat_miss": -2, "fg_miss": -1, "fg_0_39": 3, "fg_40_49": 4, "fg_50_59": 5, "fg_60_plus": 6},
+    "dst": {
+      "sack": 1, "int": 2, "fumble_rec": 2, "safety": 2, "blocked_kick": 2, "td_any": 6, "two_pt_return": 2, "one_pt_safety": 1,
+      "points_allowed": {"0": 5, "1_6": 4, "7_13": 3, "14_17": 1, "18_27": 0, "28_34": -1, "35_45": -3, "46_plus": -5},
+      "yards_allowed": {"lt_100": 5, "100_199": 3, "200_299": 2, "300_349": 0, "350_399": -1, "400_449": -3, "450_499": -5, "500_549": -6, "550_plus": -7}
+    }
+  },
+  "roster_slots": {
+    "QB": 1, "RB": 2, "WR": 2, "TE": 1, "FLEX": 1, "OP": 1, "DST": 1, "K": 1, "BENCH": 6, "IR": 1,
+    "_total_starters": 10, "_roster_size": 16,
+    "_flex_eligible": ["RB", "WR", "TE"], "_op_eligible": ["QB", "RB", "WR", "TE"],
+    "_superflex": true,
+    "_position_maximums": {"QB": 4, "RB": 8, "WR": 8, "TE": 3, "DST": 3, "K": 3}
+  }
+}
