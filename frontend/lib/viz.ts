@@ -96,6 +96,41 @@ export function distributionSummary(samples: number[]): DistributionSummary | nu
   };
 }
 
+// Acklam's inverse-normal-CDF (probit) approximation — accurate enough for a
+// display ridge. Input is a probability in (0,1).
+function probit(p: number): number {
+  const a = [-3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2, 1.38357751867269e2, -3.066479806614716e1, 2.506628277459239];
+  const b = [-5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2, 6.680131188771972e1, -1.328068155288572e1];
+  const c = [-7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+  const d = [7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996, 3.754408661907416];
+  const plow = 0.02425;
+  if (p < plow) {
+    const q = Math.sqrt(-2 * Math.log(p));
+    return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+  }
+  if (p <= 1 - plow) {
+    const q = p - 0.5;
+    const r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+  }
+  const q = Math.sqrt(-2 * Math.log(1 - p));
+  return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+}
+
+/**
+ * A deterministic, representative sample of N(mean, stdev) — the probit evaluated
+ * at evenly-spaced quantiles, so there's no RNG (identical output every render →
+ * SSR-safe, no hydration drift) and the shape is a clean bell. Used to drive the
+ * player-card ridge from the stored Monte-Carlo spread; a wider σ (a volatile,
+ * low-predictability player) yields a visibly wider ridge. Degenerate σ/n → [].
+ */
+export function gaussianSamples(mean: number, stdev: number, n = 240): number[] {
+  if (!(stdev > 0) || n <= 0) return [];
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) out.push(mean + stdev * probit((i + 0.5) / n));
+  return out;
+}
+
 export type PredictabilityTier = "Volatile" | "Variable" | "Reliable";
 
 export interface PredictabilityBand {

@@ -3,11 +3,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import EmptyState from "@/components/EmptyState";
 import ValueDial from "@/components/ValueDial";
+import DistributionRidge from "@/components/DistributionRidge";
+import EngineToggle from "@/components/EngineToggle";
+import PredictabilityMeter from "@/components/PredictabilityMeter";
 import Sparkline from "@/components/Sparkline";
 import DistributionBar from "@/components/DistributionBar";
 import { getPlayerDetail } from "@/lib/queries";
+import { gaussianSamples } from "@/lib/viz";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { teamLogoUrl } from "@/lib/teams";
+import type { Engine } from "@/lib/types";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,8 +20,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return { title: d?.player.full_name ?? "Player" };
 }
 
-export default async function PlayerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PlayerDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ engine?: string }>;
+}) {
   const { id } = await params;
+  const { engine: engineParam } = await searchParams;
+  const engine: Engine = engineParam === "monte_carlo" ? "monte_carlo" : "vorp";
 
   if (!isSupabaseConfigured()) {
     return (
@@ -26,7 +39,7 @@ export default async function PlayerDetailPage({ params }: { params: Promise<{ i
     );
   }
 
-  const d = await getPlayerDetail(id);
+  const d = await getPlayerDetail(id, engine);
   if (!d) notFound();
 
   const { player, value, projection, history } = d;
@@ -34,6 +47,13 @@ export default async function PlayerDetailPage({ params }: { params: Promise<{ i
   const vor = value?.vor ?? 0;
   const dialFraction = Math.max(0, Math.min(1, vor / 150)); // VOR scaled to a 150 cap
   const seasonPts = history.map((h) => h.fantasy_pts ?? 0);
+
+  // Monte-Carlo morph: rebuild a representative VOR distribution from the stored
+  // P90/P10 boom/bust (P90−P10 ≈ 2.563σ for a normal) so the ridge reflects the
+  // predictability-aware spread without recomputing the simulation client-side.
+  const mcSpread =
+    value?.boom != null && value?.bust != null ? (value.boom - value.bust) / 2.5631 : 0;
+  const mcSamples = engine === "monte_carlo" ? gaussianSamples(vor, mcSpread, 240) : [];
 
   return (
     <div className="py-12">
@@ -67,14 +87,42 @@ export default async function PlayerDetailPage({ params }: { params: Promise<{ i
 
       {/* instrument panel */}
       <div className="mt-10 grid gap-6 lg:grid-cols-3">
-        <div className="glass grid place-items-center p-6" style={{ boxShadow: "var(--glow)" }}>
-          <ValueDial
-            fraction={dialFraction}
-            size={220}
-            label="OVERALL"
-            value={value?.rank ? `#${value.rank}` : "—"}
-            sub={value?.vor != null ? `VOR ${value.vor >= 0 ? "+" : ""}${value.vor.toFixed(1)}` : undefined}
-          />
+        <div className="glass flex flex-col gap-5 p-6" style={{ boxShadow: "var(--glow)" }}>
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-label text-ink-muted">VALUE · {engine === "monte_carlo" ? "Monte Carlo" : "VORP"}</h3>
+            <EngineToggle active={engine} />
+          </div>
+
+          {/* engine toggle morphs the instrument: point dial ⇄ outcome ridgeline */}
+          {engine === "monte_carlo" ? (
+            <div className="flex flex-1 flex-col justify-center gap-3">
+              <div className="font-mono text-display-md tabular-nums">
+                {value?.rank ? `#${value.rank}` : "—"}
+                <span className="ml-2 align-middle text-label uppercase text-ink-2">overall</span>
+              </div>
+              <DistributionRidge samples={mcSamples} label="Value over replacement" decimals={0} />
+              <div className="flex justify-between text-label text-ink-muted">
+                <span>bust <span className="font-mono text-ink">{value?.bust != null ? value.bust.toFixed(0) : "—"}</span></span>
+                <span>E[VOR] <span className="font-mono text-ink">{vor.toFixed(0)}</span></span>
+                <span>boom <span className="font-mono text-ink">{value?.boom != null ? value.boom.toFixed(0) : "—"}</span></span>
+              </div>
+            </div>
+          ) : (
+            <div className="grid flex-1 place-items-center">
+              <ValueDial
+                fraction={dialFraction}
+                size={220}
+                label="OVERALL"
+                value={value?.rank ? `#${value.rank}` : "—"}
+                sub={value?.vor != null ? `VOR ${value.vor >= 0 ? "+" : ""}${value.vor.toFixed(1)}` : undefined}
+              />
+            </div>
+          )}
+
+          {/* predictability: the *why* behind a discounted value (e.g. a streamer K/DEF) */}
+          {value?.predictability != null && (
+            <PredictabilityMeter score={value.predictability} className="mt-auto" />
+          )}
         </div>
 
         <div className="glass p-6 lg:col-span-2">
