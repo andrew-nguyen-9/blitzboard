@@ -71,13 +71,20 @@ export interface PlayerDetail {
   history: Array<{ season: number; fantasy_pts: number | null; stats: any }>;
 }
 
+// True for a canonical UUID; anything else (e.g. a Sleeper id) resolves by sleeper_id.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Everything the player detail page needs, in one place (null-safe). `engine`
 // selects which precomputed value set to read so the card morphs on the toggle.
-export async function getPlayerDetail(id: string, engine: Engine = "vorp"): Promise<PlayerDetail | null> {
+// `idOrSleeper` accepts either the players.id UUID (links from draft/trade/roster
+// boards) or the snapshot's compact sleeper_id (links from the Players tab).
+export async function getPlayerDetail(idOrSleeper: string, engine: Engine = "vorp"): Promise<PlayerDetail | null> {
   const sb = getSupabase();
   if (!sb) return null;
-  const { data: player } = await sb.from("players").select(PLAYER_COLS).eq("id", id).maybeSingle();
+  const lookupCol = UUID_RE.test(idOrSleeper) ? "id" : "sleeper_id";
+  const { data: player } = await sb.from("players").select(PLAYER_COLS).eq(lookupCol, idOrSleeper).maybeSingle();
   if (!player) return null;
+  const id = (player as Player).id; // canonical UUID for the dependent reads
 
   const [{ data: value }, { data: projection }, { data: history }] = await Promise.all([
     sb.from("player_value").select("*").eq("player_id", id).eq("engine", engine).maybeSingle(),
