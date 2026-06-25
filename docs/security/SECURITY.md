@@ -7,17 +7,22 @@
 
 ## Stack decision
 
-- **Auth.js (NextAuth)** for sessions (per the platform decision) over **Supabase Postgres**
-  for data. Providers: **Google OAuth** + **email/password** (credentials), with room for
-  more OAuth later.
+- **Supabase Auth (GoTrue)** for identity + sessions over **Supabase Postgres** for data.
+  Providers: **Google OAuth** + **email/password**, with room for more OAuth later.
+  (Decision revised in v2.5.1 from the original Auth.js plan: GoTrue makes `auth.uid()` native,
+  which is the simplest, strongest path to the RLS isolation gate. Rationale:
+  `docs/phases/v2/v2.5.1-auth-design.md` §1.)
 - Sessions are **httpOnly, Secure, SameSite=Lax cookies** holding an opaque session id (or a
   signed, short-lived JWT) — **never** a token a client script or a network sniffer can replay
   into another account. All traffic is **HTTPS/TLS only** (HSTS, preload).
 
 ## Password hashing
 
-- Email/password accounts: **Argon2id** (preferred) or **bcrypt (cost ≥ 12)** if Argon2 isn't
-  available in the runtime. Per-user salt; never store or log plaintext; constant-time compare.
+- Email/password hashing is **delegated to Supabase Auth (GoTrue)**, which hashes server-side
+  with **bcrypt** (per-user salt, constant-time compare). GoTrue does not offer Argon2id, so per
+  this doc's own fallback ("bcrypt cost ≥ 12 if Argon2 isn't available in the runtime") bcrypt is
+  the sanctioned choice. The app **never receives the plaintext password** — it goes browser →
+  GoTrue over TLS — so "no plaintext stored/logged" holds by construction.
 - Never roll our own crypto. OAuth users have no password at all (delegated to Google).
 
 ## The threat the user named: "no inspector can see another user's data"
