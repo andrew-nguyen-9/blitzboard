@@ -46,3 +46,23 @@ export async function signOut() {
   if (supabase) await supabase.auth.signOut();
   redirect("/login");
 }
+
+export async function requestPasswordReset(formData: FormData) {
+  const supabase = await getServerSupabase();
+  if (!supabase) redirect("/auth/update-password?error=offline");
+  await supabase.auth.resetPasswordForEmail(String(formData.get("email") ?? ""), {
+    redirectTo: `${SITE}/auth/confirm?next=/auth/update-password`,
+  });
+  // Always report success — never reveal whether an email exists.
+  redirect("/login?reset=sent");
+}
+
+export async function updatePassword(formData: FormData) {
+  const supabase = await getServerSupabase();
+  if (!supabase) redirect("/auth/update-password?error=offline");
+  const { error } = await supabase.auth.updateUser({
+    password: String(formData.get("password") ?? ""),
+  });
+  if (error) redirect(`/auth/update-password?error=${encodeURIComponent(error.message)}`);
+  redirect("/?passwordUpdated=1");
+}
