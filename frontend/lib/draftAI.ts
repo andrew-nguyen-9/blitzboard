@@ -243,7 +243,6 @@ export interface ScoredPick {
   reason: string;
 }
 
-// Score every available player for a team and return them ranked.
 // Hard K/DST cap: a 2nd kicker/defense is ineligible until the final rounds.
 export function isCapped(
   cand: PlayerWithValue,
