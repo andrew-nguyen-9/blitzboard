@@ -71,15 +71,16 @@ export interface PlayerDetail {
   history: Array<{ season: number; fantasy_pts: number | null; stats: any }>;
 }
 
-// Everything the player detail page needs, in one place (null-safe).
-export async function getPlayerDetail(id: string): Promise<PlayerDetail | null> {
+// Everything the player detail page needs, in one place (null-safe). `engine`
+// selects which precomputed value set to read so the card morphs on the toggle.
+export async function getPlayerDetail(id: string, engine: Engine = "vorp"): Promise<PlayerDetail | null> {
   const sb = getSupabase();
   if (!sb) return null;
   const { data: player } = await sb.from("players").select(PLAYER_COLS).eq("id", id).maybeSingle();
   if (!player) return null;
 
   const [{ data: value }, { data: projection }, { data: history }] = await Promise.all([
-    sb.from("player_value").select("*").eq("player_id", id).eq("engine", "vorp").maybeSingle(),
+    sb.from("player_value").select("*").eq("player_id", id).eq("engine", engine).maybeSingle(),
     sb.from("projections").select("*").eq("player_id", id).eq("source", "ensemble").order("season", { ascending: false }).limit(1).maybeSingle(),
     sb.from("player_stats_history").select("season,fantasy_pts,stats").eq("player_id", id).is("week", null).order("season"),
   ]);
