@@ -9,12 +9,32 @@ from __future__ import annotations
 
 import numpy as np
 
-# 10 starters: QB, RB, RB, WR, WR, TE, FLEX(RB/WR/TE), OP(QB/RB/WR/TE), DST, K.
-SUPERFLEX_SLOTS: list[tuple[str, tuple[str, ...]]] = [
-    ("QB", ("QB",)), ("RB", ("RB",)), ("RB", ("RB",)), ("WR", ("WR",)), ("WR", ("WR",)),
-    ("TE", ("TE",)), ("FLEX", ("RB", "WR", "TE")), ("OP", ("QB", "RB", "WR", "TE")),
-    ("DST", ("DST",)), ("K", ("K",)),
-]
+# Order in which starting slots are laid out (counts come from the league's roster_slots).
+_STARTER_ORDER = ("QB", "RB", "WR", "TE", "FLEX", "OP", "DST", "K")
+
+
+def slots_from_rules(rules) -> list[tuple[str, tuple[str, ...]]]:
+    """Expand a league's roster_slots into per-slot (name, eligible-positions) tuples, so
+    the lineup shape has ONE source of truth (the rules fixture) instead of a hand-written
+    literal that silently goes stale if the league changes."""
+    rs = rules.roster_slots
+    flex = tuple(rs.get("_flex_eligible") or ("RB", "WR", "TE"))
+    op = tuple(rs.get("_op_eligible") or ("QB", "RB", "WR", "TE"))
+    out: list[tuple[str, tuple[str, ...]]] = []
+    for slot in _STARTER_ORDER:
+        n = int(rs.get(slot, 0) or 0)
+        elig = flex if slot == "FLEX" else op if slot == "OP" else (slot,)
+        out.extend([(slot, elig)] * n)
+    return out
+
+
+def _default_slots() -> list[tuple[str, tuple[str, ...]]]:
+    from .rules import load_rules_fixture
+    return slots_from_rules(load_rules_fixture())
+
+
+# Convenience default = the seeded superflex league expanded (QB,RB,RB,WR,WR,TE,FLEX,OP,DST,K).
+SUPERFLEX_SLOTS: list[tuple[str, tuple[str, ...]]] = _default_slots()
 
 
 def optimal_week_points(roster_keys, pos_by_key, week_pts, slots) -> float:

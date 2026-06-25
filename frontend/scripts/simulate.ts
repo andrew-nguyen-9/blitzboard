@@ -5,10 +5,9 @@
 // Run: npx tsx scripts/simulate.ts
 import { readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
-import { pickForTeam } from "../lib/draftAI";
-import { fillRoster, teamOnClock, SUPERFLEX_ROSTER, BENCH_SIZE } from "../lib/draft";
+import { runSnakeDraft } from "../lib/snakeDraft";
+import { fillRoster, SUPERFLEX_ROSTER, BENCH_SIZE } from "../lib/draft";
 import type { PlayerWithValue } from "../lib/types";
-import type { MappedPick } from "../lib/sleeperDraft";
 
 // load env from .env.local
 const env: Record<string, string> = {};
@@ -47,23 +46,7 @@ async function main() {
   const players = await loadPlayers();
   console.log(`loaded ${players.length} players · ${numTeams} teams × ${ROSTER_SPOTS} = ${totalSpots} picks\n`);
 
-  const picks: MappedPick[] = [];
-  const taken = new Set<string>();
-  const nextPickAfter = (team: number, from: number) => { let n = from + 1; while (n <= totalSpots) { if (teamOnClock(n, numTeams) === team) return n; n++; } return totalSpots + 1; };
-
-  while (picks.length < totalSpots) {
-    const pickNo = picks.length + 1;
-    const team = teamOnClock(pickNo, numTeams);
-    const pool = players.filter((p) => !taken.has(p.id));
-    const teamPicks = picks.filter((p) => p.team === team).map((p) => p.player);
-    const player = pickForTeam({
-      pool, teamPicks, roster: SUPERFLEX_ROSTER, benchSize: BENCH_SIZE, allPicks: picks,
-      numTeams, picksUntilNext: nextPickAfter(team, pickNo) - pickNo,
-      round: Math.ceil(pickNo / numTeams), totalRounds: ROSTER_SPOTS, randomness: 0.05,
-    }) ?? pool[0];
-    picks.push({ pickNo, team, player });
-    taken.add(player.id);
-  }
+  const picks = runSnakeDraft(players, { numTeams });
 
   // per-team measures
   console.log("slot  startPts   shapedVal   roster(starters)");

@@ -59,7 +59,7 @@ def offense_weekly(season: int) -> list[dict]:
 # PBP columns we need for distance-K (Task 3) and yardage/points-allowed D/ST (Task 4).
 _PBP_COLS = [
     "play_type", "field_goal_result", "kick_distance", "extra_point_result",
-    "kicker_player_id", "season", "week", "season_type",
+    "kicker_player_id", "kicker_player_name", "season", "week", "season_type",
     "sack", "interception", "fumble_lost", "fumble_recovery_1_team",
     "safety", "touchdown", "return_touchdown", "posteam", "defteam",
     "yards_gained", "home_team", "away_team", "home_score", "away_score",
@@ -79,8 +79,15 @@ def kicking_weekly(season: int) -> list[dict]:
     df = _pbp_frame(season)
     if "season_type" in df.columns:
         df = df[df["season_type"] == "REG"]
-    buckets = kicker_week_buckets(df.to_dict("records"))
-    return [{"player_key": kid, "name": kid, "pos": "K", "team": "",
+    records = df.to_dict("records")
+    buckets = kicker_week_buckets(records)
+    # kicker id → display name, so K rows can join to FFC ADP by name (not raw GSIS id).
+    names: dict[str, str] = {}
+    for r in records:
+        kid, nm = r.get("kicker_player_id"), r.get("kicker_player_name")
+        if kid and kid == kid and nm and nm == nm:
+            names.setdefault(str(kid), str(nm))
+    return [{"player_key": kid, "name": names.get(kid, kid), "pos": "K", "team": "",
              "season": s, "week": w, "points": score_kicking(b, sc)}
             for (kid, s, w), b in buckets.items()]
 

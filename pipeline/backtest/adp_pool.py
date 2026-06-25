@@ -54,7 +54,8 @@ def _ffc_adp(season: int, rules) -> list[dict]:
     from .cache import _DIR
     os.makedirs(_DIR, exist_ok=True)
     path = os.path.join(_DIR, f"adp_{season}.json")
-    if os.path.exists(path):
+    cached_hit = os.path.exists(path)
+    if cached_hit:
         with open(path) as f:
             data = json.load(f)
     else:
@@ -63,17 +64,13 @@ def _ffc_adp(season: int, rules) -> list[dict]:
         url = (f"https://fantasyfootballcalculator.com/api/v1/adp/2qb"
                f"?teams={rules.league_size}&year={season}&position=all")
         data = httpx.get(url, timeout=30).json()
+    rows = (data.get("players") or []) if isinstance(data, dict) else []
+    # Only cache a response that actually has players — a transient error/empty body must
+    # not poison the cache and make every later warm-cache run silently skip the season.
+    if rows and not cached_hit:
         with open(path, "w") as f:
             json.dump(data, f)
-    rows = (data.get("players") or []) if isinstance(data, dict) else []
     norm = {"PK": "K", "DEF": "DST"}
     return [{"player_key": "", "name": p.get("name", ""), "team": p.get("team", ""),
              "pos": norm.get(p.get("position"), p.get("position")), "adp": p.get("adp")}
             for p in rows]
-
-
-def draft_pool(season: int) -> list[dict]:
-    """Standalone ADP pool for a season (FFC names + reconstructed value)."""
-    from .rules import load_rules_fixture
-    rules = load_rules_fixture()
-    return value_from_adp(_ffc_adp(season, rules), rules)

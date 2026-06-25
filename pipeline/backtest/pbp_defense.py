@@ -15,11 +15,20 @@ def _num(v) -> float:
         return 0.0
 
 
-def _opp_score(r) -> float:
-    """Points the defense allowed = the offense (posteam) team's final score."""
-    if r.get("posteam") == r.get("home_team"):
+# Plays that count toward "yards allowed": scrimmage downs only. Summing every
+# defteam row would fold in punt/kickoff-return and penalty yardage and inflate the tier.
+_SCRIMMAGE = {"pass", "run"}
+
+
+def _opp_score(r):
+    """Points the defense allowed = the offense (posteam) team's final score, or None
+    when posteam isn't one of the two teams (administrative rows: timeouts, period-end)."""
+    posteam = r.get("posteam")
+    if posteam == r.get("home_team"):
         return _num(r.get("home_score"))
-    return _num(r.get("away_score"))
+    if posteam == r.get("away_team"):
+        return _num(r.get("away_score"))
+    return None  # unknown posteam → don't let it overwrite points_allowed
 
 
 def team_week_dst(pbp_rows) -> dict:
@@ -39,6 +48,9 @@ def team_week_dst(pbp_rows) -> dict:
         d["safeties"] += _num(r.get("safety"))
         if _num(r.get("return_touchdown")) and r.get("posteam") != dt:
             d["def_tds"] += 1.0
-        d["yards_allowed"] += _num(r.get("yards_gained"))
-        d["points_allowed"] = _opp_score(r)  # constant across the game's plays
+        if r.get("play_type") in _SCRIMMAGE:
+            d["yards_allowed"] += _num(r.get("yards_gained"))
+        pa = _opp_score(r)
+        if pa is not None:
+            d["points_allowed"] = pa  # final score (last valid row of the game wins)
     return out

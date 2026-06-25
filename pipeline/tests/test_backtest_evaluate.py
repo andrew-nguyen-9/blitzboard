@@ -8,7 +8,17 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backtest.evaluate import optimal_week_points, SUPERFLEX_SLOTS   # noqa: E402
+from backtest.evaluate import optimal_week_points, SUPERFLEX_SLOTS, slots_from_rules  # noqa: E402
+from backtest.rules import load_rules_fixture                                          # noqa: E402
+
+# Slots are derived from the fixture (single source of truth) and must equal the known
+# 10-starter superflex shape — pin it so a fixture change can't silently reshape lineups.
+assert slots_from_rules(load_rules_fixture()) == [
+    ("QB", ("QB",)), ("RB", ("RB",)), ("RB", ("RB",)), ("WR", ("WR",)), ("WR", ("WR",)),
+    ("TE", ("TE",)), ("FLEX", ("RB", "WR", "TE")), ("OP", ("QB", "RB", "WR", "TE")),
+    ("DST", ("DST",)), ("K", ("K",)),
+], slots_from_rules(load_rules_fixture())
+assert SUPERFLEX_SLOTS == slots_from_rules(load_rules_fixture())
 
 pos = {"qb1": "QB", "qb2": "QB", "rb1": "RB", "rb2": "RB", "rb3": "RB",
        "wr1": "WR", "wr2": "WR", "te1": "TE", "k1": "K", "d1": "DST"}
