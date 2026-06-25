@@ -12,13 +12,16 @@ const STORAGE_BASE =
   "/storage/v1/object/public/snapshots";
 const MANIFEST_URL = `${STORAGE_BASE}/manifest.json`;
 
+// Columnar payload: one array per column under `data` (compresses far better than
+// row-arrays). boom/bust aren't shipped — the list never uses them (the lazy
+// detail card reads them live from player_value).
 export interface SnapshotPayload {
   v: number;
   profile: string;
   engine: string;
   cols: string[];
   count: number;
-  rows: Array<Array<string | number | null>>;
+  data: Array<Array<string | number | null>>;
 }
 
 // A decoded snapshot row. `id` is the Sleeper id (the compact, stable route key).
@@ -30,8 +33,6 @@ export interface SnapshotPlayer {
   value: number | null;
   vor: number | null;
   rank: number | null;
-  boom: number | null;
-  bust: number | null;
   predictability: number | null;
   trend: number | null;
 }
@@ -39,26 +40,30 @@ export interface SnapshotPlayer {
 const NUM = (x: unknown): number | null => (typeof x === "number" ? x : null);
 const STR = (x: unknown): string | null => (typeof x === "string" ? x : null);
 
-// Map the compact array-of-arrays to objects BY COLUMN NAME (resilient to column
-// reordering or additions), not by fixed position.
+// Decode columnar data into row objects, resolving columns BY NAME (resilient to
+// column reordering or additions), not by fixed position.
 export function decodeSnapshot(payload: SnapshotPayload): SnapshotPlayer[] {
-  const at = (row: SnapshotPayload["rows"][number], col: string) => {
-    const j = payload.cols.indexOf(col);
-    return j >= 0 ? row[j] : null;
+  const col = (name: string): Array<string | number | null> | null => {
+    const k = payload.cols.indexOf(name);
+    return k >= 0 ? payload.data[k] : null;
   };
-  return payload.rows.map((row) => ({
-    id: String(at(row, "sid") ?? ""),
-    full_name: STR(at(row, "n")) ?? "",
-    position: STR(at(row, "pos")),
-    nfl_team: STR(at(row, "tm")),
-    value: NUM(at(row, "val")),
-    vor: NUM(at(row, "vor")),
-    rank: NUM(at(row, "rnk")),
-    boom: NUM(at(row, "boom")),
-    bust: NUM(at(row, "bust")),
-    predictability: NUM(at(row, "rho")),
-    trend: NUM(at(row, "trend")),
-  }));
+  const sid = col("sid"), n = col("n"), pos = col("pos"), tm = col("tm");
+  const val = col("val"), vor = col("vor"), rnk = col("rnk"), rho = col("rho"), trend = col("trend");
+  const out: SnapshotPlayer[] = [];
+  for (let i = 0; i < payload.count; i++) {
+    out.push({
+      id: String(sid?.[i] ?? ""),
+      full_name: STR(n?.[i]) ?? "",
+      position: STR(pos?.[i]),
+      nfl_team: STR(tm?.[i]),
+      value: NUM(val?.[i]),
+      vor: NUM(vor?.[i]),
+      rank: NUM(rnk?.[i]),
+      predictability: NUM(rho?.[i]),
+      trend: NUM(trend?.[i]),
+    });
+  }
+  return out;
 }
 
 // Decode a gzip blob to JSON using the platform's native stream — supported in

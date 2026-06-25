@@ -47,19 +47,33 @@ def _universe(n: int) -> list[dict]:
     return rows
 
 
-def test_payload_roundtrip():
-    """A built payload decodes back to the same rows (columnar array-of-arrays)."""
+def test_payload_is_columnar_and_roundtrips():
+    """Columnar layout: one array per column (better gzip than row-arrays), and
+    boom/bust are NOT shipped (the list never uses them — the lazy card does)."""
     rows = [_row("4046", "Patrick Mahomes", "QB", "KC", 1),
             _row("6794", "Bijan Robinson", "RB", "ATL", 2)]
     payload = ps.build_payload(rows, profile="default", engine="vorp")
     assert payload["cols"][0] == "sid"
+    assert "data" in payload and "rows" not in payload          # columnar, not row-arrays
+    assert len(payload["data"]) == len(payload["cols"])         # one array per column
+    assert "boom" not in payload["cols"] and "bust" not in payload["cols"]
     assert payload["count"] == 2
     decoded = ps.decode_payload(payload)
     assert decoded[0]["sid"] == "4046"
     assert decoded[0]["n"] == "Patrick Mahomes"
     assert decoded[1]["pos"] == "RB"
     assert decoded[0]["rnk"] == 1
-    print("✓ payload round-trips through build → decode")
+    print("✓ payload is columnar (no boom/bust) and round-trips through build → decode")
+
+
+def test_floats_are_rounded_for_the_wire():
+    """val/vor round to 1dp, rho/trend to 2dp — ~9KB off the full universe."""
+    row = {"sleeper_id": "4046", "full_name": "P M", "position": "QB", "nfl_team": "KC",
+           "value": 199.6789, "vor": 141.1349, "rank": 1, "predictability": 0.7156, "trend": 0.3742}
+    [r] = ps.decode_payload(ps.build_payload([row], "default", "vorp"))
+    assert r["val"] == 199.7 and r["vor"] == 141.1   # 1dp
+    assert r["rho"] == 0.72 and r["trend"] == 0.37    # 2dp
+    print("✓ wire floats rounded (val/vor 1dp, rho/trend 2dp)")
 
 
 def test_compress_decompress_roundtrip():
@@ -106,7 +120,8 @@ def test_manifest_entry_shape():
 
 
 def main():
-    test_payload_roundtrip()
+    test_payload_is_columnar_and_roundtrips()
+    test_floats_are_rounded_for_the_wire()
     test_compress_decompress_roundtrip()
     test_content_hash_idempotent_and_sensitive()
     test_full_universe_under_60kb()
