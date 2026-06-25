@@ -8,7 +8,7 @@ with the 8-step ritual (`docs/workflow/GIT_WORKFLOW.md`). Versioning: `v[phase].
 | [v2.0](../../archive/v2/v2.0-foundation.md) | `v2` (+ `v2.0-*`) | Foundation & De-Andrew-ification | #8, workflow, tokens, a11y/motion scaffold | **Shipped (v2.0.0)** |
 | [v2.1](../../archive/v2/v2.1-design-homepage.md) | `v2.1-*` | Design System & Homepage revamp | #1 | **Shipped (v2.1.0)** |
 | [v2.2](../../archive/v2/v2.2-scoring.md) | `v2.2-*` | Scoring & Value-Engine upgrade | #3 | **Shipped (v2.2.0)** |
-| [v2.3](v2.3-player-data.md) | `v2.3-*` | Player Data Layer & Players tab | #2 | Planned |
+| [v2.3](../../archive/v2/v2.3-player-data.md) | `v2.3-*` | Player Data Layer & Players tab | #2 | **Shipped (v2.3.0)** |
 | [v2.4](v2.4-draft-logic.md) | `v2.4-*` | Draft Logic redo + Backtesting | #4 | Planned |
 | [v2.5](v2.5-auth-security.md) | `v2.5-*` | Auth, Accounts & Security | #5, #7, #9 | Planned |
 | [v2.6](v2.6-gated-public-tabs.md) | `v2.6-*` | Gated + Public League/Waivers/Trades | #5, #6 | Planned |

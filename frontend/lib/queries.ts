@@ -71,13 +71,20 @@ export interface PlayerDetail {
   history: Array<{ season: number; fantasy_pts: number | null; stats: any }>;
 }
 
+// True for a canonical UUID; anything else (e.g. a Sleeper id) resolves by sleeper_id.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Everything the player detail page needs, in one place (null-safe). `engine`
 // selects which precomputed value set to read so the card morphs on the toggle.
-export async function getPlayerDetail(id: string, engine: Engine = "vorp"): Promise<PlayerDetail | null> {
+// `idOrSleeper` accepts either the players.id UUID (links from draft/trade/roster
+// boards) or the snapshot's compact sleeper_id (links from the Players tab).
+export async function getPlayerDetail(idOrSleeper: string, engine: Engine = "vorp"): Promise<PlayerDetail | null> {
   const sb = getSupabase();
   if (!sb) return null;
-  const { data: player } = await sb.from("players").select(PLAYER_COLS).eq("id", id).maybeSingle();
+  const lookupCol = UUID_RE.test(idOrSleeper) ? "id" : "sleeper_id";
+  const { data: player } = await sb.from("players").select(PLAYER_COLS).eq(lookupCol, idOrSleeper).maybeSingle();
   if (!player) return null;
+  const id = (player as Player).id; // canonical UUID for the dependent reads
 
   const [{ data: value }, { data: projection }, { data: history }] = await Promise.all([
     sb.from("player_value").select("*").eq("player_id", id).eq("engine", engine).maybeSingle(),
@@ -247,19 +254,25 @@ export async function getPlayersWithValueByIds(ids: string[]): Promise<PlayerWit
   });
 }
 
-// ALL players ranked by value, paginating past PostgREST's 1000-row cap (#1).
+// ALL players ranked by value, with NO implicit row cap (#2). Uses keyset
+// pagination on `rank` (unique per engine): each page seeks `rank > cursor`
+// rather than `offset`, so it's stable and O(1) per page regardless of size.
+// The Players tab reads the precomputed snapshot (lib/snapshot.ts); this remains
+// the live path for the draft board.
 export async function getAllPlayersByValue(engine: Engine = "vorp"): Promise<PlayerWithValue[]> {
   const sb = getSupabase();
   if (!sb) return [];
   const out: PlayerWithValue[] = [];
   const PAGE = 1000;
-  for (let start = 0; ; start += PAGE) {
+  let afterRank = -1; // exclusive keyset cursor on rank
+  for (;;) {
     const { data, error } = await sb
       .from("player_value")
       .select(`value,vor,replacement,boom,bust,adp,rank,predictability,engine,player_id,players!inner(${PLAYER_COLS})`)
       .eq("engine", engine)
+      .gt("rank", afterRank)
       .order("rank")
-      .range(start, start + PAGE - 1);
+      .limit(PAGE);
     if (error) { console.error("[getAllPlayersByValue]", error.message); break; }
     const rows = data ?? [];
     for (const r of rows as any[]) {
@@ -271,6 +284,7 @@ export async function getAllPlayersByValue(engine: Engine = "vorp"): Promise<Pla
       });
     }
     if (rows.length < PAGE) break;
+    afterRank = (rows[rows.length - 1] as any).rank;
   }
   return out;
 }

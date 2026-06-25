@@ -70,3 +70,20 @@ a default cap.
 - Table scroll 60fps with the full universe; sort/filter/search < 50ms.
 - Player detail lazy-loaded + prefetched on intent.
 - Snapshot pipeline idempotent; manifest + immutable-blob caching verified at the edge.
+
+## Shipped (v2.3.0) — wire-format note
+
+The compression above landed as **gzip, not brotli**: Supabase Storage does not persist a
+`Content-Encoding` header (so a stored brotli blob would reach the browser undeclared and
+break parsing), and `DecompressionStream('gzip')` lets the client decode natively — brotli
+isn't supported there. The blob is stored octet-stream with `cache-control = <seconds>`
+(storage3 emits `max-age=<value>`); content-hashed names give effective immutability. The
+row id on the wire is the compact **`sleeper_id`**, not the UUID (UUID entropy alone blew
+the budget). Format is **array-of-arrays keyed by a short column header** (minified-JSON
+path); gzip hits 45.4KB for ~2,800 players, so the columnar upgrade was unneeded. Full
+delta: `docs/archive/v2/v2.3-player-data.md` (As shipped).
+
+Wire format landed **columnar** (one array per column under `data`, `WIRE_VERSION = 2`): the
+real universe is 4,254 players, which a row-array snapshot rendered at 78KB — over budget.
+Columnar + dropping `boom`/`bust` (list-unused; on the lazy card) + 1dp rounding gives
+**58.6KB for the full universe, no cap** (the doc's "upgrade to columnar if needed" path).
