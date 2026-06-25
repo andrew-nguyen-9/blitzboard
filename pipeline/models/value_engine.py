@@ -29,6 +29,32 @@ CONSENSUS_W = 18.0      # consensus (Sleeper search_rank) nudge for the deep/ben
 # rough positional peak ages (value-trajectory, not just this season)
 PEAK_AGE = {"RB": 24, "WR": 26, "TE": 26, "QB": 29, "K": 30, "DST": 99}
 
+# ── Predictability discount + streamer replacement (#3: K/DEF overvalued) ─────
+DISCOUNT_K = 1.0                       # f(ρ)=ρ^k exponent; tuned by backtest (v2.4.3)
+STREAMER_PCT = 0.60                    # K/DEF replacement = this points-percentile (upper-middle)
+STREAMER_POSITIONS = ("K", "DST")     # positions everyone streams off waivers
+
+
+def f_predictability(rho: float | None, k: float) -> float:
+    """The VORP discount f(ρ)=ρ^k. A missing ρ means no discount (1.0); a perfectly
+    predictable player keeps all of its value, a volatile one is compressed toward
+    replacement. Monotone-increasing in ρ, bounded in [0,1] for ρ∈[0,1], k≥0."""
+    if rho is None:
+        return 1.0
+    rho = 0.0 if rho < 0 else 1.0 if rho > 1 else rho
+    return rho ** k
+
+
+def _streamer_replacement(means_desc: list[float], pct: float) -> float:
+    """K/DEF replacement = the matchup-optimized streamer's points, which sits at
+    the upper-middle of the position (SCORING.md §2): because every team streams,
+    the realistically-available K/DEF each week is near the positional median, not
+    the worst starter. `means_desc` is the position's projected means, best-first."""
+    if not means_desc:
+        return 0.0
+    idx = round((1 - pct) * (len(means_desc) - 1))
+    return means_desc[max(0, min(idx, len(means_desc) - 1))]
+
 
 def _youth_factor(pos: str, age: int | None) -> float:
     if age is None:
@@ -76,6 +102,10 @@ class VorpEngine(ValueEngine):
 
     name = "vorp"
 
+    def __init__(self, discount_k: float = DISCOUNT_K, streamer_pct: float = STREAMER_PCT):
+        self.discount_k = discount_k
+        self.streamer_pct = streamer_pct
+
     def compute(self, projections, positions, rules, meta=None):
         meta = meta or {}
         repl_rank = rules.replacement_ranks()
@@ -94,9 +124,15 @@ class VorpEngine(ValueEngine):
         pos_rank: dict[str, int] = {}        # player_id → 1-based rank within position
         pos_means: dict[str, list[float]] = {}
         for pos, ranked in by_pos.items():
-            n = repl_rank.get(pos, 1)
-            replacement[pos] = ranked[n - 1][1] if len(ranked) >= n else (ranked[-1][1] if ranked else 0.0)
-            pos_means[pos] = [m for _, m in ranked]
+            means_desc = [m for _, m in ranked]
+            if pos in STREAMER_POSITIONS:
+                # everyone streams K/DEF → replacement is the upper-middle streamer,
+                # not the 12th-best (SCORING.md §2). Collapses the elite↔replacement gap.
+                replacement[pos] = _streamer_replacement(means_desc, self.streamer_pct)
+            else:
+                n = repl_rank.get(pos, 1)
+                replacement[pos] = means_desc[n - 1] if len(means_desc) >= n else (means_desc[-1] if means_desc else 0.0)
+            pos_means[pos] = means_desc
             for i, (pid, _) in enumerate(ranked, 1):
                 pos_rank[pid] = i
 
@@ -120,9 +156,12 @@ class VorpEngine(ValueEngine):
             upside = max(0.0, proj.ceiling - proj.mean) * UPSIDE_W
             # 4) future-value YOUTH factor
             youth = _youth_factor(pos, m.get("age"))
+            # 5) predictability discount f(ρ)=ρ^k — compresses unreproducible value
+            #    (volatile K/DEF) toward replacement without special-casing position.
+            disc = f_predictability(proj.predictability, self.discount_k)
 
             if vor > 0:
-                shaped = (vor * elite + cliff + upside) * youth
+                shaped = (vor * elite + cliff + upside) * disc * youth
             else:
                 # deep/bench pool: real projections are thin & nearly tied here, so
                 # order by Sleeper's consensus rank (search_rank) + a little upside.
