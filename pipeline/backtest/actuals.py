@@ -54,3 +54,32 @@ def offense_weekly(season: int) -> list[dict]:
             "points": score_offense_week(stats, sc),
         })
     return rows
+
+
+# PBP columns we need for distance-K (Task 3) and yardage/points-allowed D/ST (Task 4).
+_PBP_COLS = [
+    "play_type", "field_goal_result", "kick_distance", "extra_point_result",
+    "kicker_player_id", "season", "week", "season_type",
+    "sack", "interception", "fumble_lost", "fumble_recovery_1_team",
+    "safety", "touchdown", "return_touchdown", "posteam", "defteam",
+    "yards_gained", "home_team", "away_team", "home_score", "away_score",
+]
+
+
+def _pbp_frame(season: int):
+    import nfl_data_py as nfl
+    return cached(f"pbp_{season}", lambda: nfl.import_pbp_data([season], columns=_PBP_COLS))
+
+
+def kicking_weekly(season: int) -> list[dict]:
+    from .rules import load_rules_fixture
+    from .pbp_kicking import kicker_week_buckets
+    from models.scoring import score_kicking
+    sc = load_rules_fixture().scoring
+    df = _pbp_frame(season)
+    if "season_type" in df.columns:
+        df = df[df["season_type"] == "REG"]
+    buckets = kicker_week_buckets(df.to_dict("records"))
+    return [{"player_key": kid, "name": kid, "pos": "K", "team": "",
+             "season": s, "week": w, "points": score_kicking(b, sc)}
+            for (kid, s, w), b in buckets.items()]
