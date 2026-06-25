@@ -23,6 +23,7 @@ from models import (
     EnsembleProjector,
     KickerProjector,
     DefenseProjector,
+    Predictability,
     VorpEngine,
     MonteCarloEngine,
     load_league_rules,
@@ -135,6 +136,9 @@ def main() -> None:
     kicker = KickerProjector(store, rules, args.season, teams=rules.league_size)
     defense = DefenseProjector(store, rules, args.season, teams=rules.league_size)
 
+    # predictability ρ — shared positional priors computed once from the same store
+    pred = Predictability(store, rules)
+
     def projector_for(pos: str):
         if pos == "K":
             return kicker
@@ -156,6 +160,7 @@ def main() -> None:
         pr = projector_for(pos).project(p)
         if not pr:
             continue
+        pr.predictability = round(pred.score(pr.player_id, p["position"]), 4)
         projections[p["id"]] = pr
         positions[p["id"]] = p["position"]
         proj_rows.append({
@@ -163,6 +168,7 @@ def main() -> None:
             "source": "ensemble", "scoring_profile": "default",
             "mean": pr.mean, "floor": pr.floor, "ceiling": pr.ceiling,
             "stdev": pr.stdev, "by_stat": pr.by_stat,
+            "predictability": pr.predictability,
         })
     console.print(f"[cyan]projected {len(proj_rows)} players[/cyan]")
     # Delete-before-insert: projections key includes NULL `week` for season rows, which
@@ -203,6 +209,7 @@ def main() -> None:
         "scoring_profile": "default", "value": round(v.value, 2), "vor": round(v.vor, 2),
         "replacement": round(v.replacement, 2), "boom": v.boom, "bust": v.bust,
         "adp": v.adp, "rank": v.rank,
+        "predictability": projections[v.player_id].predictability,
     } for v in values]
     upsert("player_value", value_rows, on_conflict="player_id,league_id,engine,scoring_profile")
     console.print(f"[green]✓ wrote {len(value_rows)} {args.engine} values[/green]")

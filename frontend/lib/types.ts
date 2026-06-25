@@ -32,6 +32,7 @@ export interface PlayerValue {
   bust: number | null;
   adp: number | null;
   rank: number | null;
+  predictability?: number | null;   // ρ∈[0,1] (SCORING.md §1) — drives the predictability meter
 }
 
 // Player joined with its value for a given engine (Player Explorer row).

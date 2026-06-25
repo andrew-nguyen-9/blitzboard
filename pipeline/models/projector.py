@@ -86,6 +86,7 @@ class Projection:
     stdev: float
     week: int | None = None
     by_stat: dict = field(default_factory=dict)
+    predictability: float | None = None   # ρ∈[0,1] (SCORING.md §1) — set by the orchestrator
 
 
 # Age-curve peak + per-year falloff by position (multiplier vs prior season).

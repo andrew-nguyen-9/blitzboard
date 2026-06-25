@@ -13,6 +13,7 @@ import random
 from models import (
     LeagueRules, HistoryStore, HeuristicProjector, RegressionProjector,
     EnsembleProjector, KickerProjector, DefenseProjector, VorpEngine,
+    Predictability,
     score_stats, score_kicking, score_defense,
     VaderScorer, PlayerMatcher,
 )
@@ -93,13 +94,22 @@ def main() -> None:
         (HeuristicProjector(store, RULES, 2025), 1.0),
         (RegressionProjector(store, RULES, 2025), 1.0),
     ])
+    pred = Predictability(store, RULES)
     projections, positions = {}, {}
     for p in players:
         pr = ensemble.project(p)
         assert pr and pr.mean > 0 and pr.stdev > 0 and pr.ceiling > pr.floor
+        pr.predictability = pred.score(pr.player_id, p["position"])
+        assert 0.0 <= pr.predictability <= 1.0
         projections[p["id"]] = pr
         positions[p["id"]] = p["position"]
-    print(f"✓ projected {len(projections)} players (mean+distribution)")
+    print(f"✓ projected {len(projections)} players (mean+distribution+predictability)")
+
+    # predictability flows through the chain and orders K/DST below skill positions
+    assert pred.prior["K"] < pred.prior["QB"] and pred.prior["DST"] < pred.prior["RB"]
+    rb_rho = sum(projections[p["id"]].predictability for p in players if positions[p["id"]] == "RB")
+    rb_rho /= sum(1 for p in players if positions[p["id"]] == "RB")
+    print(f"✓ predictability: K/DST priors below skill; mean RB ρ={rb_rho:.2f}")
 
     values = VorpEngine().compute(projections, positions, RULES)
     assert values[0].rank == 1 and values[0].value >= values[-1].value

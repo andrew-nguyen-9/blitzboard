@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { dialGeometry, ridgePath, formatStat, distributionSummary, predictabilityBand } from "./viz";
+import { dialGeometry, ridgePath, formatStat, distributionSummary, predictabilityBand, gaussianSamples } from "./viz";
 
 describe("dialGeometry", () => {
   const r = 84;
@@ -146,5 +146,32 @@ describe("predictabilityBand", () => {
     expect(predictabilityBand(-1).lit).toBe(0);
     expect(predictabilityBand(Number.NaN).lit).toBe(0);
     expect(predictabilityBand(Number.NaN).tier).toBe("Volatile");
+  });
+});
+
+describe("gaussianSamples", () => {
+  test("recovers the requested mean and stdev (deterministic, no RNG)", () => {
+    const s = gaussianSamples(100, 20, 400);
+    expect(s.length).toBe(400);
+    const mean = s.reduce((a, b) => a + b, 0) / s.length;
+    const sd = Math.sqrt(s.reduce((a, b) => a + (b - mean) ** 2, 0) / s.length);
+    expect(mean).toBeCloseTo(100, 1);
+    expect(sd).toBeGreaterThan(17);
+    expect(sd).toBeLessThan(22);
+  });
+
+  test("is stable across calls (same input → identical output, SSR-safe)", () => {
+    expect(gaussianSamples(50, 10, 64)).toEqual(gaussianSamples(50, 10, 64));
+  });
+
+  test("a wider stdev yields a wider spread (the predictability-aware ridge)", () => {
+    const span = (s: number[]) => Math.max(...s) - Math.min(...s);
+    expect(span(gaussianSamples(100, 40, 200))).toBeGreaterThan(span(gaussianSamples(100, 15, 200)));
+  });
+
+  test("degenerate inputs return an empty sample (renders the empty ridge)", () => {
+    expect(gaussianSamples(100, 0, 200)).toEqual([]);
+    expect(gaussianSamples(100, -5, 200)).toEqual([]);
+    expect(gaussianSamples(100, 20, 0)).toEqual([]);
   });
 });

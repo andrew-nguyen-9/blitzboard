@@ -29,6 +29,33 @@ CONSENSUS_W = 18.0      # consensus (Sleeper search_rank) nudge for the deep/ben
 # rough positional peak ages (value-trajectory, not just this season)
 PEAK_AGE = {"RB": 24, "WR": 26, "TE": 26, "QB": 29, "K": 30, "DST": 99}
 
+# ── Predictability discount + streamer replacement (#3: K/DEF overvalued) ─────
+DISCOUNT_K = 1.0                       # f(ρ)=ρ^k exponent; tuned by backtest (v2.4.3)
+STREAMER_PCT = 0.60                    # K/DEF replacement = this points-percentile (upper-middle)
+STREAMER_POSITIONS = ("K", "DST")     # positions everyone streams off waivers
+MC_VOL_GAIN = 0.6                      # how much low ρ widens Monte Carlo σ (v2.2.3.1)
+
+
+def f_predictability(rho: float | None, k: float) -> float:
+    """The VORP discount f(ρ)=ρ^k. A missing ρ means no discount (1.0); a perfectly
+    predictable player keeps all of its value, a volatile one is compressed toward
+    replacement. Monotone-increasing in ρ, bounded in [0,1] for ρ∈[0,1], k≥0."""
+    if rho is None:
+        return 1.0
+    rho = 0.0 if rho < 0 else 1.0 if rho > 1 else rho
+    return rho ** k
+
+
+def _replacement_index(pos: str, n: int, repl_rank: int, streamer_pct: float) -> int:
+    """0-based, best-first index of a position's replacement player — shared by both
+    engines so they price replacement identically. K/DEF use the upper-middle weekly-
+    streamer percentile (everyone streams off waivers, SCORING.md §2); every other
+    position uses league slot demand (superflex-aware). Clamped to [0, n-1]."""
+    if n <= 0:
+        return 0
+    idx = round((1 - streamer_pct) * (n - 1)) if pos in STREAMER_POSITIONS else repl_rank - 1
+    return max(0, min(idx, n - 1))
+
 
 def _youth_factor(pos: str, age: int | None) -> float:
     if age is None:
@@ -76,6 +103,10 @@ class VorpEngine(ValueEngine):
 
     name = "vorp"
 
+    def __init__(self, discount_k: float = DISCOUNT_K, streamer_pct: float = STREAMER_PCT):
+        self.discount_k = discount_k
+        self.streamer_pct = streamer_pct
+
     def compute(self, projections, positions, rules, meta=None):
         meta = meta or {}
         repl_rank = rules.replacement_ranks()
@@ -94,9 +125,10 @@ class VorpEngine(ValueEngine):
         pos_rank: dict[str, int] = {}        # player_id → 1-based rank within position
         pos_means: dict[str, list[float]] = {}
         for pos, ranked in by_pos.items():
-            n = repl_rank.get(pos, 1)
-            replacement[pos] = ranked[n - 1][1] if len(ranked) >= n else (ranked[-1][1] if ranked else 0.0)
-            pos_means[pos] = [m for _, m in ranked]
+            means_desc = [m for _, m in ranked]
+            idx = _replacement_index(pos, len(means_desc), repl_rank.get(pos, 1), self.streamer_pct)
+            replacement[pos] = means_desc[idx] if means_desc else 0.0
+            pos_means[pos] = means_desc
             for i, (pid, _) in enumerate(ranked, 1):
                 pos_rank[pid] = i
 
@@ -120,9 +152,12 @@ class VorpEngine(ValueEngine):
             upside = max(0.0, proj.ceiling - proj.mean) * UPSIDE_W
             # 4) future-value YOUTH factor
             youth = _youth_factor(pos, m.get("age"))
+            # 5) predictability discount f(ρ)=ρ^k — compresses unreproducible value
+            #    (volatile K/DEF) toward replacement without special-casing position.
+            disc = f_predictability(proj.predictability, self.discount_k)
 
             if vor > 0:
-                shaped = (vor * elite + cliff + upside) * youth
+                shaped = (vor * elite + cliff + upside) * disc * youth
             else:
                 # deep/bench pool: real projections are thin & nearly tied here, so
                 # order by Sleeper's consensus rank (search_rank) + a little upside.
@@ -171,13 +206,19 @@ class MonteCarloEngine(ValueEngine):
     distribution N times so variance becomes an explicit input to value:
       value = E[VOR] + UPSIDE_W × (P90_VOR − E[VOR]) × youth_factor
     boom/bust = P90/P10 VOR across simulations (not projection bounds).
-    Superflex replacement levels are the same as VORP (from LeagueRules).
+
+    v2.2.3: the sampled σ is widened by low predictability (`1 + MC_VOL_GAIN·(1−ρ)`)
+    so volatile players get correctly wider boom/bust. Replacement levels (incl. the
+    K/DEF streamer level) are shared with VORP via `_replacement_index`, so the two
+    engines price the board coherently. `seed` makes a run reproducible.
     """
 
     name = "monte_carlo"
 
-    def __init__(self, n_sims: int = 10_000):
+    def __init__(self, n_sims: int = 10_000, streamer_pct: float = STREAMER_PCT, seed: int | None = None):
         self.n_sims = n_sims
+        self.streamer_pct = streamer_pct
+        self.seed = seed
 
     def compute(self, projections, positions, rules, meta=None):
         try:
@@ -188,7 +229,8 @@ class MonteCarloEngine(ValueEngine):
         meta = meta or {}
         repl_rank = rules.replacement_ranks()
 
-        # Only score positions VORP handles (K/DST have thin distributions; skip)
+        # Score every position the board ranks (K/DST included — their value comes
+        # from the streamer replacement + predictability-widened distribution).
         eligible = {
             pid: proj for pid, proj in projections.items()
             if positions.get(pid) in BASE_POSITIONS
@@ -199,15 +241,22 @@ class MonteCarloEngine(ValueEngine):
 
         means = np.array([eligible[p].mean for p in pids], dtype=float)
         stdevs = np.array([eligible[p].stdev for p in pids], dtype=float)
-        floors = np.array([eligible[p].floor for p in pids], dtype=float)
-        ceilings = np.array([eligible[p].ceiling for p in pids], dtype=float)
         pos_arr = np.array([positions.get(p, "?") for p in pids])
 
+        # Predictability-aware σ: a low-ρ player is sampled WIDER, so its boom/bust
+        # honestly reflects how unreproducible the projection is (SCORING.md §3.1).
+        rhos = np.array([eligible[p].predictability if eligible[p].predictability is not None else 1.0
+                         for p in pids], dtype=float)
+        eff_stdevs = stdevs * (1.0 + MC_VOL_GAIN * (1.0 - rhos))
+        # Re-derive clip bounds from the EFFECTIVE σ, else widening is clipped away.
+        floors = means - 1.28 * eff_stdevs
+        ceilings = means + 1.28 * eff_stdevs
+
         # Draw n_sims season totals per player; clip approximates truncated normal
-        # (Projector sets floor/ceiling at ±1.28σ so clipping ≈ 80th-pct bounds)
-        rng = np.random.default_rng()
+        # (bounds at ±1.28σ_eff ≈ 80th-pct). `seed` makes the run reproducible.
+        rng = np.random.default_rng(self.seed)
         samples = np.clip(
-            rng.normal(means, stdevs, (self.n_sims, len(pids))),
+            rng.normal(means, eff_stdevs, (self.n_sims, len(pids))),
             floors, ceilings,
         )  # shape: (n_sims, n_players)
 
@@ -217,10 +266,10 @@ class MonteCarloEngine(ValueEngine):
         sim_pos = [pos for pos in BASE_POSITIONS if pos in pos_arr]
         for pos in sim_pos:
             mask = pos_arr == pos
-            n = repl_rank.get(pos, 1)
             pos_samp = samples[:, mask]                        # (n_sims, n_pos)
             sorted_desc = np.sort(pos_samp, axis=1)[:, ::-1]  # best-first per sim
-            idx = min(n - 1, sorted_desc.shape[1] - 1)
+            # same replacement index as VORP (incl. K/DEF streamer level)
+            idx = _replacement_index(pos, sorted_desc.shape[1], repl_rank.get(pos, 1), self.streamer_pct)
             repl_sim[:, mask] = sorted_desc[:, idx : idx + 1]
             # scalar replacement (from means) for the PlayerValue.replacement field
             pos_means = sorted(means[mask].tolist(), reverse=True)

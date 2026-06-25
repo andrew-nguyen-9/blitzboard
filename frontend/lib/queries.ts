@@ -36,7 +36,7 @@ export async function getPlayersByValue(
   const { data, error } = await sb
     .from("player_value")
     .select(
-      `value,vor,replacement,boom,bust,adp,rank,engine,player_id,
+      `value,vor,replacement,boom,bust,adp,rank,predictability,engine,player_id,
        players!inner(${PLAYER_COLS})`,
     )
     .eq("engine", engine)
@@ -59,6 +59,7 @@ export async function getPlayersByValue(
       bust: r.bust,
       adp: r.adp,
       rank: r.rank,
+      predictability: r.predictability,
     },
   }));
 }
@@ -70,15 +71,16 @@ export interface PlayerDetail {
   history: Array<{ season: number; fantasy_pts: number | null; stats: any }>;
 }
 
-// Everything the player detail page needs, in one place (null-safe).
-export async function getPlayerDetail(id: string): Promise<PlayerDetail | null> {
+// Everything the player detail page needs, in one place (null-safe). `engine`
+// selects which precomputed value set to read so the card morphs on the toggle.
+export async function getPlayerDetail(id: string, engine: Engine = "vorp"): Promise<PlayerDetail | null> {
   const sb = getSupabase();
   if (!sb) return null;
   const { data: player } = await sb.from("players").select(PLAYER_COLS).eq("id", id).maybeSingle();
   if (!player) return null;
 
   const [{ data: value }, { data: projection }, { data: history }] = await Promise.all([
-    sb.from("player_value").select("*").eq("player_id", id).eq("engine", "vorp").maybeSingle(),
+    sb.from("player_value").select("*").eq("player_id", id).eq("engine", engine).maybeSingle(),
     sb.from("projections").select("*").eq("player_id", id).eq("source", "ensemble").order("season", { ascending: false }).limit(1).maybeSingle(),
     sb.from("player_stats_history").select("season,fantasy_pts,stats").eq("player_id", id).is("week", null).order("season"),
   ]);
@@ -231,7 +233,7 @@ export async function getPlayersWithValueByIds(ids: string[]): Promise<PlayerWit
   if (!sb || !ids.length) return [];
   const [{ data: players }, { data: vals }] = await Promise.all([
     sb.from("players").select(PLAYER_COLS).in("id", ids),
-    sb.from("player_value").select("player_id,value,vor,boom,bust,rank").eq("engine", "vorp").in("player_id", ids),
+    sb.from("player_value").select("player_id,value,vor,boom,bust,rank,predictability").eq("engine", "vorp").in("player_id", ids),
   ]);
   const vById = new Map((vals ?? []).map((v: any) => [v.player_id, v]));
   return (players ?? []).map((p: any) => {
@@ -239,7 +241,7 @@ export async function getPlayersWithValueByIds(ids: string[]): Promise<PlayerWit
     return {
       ...(p as Player),
       value: v
-        ? { player_id: p.id, engine: "vorp", value: v.value, vor: v.vor, replacement: null, boom: v.boom, bust: v.bust, adp: null, rank: v.rank }
+        ? { player_id: p.id, engine: "vorp", value: v.value, vor: v.vor, replacement: null, boom: v.boom, bust: v.bust, adp: null, rank: v.rank, predictability: v.predictability }
         : null,
     };
   });
@@ -254,7 +256,7 @@ export async function getAllPlayersByValue(engine: Engine = "vorp"): Promise<Pla
   for (let start = 0; ; start += PAGE) {
     const { data, error } = await sb
       .from("player_value")
-      .select(`value,vor,replacement,boom,bust,adp,rank,engine,player_id,players!inner(${PLAYER_COLS})`)
+      .select(`value,vor,replacement,boom,bust,adp,rank,predictability,engine,player_id,players!inner(${PLAYER_COLS})`)
       .eq("engine", engine)
       .order("rank")
       .range(start, start + PAGE - 1);
@@ -264,7 +266,8 @@ export async function getAllPlayersByValue(engine: Engine = "vorp"): Promise<Pla
       out.push({
         ...(r.players as Player),
         value: { player_id: r.player_id, engine: r.engine, value: r.value, vor: r.vor,
-          replacement: r.replacement, boom: r.boom, bust: r.bust, adp: r.adp, rank: r.rank },
+          replacement: r.replacement, boom: r.boom, bust: r.bust, adp: r.adp, rank: r.rank,
+          predictability: r.predictability },
       });
     }
     if (rows.length < PAGE) break;
