@@ -6,7 +6,7 @@
 // to an upside/thinness model and realistically defer K/DST to the final rounds.
 import type { PlayerWithValue } from "./types";
 import type { RosterSlot } from "./draft";
-import { fillRoster } from "./draft";
+import { fillRoster, SUPERFLEX_ROSTER } from "./draft";
 import type { MappedPick } from "./sleeperDraft";
 
 const POS_GROUPS = ["QB", "RB", "WR", "TE", "K", "DST"] as const;
@@ -83,6 +83,110 @@ function ownedByPos(teamPicks: PlayerWithValue[]): Record<string, number> {
     out[pos] = (out[pos] ?? 0) + 1;
   }
   return out;
+}
+
+// ── Additive draft policy (v2.4.2) ──────────────────────────────────────────
+// Every term below resolves to projected fantasy points in the active league's
+// scoring, so pick_score = max(marginalStarterValue, benchValue) − overfill is
+// a meaningful sum. Coefficients live in DEFAULT_POLICY so v2.4.3 can tune/ablate.
+
+export const STARTABLE_WEEKS = 17;
+
+export interface PolicyParams {
+  runDepletion: number;          // hot-position depletion multiplier in the replacement walk
+  benchByeWeight: number;        // weight on bye-coverage starts
+  benchInjuryWeight: number;     // weight on injury-cover starts
+  benchCeilingWeight: number;    // weight on ceiling-week starts
+  boomWeight: number;            // blend of boom vs mean in value-when-started (0..1)
+  availabilityPrior: number;     // default health/role availability (~0.9)
+  handcuffAmplify: number;       // injury-cover multiplier for a same-team handcuff
+  injuryRate: Record<string, number>; // expected fraction of the season a starter at pos misses
+  maxCeilingWeeks: number;       // cap on ceiling-week starts
+  ceilingScale: number;          // scales boom-edge into ceiling weeks
+  kdstCapRoundsFromEnd: number;  // K/DST become draftable only inside this many final rounds
+  overfillDepth: Record<string, number>; // reasonable owned count per position before penalty
+  overfillPenaltyPerExtra: number;        // points penalty per player past the depth cap
+}
+
+export const DEFAULT_POLICY: PolicyParams = {
+  runDepletion: 1.6,
+  benchByeWeight: 1,
+  benchInjuryWeight: 1,
+  benchCeilingWeight: 1,
+  boomWeight: 0.5,
+  availabilityPrior: 0.9,
+  handcuffAmplify: 1.6,
+  injuryRate: { QB: 0.08, RB: 0.18, WR: 0.12, TE: 0.12, K: 0.03, DST: 0.0 },
+  maxCeilingWeeks: 4,
+  ceilingScale: 6,
+  kdstCapRoundsFromEnd: 2,
+  overfillDepth: { QB: 3, RB: 5, WR: 5, TE: 2, K: 1, DST: 1 },
+  overfillPenaltyPerExtra: 25,
+};
+
+// Season projection in league scoring — the common unit for every additive term.
+export function proj(p: PlayerWithValue): number {
+  return (p.value?.vor ?? 0) + (p.value?.replacement ?? 0);
+}
+
+// Points of the optimal starting lineup these players can field (reuses fillRoster).
+export function optimalLineupPoints(
+  players: PlayerWithValue[],
+  roster: RosterSlot[] = SUPERFLEX_ROSTER,
+): number {
+  return fillRoster(players, roster).projectedPoints;
+}
+
+// A synthetic "replacement" body at a position with a given season projection.
+function syntheticReplacement(pos: string, projPts: number): PlayerWithValue {
+  return {
+    id: "__rep__",
+    full_name: "replacement",
+    position: pos,
+    nfl_team: null,
+    bye_week: null,
+    metadata: {},
+    value: { player_id: "__rep__", engine: "vorp", value: projPts, vor: projPts, replacement: 0, boom: projPts, bust: projPts, adp: null, rank: null },
+  } as PlayerWithValue;
+}
+
+// Projection of the player at `pos` you can realistically still get at your next turn:
+// walk the pool down by the expected number gone, accelerated when the position is running.
+export function expectedReplacementAtNextTurn(
+  pos: string,
+  pool: PlayerWithValue[],
+  picksUntilNext: number,
+  runs: RunInfo,
+  params: PolicyParams,
+): number {
+  const atPos = pool
+    .filter((p) => norm(p.position) === pos)
+    .sort((a, b) => proj(b) - proj(a));
+  if (atPos.length === 0) return 0;
+  const share = runs.rate[pos] ?? 0;
+  const accel = runs.hot.includes(pos) ? params.runDepletion : 1;
+  const gone = Math.floor(share * accel * picksUntilNext);
+  const idx = Math.min(atPos.length - 1, Math.max(0, gone));
+  return proj(atPos[idx]);
+}
+
+// How much this pick raises my optimal lineup over the replacement I'd still get next turn.
+export function marginalStarterValue(
+  cand: PlayerWithValue,
+  ctx: AIContext,
+  params: PolicyParams = DEFAULT_POLICY,
+): number {
+  const base = optimalLineupPoints(ctx.teamPicks, ctx.roster);
+  const candDelta = optimalLineupPoints([...ctx.teamPicks, cand], ctx.roster) - base;
+  if (candDelta <= 0) return 0; // does not crack the starting lineup — Term B (bench) handles it
+  const runs = detectRuns(ctx.allPicks, ctx.numTeams);
+  // The replacement is the NEXT player you'd get, so exclude the candidate itself — otherwise a
+  // position whose only body is the candidate would self-cancel to a 0 marginal (VONA).
+  const others = ctx.pool.filter((p) => p.id !== cand.id);
+  const repProj = expectedReplacementAtNextTurn(norm(cand.position), others, ctx.picksUntilNext, runs, params);
+  const rep = syntheticReplacement(norm(cand.position), repProj);
+  const repDelta = optimalLineupPoints([...ctx.teamPicks, rep], ctx.roster) - base;
+  return Math.max(0, candDelta - repDelta);
 }
 
 export interface ScoredPick {
