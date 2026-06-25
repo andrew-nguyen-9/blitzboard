@@ -117,6 +117,7 @@ create table if not exists projections (
   floor           numeric,
   ceiling         numeric,
   stdev           numeric,
+  predictability  numeric,                        -- ρ∈[0,1] (SCORING.md §1) — v2.2.1
   by_stat         jsonb default '{}',
   unique (player_id, season, week, source, scoring_profile)
 );
@@ -137,6 +138,7 @@ create table if not exists player_value (
   bust            numeric,
   adp             numeric,
   rank            int,
+  predictability  numeric,                        -- ρ∈[0,1] carried from projection — v2.2.1
   computed_at     timestamptz default now(),
   unique (player_id, league_id, engine, scoring_profile)
 );

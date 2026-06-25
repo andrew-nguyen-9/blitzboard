@@ -36,7 +36,7 @@ export async function getPlayersByValue(
   const { data, error } = await sb
     .from("player_value")
     .select(
-      `value,vor,replacement,boom,bust,adp,rank,engine,player_id,
+      `value,vor,replacement,boom,bust,adp,rank,predictability,engine,player_id,
        players!inner(${PLAYER_COLS})`,
     )
     .eq("engine", engine)
@@ -59,6 +59,7 @@ export async function getPlayersByValue(
       bust: r.bust,
       adp: r.adp,
       rank: r.rank,
+      predictability: r.predictability,
     },
   }));
 }
@@ -231,7 +232,7 @@ export async function getPlayersWithValueByIds(ids: string[]): Promise<PlayerWit
   if (!sb || !ids.length) return [];
   const [{ data: players }, { data: vals }] = await Promise.all([
     sb.from("players").select(PLAYER_COLS).in("id", ids),
-    sb.from("player_value").select("player_id,value,vor,boom,bust,rank").eq("engine", "vorp").in("player_id", ids),
+    sb.from("player_value").select("player_id,value,vor,boom,bust,rank,predictability").eq("engine", "vorp").in("player_id", ids),
   ]);
   const vById = new Map((vals ?? []).map((v: any) => [v.player_id, v]));
   return (players ?? []).map((p: any) => {
@@ -239,7 +240,7 @@ export async function getPlayersWithValueByIds(ids: string[]): Promise<PlayerWit
     return {
       ...(p as Player),
       value: v
-        ? { player_id: p.id, engine: "vorp", value: v.value, vor: v.vor, replacement: null, boom: v.boom, bust: v.bust, adp: null, rank: v.rank }
+        ? { player_id: p.id, engine: "vorp", value: v.value, vor: v.vor, replacement: null, boom: v.boom, bust: v.bust, adp: null, rank: v.rank, predictability: v.predictability }
         : null,
     };
   });
@@ -254,7 +255,7 @@ export async function getAllPlayersByValue(engine: Engine = "vorp"): Promise<Pla
   for (let start = 0; ; start += PAGE) {
     const { data, error } = await sb
       .from("player_value")
-      .select(`value,vor,replacement,boom,bust,adp,rank,engine,player_id,players!inner(${PLAYER_COLS})`)
+      .select(`value,vor,replacement,boom,bust,adp,rank,predictability,engine,player_id,players!inner(${PLAYER_COLS})`)
       .eq("engine", engine)
       .order("rank")
       .range(start, start + PAGE - 1);
@@ -264,7 +265,8 @@ export async function getAllPlayersByValue(engine: Engine = "vorp"): Promise<Pla
       out.push({
         ...(r.players as Player),
         value: { player_id: r.player_id, engine: r.engine, value: r.value, vor: r.vor,
-          replacement: r.replacement, boom: r.boom, bust: r.bust, adp: r.adp, rank: r.rank },
+          replacement: r.replacement, boom: r.boom, bust: r.bust, adp: r.adp, rank: r.rank,
+          predictability: r.predictability },
       });
     }
     if (rows.length < PAGE) break;

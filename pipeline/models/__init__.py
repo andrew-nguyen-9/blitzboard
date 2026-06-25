@@ -17,6 +17,7 @@ from .projector import (
     EnsembleProjector,
 )
 from .special_teams import KickerProjector, DefenseProjector
+from .predictability import Predictability, td_turnover_share
 from .sentiment import SentimentScorer, VaderScorer, PlayerMatcher, SentimentResult
 from .value_engine import ValueEngine, VorpEngine, MonteCarloEngine, PlayerValue
 
@@ -35,6 +36,8 @@ __all__ = [
     "EnsembleProjector",
     "KickerProjector",
     "DefenseProjector",
+    "Predictability",
+    "td_turnover_share",
     "SentimentScorer",
     "VaderScorer",
     "PlayerMatcher",
