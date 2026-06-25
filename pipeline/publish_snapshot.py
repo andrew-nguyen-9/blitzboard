@@ -32,13 +32,18 @@ import json
 
 from common import console, get_supabase, fetch_all
 
-# Compact wire format (DATA_TRANSFER.md §2): array-of-arrays keyed by a short
-# column header — kills per-row JSON key repetition. `sid` (Sleeper id) is the
-# row id: compact + stable, where UUIDs are high-entropy and blow the budget.
-# Tiers are intentionally NOT shipped — the client derives them from rank (single
-# source of truth in lib/tiers.ts), so there's no cross-language tier drift.
-COLS = ["sid", "n", "pos", "tm", "val", "vor", "rnk", "boom", "bust", "rho", "trend"]
-WIRE_VERSION = 1
+# Compact COLUMNAR wire format (DATA_TRANSFER.md §2): one array per column under
+# `data`, keyed by a short header — homogeneous columns gzip far better than
+# interleaved rows (the real 4,254-player universe is 78KB row-array vs ~59KB
+# columnar+rounded). `sid` (Sleeper id) is the row id: compact + stable, where
+# UUIDs are high-entropy and blow the budget. boom/bust are NOT shipped — the list
+# never renders them (they live on the lazy detail card). Tiers aren't shipped
+# either — the client derives them from rank (single source in lib/tiers.ts).
+COLS = ["sid", "n", "pos", "tm", "val", "vor", "rnk", "rho", "trend"]
+# Round on the wire: 1dp is plenty for VOR-scale values, 2dp for ρ/trend (~9KB off
+# the full universe). rank is an int; strings pass through.
+ROUND = {"val": 1, "vor": 1, "rho": 2, "trend": 2}
+WIRE_VERSION = 2
 BUCKET = "snapshots"
 MANIFEST_NAME = "manifest.json"
 # Cache-control is the max-age in SECONDS (storage3 emits `max-age=<value>` and
@@ -51,25 +56,27 @@ MANIFEST_CACHE = "60"
 _SRC = {
     "sid": "sleeper_id", "n": "full_name", "pos": "position", "tm": "nfl_team",
     "val": "value", "vor": "vor", "rnk": "rank",
-    "boom": "boom", "bust": "bust", "rho": "predictability", "trend": "trend",
+    "rho": "predictability", "trend": "trend",
 }
 
 
-def _num(x):
-    """Keep the wire small: round floats to 2dp; ints/None pass through."""
-    return round(x, 2) if isinstance(x, float) else x
+def _cell(col: str, value):
+    """Round per-column floats for the wire; ints/strings/None pass through."""
+    dp = ROUND.get(col)
+    return round(value, dp) if (dp is not None and isinstance(value, float)) else value
 
 
 def build_payload(rows: list[dict], profile: str, engine: str) -> dict:
-    out = [[_num(r.get(_SRC[c])) for c in COLS] for r in rows]
+    # one array per column (columnar) — compresses better than row-arrays.
+    data = [[_cell(c, r.get(_SRC[c])) for r in rows] for c in COLS]
     return {"v": WIRE_VERSION, "profile": profile, "engine": engine,
-            "cols": COLS, "count": len(out), "rows": out}
+            "cols": COLS, "count": len(rows), "data": data}
 
 
 def decode_payload(payload: dict) -> list[dict]:
-    """Inverse of build_payload — rows back to dicts (parity check for tests)."""
-    cols = payload["cols"]
-    return [dict(zip(cols, row)) for row in payload["rows"]]
+    """Inverse of build_payload — columns back to row dicts (parity check for tests)."""
+    cols, data, n = payload["cols"], payload["data"], payload["count"]
+    return [{cols[k]: data[k][i] for k in range(len(cols))} for i in range(n)]
 
 
 def encode(payload: dict) -> bytes:
@@ -103,7 +110,7 @@ def load_value_rows(engine: str) -> list[dict]:
     trend_score from the trending table. Paginates past the 1000-row cap."""
     rows = fetch_all(
         "player_value",
-        "rank,value,vor,boom,bust,predictability,player_id,"
+        "rank,value,vor,predictability,player_id,"
         "players!inner(sleeper_id,full_name,position,nfl_team)",
         apply=lambda q: q.eq("engine", engine).order("rank"),
     )
@@ -118,7 +125,6 @@ def load_value_rows(engine: str) -> list[dict]:
             "sleeper_id": p["sleeper_id"], "full_name": p.get("full_name"),
             "position": p.get("position"), "nfl_team": p.get("nfl_team"),
             "value": r.get("value"), "vor": r.get("vor"), "rank": r.get("rank"),
-            "boom": r.get("boom"), "bust": r.get("bust"),
             "predictability": r.get("predictability"),
             "trend": trend.get(r["player_id"], 0),
         })

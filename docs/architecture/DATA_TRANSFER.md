@@ -82,3 +82,8 @@ row id on the wire is the compact **`sleeper_id`**, not the UUID (UUID entropy a
 the budget). Format is **array-of-arrays keyed by a short column header** (minified-JSON
 path); gzip hits 45.4KB for ~2,800 players, so the columnar upgrade was unneeded. Full
 delta: `docs/archive/v2/v2.3-player-data.md` (As shipped).
+
+Wire format landed **columnar** (one array per column under `data`, `WIRE_VERSION = 2`): the
+real universe is 4,254 players, which a row-array snapshot rendered at 78KB — over budget.
+Columnar + dropping `boom`/`bust` (list-unused; on the lazy card) + 1dp rounding gives
+**58.6KB for the full universe, no cap** (the doc's "upgrade to columnar if needed" path).
