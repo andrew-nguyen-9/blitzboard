@@ -247,19 +247,25 @@ export async function getPlayersWithValueByIds(ids: string[]): Promise<PlayerWit
   });
 }
 
-// ALL players ranked by value, paginating past PostgREST's 1000-row cap (#1).
+// ALL players ranked by value, with NO implicit row cap (#2). Uses keyset
+// pagination on `rank` (unique per engine): each page seeks `rank > cursor`
+// rather than `offset`, so it's stable and O(1) per page regardless of size.
+// The Players tab reads the precomputed snapshot (lib/snapshot.ts); this remains
+// the live path for the draft board.
 export async function getAllPlayersByValue(engine: Engine = "vorp"): Promise<PlayerWithValue[]> {
   const sb = getSupabase();
   if (!sb) return [];
   const out: PlayerWithValue[] = [];
   const PAGE = 1000;
-  for (let start = 0; ; start += PAGE) {
+  let afterRank = -1; // exclusive keyset cursor on rank
+  for (;;) {
     const { data, error } = await sb
       .from("player_value")
       .select(`value,vor,replacement,boom,bust,adp,rank,predictability,engine,player_id,players!inner(${PLAYER_COLS})`)
       .eq("engine", engine)
+      .gt("rank", afterRank)
       .order("rank")
-      .range(start, start + PAGE - 1);
+      .limit(PAGE);
     if (error) { console.error("[getAllPlayersByValue]", error.message); break; }
     const rows = data ?? [];
     for (const r of rows as any[]) {
@@ -271,6 +277,7 @@ export async function getAllPlayersByValue(engine: Engine = "vorp"): Promise<Pla
       });
     }
     if (rows.length < PAGE) break;
+    afterRank = (rows[rows.length - 1] as any).rank;
   }
   return out;
 }
