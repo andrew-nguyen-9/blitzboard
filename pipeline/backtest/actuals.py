@@ -83,3 +83,22 @@ def kicking_weekly(season: int) -> list[dict]:
     return [{"player_key": kid, "name": kid, "pos": "K", "team": "",
              "season": s, "week": w, "points": score_kicking(b, sc)}
             for (kid, s, w), b in buckets.items()]
+
+
+def defense_weekly(season: int) -> list[dict]:
+    from .rules import load_rules_fixture
+    from .pbp_defense import team_week_dst
+    from models.scoring import score_defense
+    sc = load_rules_fixture().scoring
+    df = _pbp_frame(season)
+    if "season_type" in df.columns:
+        df = df[df["season_type"] == "REG"]
+    lines = team_week_dst(df.to_dict("records"))
+    return [{"player_key": tm, "name": f"{tm} D/ST", "pos": "DST", "team": tm,
+             "season": s, "week": w, "points": score_defense(d, sc)}
+            for (tm, s, w), d in lines.items()]
+
+
+def season_actuals(season: int) -> list[dict]:
+    """All weekly actual points (offense + K + D/ST) for a season, under league rules."""
+    return offense_weekly(season) + kicking_weekly(season) + defense_weekly(season)
