@@ -119,6 +119,43 @@ def _actuals_by_week(actuals) -> dict[int, dict[str, float]]:
     return abw
 
 
+def score_policy(seasons, seeds, policy, rules, slots, params=None, *, quiet=False) -> dict:
+    """Run one policy over seasons × seeds and aggregate per-team scores.
+
+    Returns {'points': agg, 'winpct': agg, 'seasons': [...], 'n': int} where each agg is
+    {'mean','lo','hi'} (bootstrap 95% CI), or None aggregates when no season had ADP. Shared
+    by the single-policy CLI (main) and the v2.4.3 tune driver, so they score identically."""
+    points_scores: list[float] = []
+    winpct_scores: list[float] = []
+    used_seasons: list[int] = []
+    for season in seasons:
+        adp_rows = _ffc_adp(season, rules)
+        if not any(a.get("adp") is not None for a in adp_rows):
+            if not quiet:
+                console.print(f"[yellow]⚠ no ADP for {season} — skipping (FFC has no archive).[/yellow]")
+            continue
+        actuals = season_actuals(season)  # compute once; reused for pool, weeks, and join
+        pool, matched = _build_pool(actuals, rules, adp_rows)
+        pos_by_key = join_pool_to_actuals(pool, actuals)
+        abw = _actuals_by_week(actuals)
+        if not quiet:
+            console.print(f"[cyan]{season}: pool {len(pool)} players, {matched} ADP-matched · {seeds} seeds · {policy}[/cyan]")
+        for seed in range(seeds):
+            rosters = run_draft(pool, seed=seed, num_teams=rules.league_size, policy=policy, params=params)
+            wtp = weekly_team_points(rosters, pos_by_key, abw, slots)
+            for t in range(len(rosters)):
+                points_scores.append(sum(wtp[t]))
+                w, l, ti = h2h_record(t, wtp)
+                winpct_scores.append(100.0 * w / max(1, w + l + ti))
+        used_seasons.append(season)
+    return {
+        "points": aggregate(points_scores) if points_scores else None,
+        "winpct": aggregate(winpct_scores) if winpct_scores else None,
+        "seasons": used_seasons,
+        "n": len(points_scores),
+    }
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Run the v2.4 draft backtest.")
     ap.add_argument("--seasons", type=int, nargs="+", default=[2021, 2022, 2023, 2024])
@@ -128,34 +165,12 @@ def main() -> None:
     rules = load_rules_fixture()
     slots = slots_from_rules(rules)
 
-    points_scores: list[float] = []
-    winpct_scores: list[float] = []
-    used_seasons: list[int] = []
-    for season in args.seasons:
-        adp_rows = _ffc_adp(season, rules)
-        if not any(a.get("adp") is not None for a in adp_rows):
-            console.print(f"[yellow]⚠ no ADP for {season} — skipping (FFC has no archive).[/yellow]")
-            continue
-        actuals = season_actuals(season)  # compute once; reused for pool, weeks, and join
-        pool, matched = _build_pool(actuals, rules, adp_rows)
-        pos_by_key = join_pool_to_actuals(pool, actuals)
-        abw = _actuals_by_week(actuals)
-        console.print(f"[cyan]{season}: pool {len(pool)} players, {matched} ADP-matched · {args.seeds} seeds[/cyan]")
-        for seed in range(args.seeds):
-            rosters = run_draft(pool, seed=seed, num_teams=rules.league_size, policy=args.policy)
-            wtp = weekly_team_points(rosters, pos_by_key, abw, slots)
-            for t in range(len(rosters)):
-                points_scores.append(sum(wtp[t]))
-                w, l, ti = h2h_record(t, wtp)
-                winpct_scores.append(100.0 * w / max(1, w + l + ti))
-        used_seasons.append(season)
-
-    if not points_scores:
+    res = score_policy(args.seasons, args.seeds, args.policy, rules, slots)
+    if not res["points"]:
         console.print("[red]No seasons had ADP — nothing to score.[/red]")
         return
-    pa = aggregate(points_scores)
-    wa = aggregate(winpct_scores)
-    console.print(f"\n[bold]policy={args.policy}  seasons={used_seasons}  seeds={args.seeds}[/bold]")
+    pa, wa = res["points"], res["winpct"]
+    console.print(f"\n[bold]policy={args.policy}  seasons={res['seasons']}  seeds={args.seeds}[/bold]")
     console.print(f"  season points-for:  {pa['mean']:.0f}  (95% CI {pa['lo']:.0f}–{pa['hi']:.0f})")
     console.print(f"  H2H win%:           {wa['mean']:.1f}%  (95% CI {wa['lo']:.1f}–{wa['hi']:.1f})")
 
