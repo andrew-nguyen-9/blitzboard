@@ -15,6 +15,9 @@ import {
   overfillPenalty,
   scoreBoard,
   norm,
+  pickForTeam,
+  pickRawVorp,
+  pickAdp,
 } from "./draftAI";
 import { SUPERFLEX_ROSTER } from "./draft";
 import { runSnakeDraft, mulberry32 } from "./snakeDraft";
@@ -240,5 +243,47 @@ describe("full-draft regression", () => {
       expect(counts.K).toBeLessThanOrEqual(1);
       expect(counts.DST).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+describe("policy selection (v2.4.3 backtest seams)", () => {
+  function ctx(pool: PlayerWithValue[], teamPicks: PlayerWithValue[] = []): any {
+    return { pool, teamPicks, roster: SUPERFLEX_ROSTER, benchSize: 6, allPicks: [], numTeams: 12, picksUntilNext: 1, round: 1, totalRounds: 16 };
+  }
+
+  it("pickForTeam forwards params to scoreBoard (an overfill ablation flips the pick)", () => {
+    const pool = [mk("rb1", "RB", 100), mk("wr1", "WR", 95)];
+    expect(pickForTeam(ctx([...pool]))!.id).toBe("rb1"); // default: best projection wins
+    const penalizeRb = {
+      ...DEFAULT_POLICY,
+      overfillDepth: { ...DEFAULT_POLICY.overfillDepth, RB: 0 },
+      overfillPenaltyPerExtra: 1000,
+    };
+    expect(pickForTeam(ctx([...pool]), penalizeRb)!.id).toBe("wr1"); // params threaded → RB penalized
+  });
+
+  it("pickRawVorp always takes the highest projection", () => {
+    const pool = [mk("a", "WR", 120), mk("b", "RB", 200), mk("c", "QB", 150)];
+    expect(pickRawVorp(ctx(pool))!.id).toBe("b");
+  });
+
+  it("pickAdp follows ADP (earliest first, nulls last)", () => {
+    const pool = [
+      mk("late", "WR", 300, { vor: 300 }),
+      mk("early", "RB", 50),
+      mk("none", "QB", 280),
+    ];
+    pool[0].value!.adp = 40;
+    pool[1].value!.adp = 3;
+    pool[2].value!.adp = null;
+    expect(pickAdp(ctx(pool))!.id).toBe("early");
+  });
+
+  it("runSnakeDraft uses a provided chooser instead of the default policy", () => {
+    const players = Array.from({ length: 12 * 16 }, (_, i) => mk(`p${i}`, ["QB", "RB", "WR", "TE", "K", "DST"][i % 6], 250 - i));
+    // a chooser that always grabs the first pool entry → fully determined, no policy involved
+    const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(1), randomness: 0, chooser: (c: any) => c.pool[0] });
+    expect(picks[0].player.id).toBe("p0");
+    expect(picks[1].player.id).toBe("p1");
   });
 });
