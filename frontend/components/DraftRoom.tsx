@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { PlayerWithValue } from "@/lib/types";
 import { fillRoster, scarcity, teamOnClock, myPickNumbers } from "@/lib/draft";
 import { defaultConfig, defaultTeams, trackedPositions, type LeagueConfig } from "@/lib/leagueConfig";
-import { pickForTeam, detectRuns } from "@/lib/draftAI";
+import { pickForTeam, detectRuns, scoreBoard } from "@/lib/draftAI";
 import { mapPicks, type MappedPick } from "@/lib/sleeperDraft";
 import { mapEspnPicks } from "@/lib/espnDraft";
 import { useSleeperSync } from "@/lib/useSleeperSync";
@@ -109,6 +109,52 @@ export default function DraftRoom({ players }: { players: PlayerWithValue[] }) {
   const scarce = useMemo(() => scarcity(available), [available]);
   const runs = useMemo(() => detectRuns(picks, numTeams), [picks, numTeams]);
   const positionsTracked = useMemo(() => trackedPositions(config), [config]);
+
+  // Positions still needed to fill an open STARTING slot (incl. flex/superflex eligibility).
+  const neededPositions = useMemo(() => {
+    const s = new Set<string>();
+    myRoster.starters.forEach((slot, i) => {
+      if (!slot.player) config.rosterSlots[i]?.eligible.forEach((e) => s.add(e === "DEF" ? "DST" : e));
+    });
+    return s;
+  }, [myRoster, config.rosterSlots]);
+
+  // Top recommendations for MY next pick, straight from the shared v2 policy (D7 — the same
+  // scoreBoard the auto-draft and backtest use). Capped to the top projections for snappiness;
+  // memoized so it only recomputes when the board changes, not on every keystroke.
+  const recs = useMemo(() => {
+    if (complete) return [];
+    const myNos = myPickNumbers(numTeams, mySlot, ROSTER_SPOTS);
+    const myPickNo = myNos.find((n) => n >= currentPickNo) ?? currentPickNo;
+    const after = myNos.find((n) => n > myPickNo) ?? myPickNo + numTeams;
+    const candidates = [...available]
+      .sort((a, b) => ((b.value?.vor ?? 0) + (b.value?.replacement ?? 0)) - ((a.value?.vor ?? 0) + (a.value?.replacement ?? 0)))
+      .slice(0, 80);
+    return scoreBoard({
+      pool: candidates,
+      teamPicks: picks.filter((p) => p.team === mySlot).map((p) => p.player),
+      roster: config.rosterSlots,
+      benchSize: config.benchSize,
+      allPicks: picks,
+      numTeams,
+      picksUntilNext: after - myPickNo,
+      round: Math.ceil(myPickNo / numTeams),
+      totalRounds: ROSTER_SPOTS,
+      randomness: 0,
+    }).slice(0, 3);
+  }, [available, picks, mySlot, numTeams, config, ROSTER_SPOTS, currentPickNo, complete]);
+
+  // Legible "why" for a recommended player: need / scarcity / upside, in user terms.
+  function rationaleChips(p: PlayerWithValue): string[] {
+    const pos = p.position === "DEF" ? "DST" : p.position ?? "";
+    const chips: string[] = [];
+    if (neededPositions.has(pos)) chips.push("fills need");
+    if ((scarce[pos] ?? 99) <= numTeams) chips.push("scarce");
+    const mean = (p.value?.vor ?? 0) + (p.value?.replacement ?? 0);
+    if (mean > 0 && (p.value?.boom ?? 0) > mean * 1.15) chips.push("upside");
+    if (runs.hot.includes(pos)) chips.push("run on");
+    return chips.length ? chips : ["best value"];
+  }
 
   const shown = useMemo(() => {
     let r = available;
@@ -388,6 +434,41 @@ export default function DraftRoom({ players }: { players: PlayerWithValue[] }) {
 
           {/* SIDEBAR */}
           <aside className="space-y-6">
+            {/* Recommended picks (#4): the shared v2 policy's top suggestions for your next
+                pick, with a legible why (need / scarcity / upside). Manual + synced boards
+                render this identically — same policy, same data (D7). */}
+            {!complete && recs.length > 0 && (
+              <div className="glass p-4">
+                <h3 className="mb-3 text-label text-ink-muted">
+                  RECOMMENDED{isMyPick ? " · YOUR PICK" : picksUntilMe != null ? ` · IN ${picksUntilMe}` : ""}
+                </h3>
+                <ol className="space-y-3">
+                  {recs.map(({ player }, idx) => (
+                    <li key={player.id} className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 shrink-0 font-mono text-label text-ink-muted">{idx + 1}</span>
+                        <Link href={`/players/${player.id}`} className="min-w-0 flex-1 truncate font-medium transition hover:text-accent">
+                          {player.full_name}
+                        </Link>
+                        <span className="shrink-0 text-label text-ink-muted/70">{player.position === "DEF" ? "DST" : player.position}</span>
+                        {mode === "manual" && isMyPick && (
+                          <button onClick={() => draft(player)} disabled={complete}
+                            className="shrink-0 rounded-full bg-accent px-2.5 py-0.5 text-label text-bg transition hover:opacity-90 disabled:opacity-40">
+                            Draft
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1 pl-6">
+                        {rationaleChips(player).map((c) => (
+                          <span key={c} className="rounded-full border border-hairline px-2 py-0.5 text-label text-ink-muted">{c}</span>
+                        ))}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
             <div className="glass p-4">
               <h3 className="mb-3 text-label text-ink-muted">DRAFT SETTINGS</h3>
               <label className="flex items-center justify-between py-1 text-body">
