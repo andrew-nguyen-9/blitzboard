@@ -29,12 +29,14 @@ export const GATE_PROMPT: Record<Exclude<GateState, "ok">, { title: string; body
     title: "Connect your league",
     body: "Import your Sleeper or ESPN league once and we'll tailor value, FAAB bids, and trades to your exact rules.",
     cta: "Import a league",
-    href: "/league?import=1",
+    // Points at the working Sleeper/ESPN import surface (/draft). Persisting that import to the
+    // authed user_leagues model is the deferred v2.5.4 UI — tracked, not a dead end.
+    href: "/draft",
   },
   reconnect: {
     title: "Reconnect your league",
     body: "Your ESPN/Sleeper credentials expired (they rotate). Reconnect to refresh standings, rosters, and recommendations.",
     cta: "Reconnect",
-    href: "/league?reconnect=1",
+    href: "/draft",
   },
 };
