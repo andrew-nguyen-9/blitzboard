@@ -6,6 +6,7 @@
 // happens in the pipeline (service-role), never here and never client-side.
 import { getServerSupabase } from "@/lib/supabase/server";
 import { loadMasterKey, encryptSecret, maskHint } from "@/lib/crypto/vault";
+import { credentialInput, validate } from "@/lib/validation";
 
 export type Platform = "espn" | "sleeper";
 
@@ -22,7 +23,8 @@ export async function saveCredential(
   platform: Platform,
   secret: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  if (!secret?.trim()) return { ok: false, error: "empty secret" };
+  const valid = validate(credentialInput, { platform, secret });
+  if (!valid.ok) return { ok: false, error: valid.error };
   const key = loadMasterKey();
   if (!key) return { ok: false, error: "vault not configured" };
   const sb = await getServerSupabase();
