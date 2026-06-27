@@ -4,6 +4,7 @@
 // change to pick mechanics lands in one place — the single-source-of-truth the
 // backtest depends on (D7). The policy itself is pickForTeam (lib/draftAI.ts).
 import { pickForTeam } from "./draftAI";
+import type { AIContext } from "./draftAI";
 import { teamOnClock, SUPERFLEX_ROSTER, BENCH_SIZE } from "./draft";
 import type { PlayerWithValue } from "./types";
 import type { MappedPick } from "./sleeperDraft";
@@ -24,11 +25,14 @@ export interface SnakeOpts {
   numTeams: number;
   rng?: () => number;
   randomness?: number;
+  // Optional pick strategy (backtest baselines/ablations). Defaults to the shared v2 policy,
+  // so the live board (simulate.ts) is unaffected.
+  chooser?: (ctx: AIContext) => PlayerWithValue | null;
 }
 
 // Run a full snake draft with every team on the shared policy; return the pick log.
 export function runSnakeDraft(players: PlayerWithValue[], opts: SnakeOpts): MappedPick[] {
-  const { numTeams, rng = Math.random, randomness = 0.05 } = opts;
+  const { numTeams, rng = Math.random, randomness = 0.05, chooser = pickForTeam } = opts;
   const ROSTER_SPOTS = SUPERFLEX_ROSTER.length + BENCH_SIZE;
   const totalSpots = numTeams * ROSTER_SPOTS;
 
@@ -49,7 +53,7 @@ export function runSnakeDraft(players: PlayerWithValue[], opts: SnakeOpts): Mapp
     const pool = players.filter((p) => !taken.has(p.id));
     const teamPicks = picks.filter((p) => p.team === team).map((p) => p.player);
     const player =
-      pickForTeam({
+      chooser({
         pool,
         teamPicks,
         roster: SUPERFLEX_ROSTER,

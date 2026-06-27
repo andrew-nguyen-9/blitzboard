@@ -13,9 +13,20 @@ _FRONTEND = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", 
 _TSX = os.path.join("node_modules", ".bin", "tsx")
 
 
-def run_draft(players: list[dict], seed: int, num_teams: int = 12, policy: str = "v2") -> list[list[str]]:
-    """Run one deterministic snake draft; return rosters as per-team lists of player ids."""
-    payload = json.dumps({"players": players, "numTeams": num_teams, "seed": seed, "policy": policy})
+def run_draft(
+    players: list[dict],
+    seed: int,
+    num_teams: int = 12,
+    policy: str = "v2",
+    params: dict | None = None,
+) -> list[list[str]]:
+    """Run one deterministic snake draft; return rosters as per-team lists of player ids.
+
+    `params` is an optional PolicyParams override (v2 ablation/tuning runs); it is ignored by
+    the baseline policies."""
+    payload = json.dumps(
+        {"players": players, "numTeams": num_teams, "seed": seed, "policy": policy, "params": params}
+    )
     try:
         proc = subprocess.run(
             [_TSX, "scripts/draftSim.ts"],

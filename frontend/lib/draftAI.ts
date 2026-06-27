@@ -300,8 +300,36 @@ export function scoreBoard(ctx: AIContext, params: PolicyParams = DEFAULT_POLICY
   return scored;
 }
 
-// The single best pick for a team in the given context.
-export function pickForTeam(ctx: AIContext): PlayerWithValue | null {
-  const ranked = scoreBoard(ctx);
+// The single best pick for a team in the given context. `params` lets the backtest run
+// ablations (e.g. cap off, bench-ceiling off) without changing the live default.
+export function pickForTeam(
+  ctx: AIContext,
+  params: PolicyParams = DEFAULT_POLICY,
+): PlayerWithValue | null {
+  const ranked = scoreBoard(ctx, params);
   return ranked[0]?.player ?? null;
+}
+
+// ── Backtest baseline policies (v2.4.3) ──────────────────────────────────────
+// Deliberately naive comparisons the v2 policy must beat.
+
+// raw-VORP: always take the highest projection, no need/scarcity/bench reasoning.
+export function pickRawVorp(ctx: AIContext): PlayerWithValue | null {
+  let best: PlayerWithValue | null = null;
+  for (const p of ctx.pool) if (!best || proj(p) > proj(best)) best = p;
+  return best;
+}
+
+// ADP-follow: take the earliest-drafted player (smallest ADP); nulls sort last.
+export function pickAdp(ctx: AIContext): PlayerWithValue | null {
+  let best: PlayerWithValue | null = null;
+  let bestAdp = Infinity;
+  for (const p of ctx.pool) {
+    const a = p.value?.adp ?? Infinity;
+    if (a < bestAdp) {
+      bestAdp = a;
+      best = p;
+    }
+  }
+  return best ?? ctx.pool[0] ?? null;
 }
