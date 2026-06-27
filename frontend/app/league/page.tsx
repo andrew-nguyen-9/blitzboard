@@ -1,13 +1,24 @@
 import EmptyState from "@/components/EmptyState";
+import ConnectPrompt from "@/components/ConnectPrompt";
 import { getLeagueOverview } from "@/lib/queries";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { resolveGateState } from "@/lib/auth/gate.server";
 
 export const metadata = { title: "League Overview" };
 export const dynamic = "force-dynamic"; // reflects latest league_sync
 
-// P3: the connected ESPN league — standings + teams. Populated by
-// pipeline/league_sync.py (ESPN cookie auth). Read-only enrichment (D1).
+// v2.6: the authenticated league plane — gated on a session + a connected league. Non-"ok"
+// states render a helpful ConnectPrompt (login / import / reconnect), never a dead end.
 export default async function LeaguePage() {
+  const gate = await resolveGateState();
+  if (gate !== "ok") {
+    return (
+      <div className="py-16">
+        <ConnectPrompt state={gate} />
+      </div>
+    );
+  }
+
   const live = isSupabaseConfigured();
   const { league, teams } = live ? await getLeagueOverview() : { league: null, teams: [] };
 
