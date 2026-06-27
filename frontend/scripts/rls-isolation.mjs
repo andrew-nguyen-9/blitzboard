@@ -62,6 +62,23 @@ try {
   // A cannot write B's row (update affects 0 rows under RLS)
   const upd = await a.from("accounts").update({ display_name: "hijacked" }).eq("user_id", idB).select();
   check(Array.isArray(upd.data) && upd.data.length === 0, "A cannot update B's accounts row");
+
+  // credential_vault: there is NO select policy, so the ciphertext never reaches the authed
+  // client — even its own. A writes one, then confirms it reads back zero rows.
+  await a.from("credential_vault").insert({ user_id: idA, platform: "sleeper", ciphertext: "iv.tag.ct", masked_hint: "••••AAAA", status: "connected" });
+  const vaultRead = await a.from("credential_vault").select("ciphertext");
+  check(Array.isArray(vaultRead.data) && vaultRead.data.length === 0, "credential_vault ciphertext is unreadable by the authed client");
+  const statusRows = await a.rpc("credential_status");
+  check(Array.isArray(statusRows.data) && statusRows.data.every((r) => !("ciphertext" in r)), "credential_status returns no ciphertext column");
+
+  // user_leagues: A inserts a league; B cannot see it, and B's select returns only its own rows.
+  const ins = await a.from("user_leagues").insert({ user_id: idA, platform: "manual", name: "A's league" }).select("id");
+  check(!ins.error, "A can insert its own league");
+  const b = await signedInClient(emails[1]);
+  const bSeesA = await b.from("user_leagues").select("id").eq("user_id", idA);
+  check(Array.isArray(bSeesA.data) && bSeesA.data.length === 0, "B cannot read A's user_leagues");
+  const bAll = await b.from("user_leagues").select("user_id");
+  check(Array.isArray(bAll.data) && bAll.data.every((r) => r.user_id === idB), "B's user_leagues select returns only its own rows");
 } catch (e) {
   console.error("rls-isolation error:", e.message);
   failures.push(e.message);
