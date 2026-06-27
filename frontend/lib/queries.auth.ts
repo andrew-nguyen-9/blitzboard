@@ -41,3 +41,53 @@ export async function getMyPrefs(): Promise<Record<string, unknown>> {
   const account = await getMyAccount();
   return account?.prefs ?? {};
 }
+
+export interface UserLeague {
+  id: string;
+  platform: "espn" | "sleeper" | "manual";
+  external_league_id: string | null;
+  season: string | null;
+  name: string | null;
+  scoring_profile_id: string | null;
+  is_default: boolean;
+}
+
+// All of the signed-in user's connected leagues (RLS-isolated), oldest first.
+export async function getMyLeagues(): Promise<UserLeague[]> {
+  const sb = await getServerSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from("user_leagues")
+    .select("id,platform,external_league_id,season,name,scoring_profile_id,is_default")
+    .order("created_at");
+  if (error) {
+    console.error("[queries.auth.getMyLeagues]", error.message);
+    return [];
+  }
+  return (data ?? []) as UserLeague[];
+}
+
+// The user's active league — their default, or the first connected, or null. This is the
+// league the gated tabs (v2.6) tailor value/standings/waivers to.
+export async function getActiveLeague(): Promise<UserLeague | null> {
+  const leagues = await getMyLeagues();
+  return leagues.find((l) => l.is_default) ?? leagues[0] ?? null;
+}
+
+// The active league's scoring rules config, or null. Joins user_leagues → league_rules.
+export async function getActiveLeagueRules(): Promise<Record<string, unknown> | null> {
+  const sb = await getServerSupabase();
+  if (!sb) return null;
+  const active = await getActiveLeague();
+  if (!active?.scoring_profile_id) return null;
+  const { data, error } = await sb
+    .from("league_rules")
+    .select("config")
+    .eq("id", active.scoring_profile_id)
+    .single();
+  if (error) {
+    console.error("[queries.auth.getActiveLeagueRules]", error.message);
+    return null;
+  }
+  return (data?.config ?? null) as Record<string, unknown> | null;
+}
