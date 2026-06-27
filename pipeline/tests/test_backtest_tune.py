@@ -68,4 +68,5 @@ assert "raw-VORP" in md and "ADP-follow" in md  # baseline rows present
 assert "beats" in md  # v2 verdict line (fake makes v2 win)
 assert "no-bench-ceiling" in md
 assert "1600" in md  # v2 mean shows up
+assert "## Metric notes" in md and "mixed-policy" in md  # honest caveats present
 print("ok test_backtest_tune")

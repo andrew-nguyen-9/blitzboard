@@ -121,6 +121,39 @@ def render_report(suite: dict, seasons, seeds) -> str:
     lines.append("")
     lines.append("A negative Δ means the full policy is better with that component — it earns its place.")
     lines.append("")
+    lines += [
+        "## Metric notes",
+        "",
+        "- **Season points-for** is the discriminating metric. **H2H win% is ~50% on every row "
+        "by construction** — the harness runs all 12 teams on the *same* policy, so \"vs the "
+        "field\" is symmetric. A true policy-vs-policy H2H needs *mixed-policy* drafts (harness "
+        "follow-up).",
+        "- Points-for scores a **perfect-hindsight** weekly-optimal lineup, which structurally "
+        "under-values bench insurance (injury cover, ceiling stashes): you \"start whoever "
+        "actually scored,\" so depth pays off less than in a real imperfect-information season. "
+        "A neutral or positive ablation Δ on a bench term does **not** prove the term is useless "
+        "— only that this metric cannot see its value. Bench terms are kept for real-season "
+        "robustness and revisited under a mixed-draft / injury-aware eval.",
+        "",
+    ]
+
+    # Data-driven reading so a re-run reproduces the committed report (no hand edits to lose).
+    rv, ad = b.get("rawvorp", {}).get("points"), b.get("adp", {}).get("points")
+    if v2_mean is not None and rv and ad:
+        lines += [
+            "## Reading",
+            "",
+            f"The **marginal-starter-value core** is what beats the baselines: v2's "
+            f"+{v2_mean - rv['mean']:.0f} over raw-VORP and +{v2_mean - ad['mean']:.0f} over "
+            f"ADP-follow come from valuing each pick by how much it raises the *optimal starting "
+            f"lineup* against the replacement still available, not by raw VOR or ADP. The K/DEF "
+            f"cap and bench terms are neutral-to-slightly-negative on this hindsight metric — "
+            f"expected, since it can't price insurance — so `DEFAULT_POLICY` is **left unchanged** "
+            f"rather than overfit to a metric blind to bench value. Reproduce: "
+            f"`python -m backtest.tune --seasons 2021 2022 2023 2024 --seeds 4` (add `--grid` for "
+            f"the param sweep).",
+            "",
+        ]
 
     if suite.get("grid_best"):
         cfg, agg = suite["grid_best"]
