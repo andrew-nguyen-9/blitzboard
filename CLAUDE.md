@@ -1,6 +1,6 @@
 # CLAUDE.md — Repo dev instructions (Claude Code)
 
-Project-specific guidance for AI-assisted development of the Fantasy Football Tool.
+Project-specific guidance for AI-assisted development of BlitzBoard.
 Global rules in `~/.claude/CLAUDE.md` still apply (notably: **no AI attribution** in any
 git artifact). This file adds the project's workflow, conventions, and tooling.
 

@@ -1,8 +1,9 @@
-# Fantasy Football Tool
+# BlitzBoard
 
-A pipeline-driven web app for NFL fantasy football: player intelligence, draft assistance
+BlitzBoard is a pipeline-driven NFL fantasy war room: player intelligence, draft assistance
 (live + offline), trade and waiver optimization, and real-time news-sentiment trending.
 Next.js 15 (App Router) + Supabase (Postgres) + a Python cron pipeline.
+Production: [blitzboard.an9.dev](https://blitzboard.an9.dev).
 
 > **Status: v2 in planning.** v1 (P0–P7) shipped and is frozen as **v1.0.0** under
 > `docs/archive/v1/`. We are building **v2.0.0+** — a high-end, accessible, secure, multi-user

@@ -5,10 +5,10 @@ import type { MetadataRoute } from "next";
 // OKLCH); they mirror the dark "Broadcast Instrument" page surface.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "FFDT — Fantasy Football Draft Tool",
-    short_name: "FFDT",
+    name: "BlitzBoard — your draft war room",
+    short_name: "BlitzBoard",
     description:
-      "A fantasy football war room: player intelligence, draft assistance, trade & waiver optimization, and news-sentiment trending.",
+      "Your draft war room: player intelligence, draft assistance, trade & waiver optimization, and news-sentiment trending.",
     start_url: "/",
     display: "standalone",
     background_color: "#0a0b0d",

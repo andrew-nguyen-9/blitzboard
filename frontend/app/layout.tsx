@@ -20,14 +20,25 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", 
 
 const fontVars = `${display.variable} ${scoreboard.variable} ${body.variable} ${mono.variable}`;
 
+const SITE_URL = "https://blitzboard.an9.dev";
+const TAGLINE =
+  "BlitzBoard — your draft war room: player intelligence, live and offline draft assistance, trade & waiver optimization, and real-time news-sentiment trending.";
+
 export const metadata: Metadata = {
   title: {
-    default: "FFDT — Fantasy Football Draft Tool",
-    template: "%s · FFDT",
+    default: "BlitzBoard — your draft war room",
+    template: "%s · BlitzBoard",
   },
-  description:
-    "A fantasy football war room: player intelligence, draft assistance (live + offline), trade & waiver optimization, and real-time news-sentiment trending.",
-  metadataBase: new URL("https://ffdt.vercel.app"),
+  description: TAGLINE,
+  metadataBase: new URL(SITE_URL),
+  openGraph: {
+    title: "BlitzBoard — your draft war room",
+    description: TAGLINE,
+    url: SITE_URL,
+    siteName: "BlitzBoard",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image", title: "BlitzBoard", description: TAGLINE },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -44,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Nav />
         <main id="main" className="mx-auto max-w-wide px-5 md:px-8">{children}</main>
         <footer className="mx-auto mt-24 max-w-wide border-t border-line px-5 py-10 text-label text-ink-2 md:px-8">
-          FFDT · Data from Sleeper, nflverse &amp; ESPN · Built with Next.js + Supabase
+          BlitzBoard · Data from Sleeper, nflverse &amp; ESPN · Built with Next.js + Supabase
         </footer>
       </body>
     </html>

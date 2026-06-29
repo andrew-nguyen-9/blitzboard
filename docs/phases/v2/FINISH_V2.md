@@ -148,8 +148,7 @@ asked and where it gets resolved.
   playbook (per-route split, font preload trimming, static LCP) to every key route; carry the
   RLS + inspector-isolation tests from v2.5 (verify here, don't first-discover).
 - **Defer (needs the user at launch — does NOT block the work):**
-  - **Production domain** → keep `ffdt.vercel.app` (current `metadataBase`) until the user
-    supplies a custom domain in **v2.7.4**.
+  - **Production domain** → `blitzboard.an9.dev` (set as `metadataBase` in the v2.8 rebrand).
   - **Sentry/monitoring account** → user provisions DSN into env at **v2.7.4**; code against the
     SDK now so it's a config flip.
 
@@ -178,7 +177,7 @@ real call. Surface these to the user **at the named phase**, not before.
 | 10 | Encryption master key / KMS | server env var now; managed-KMS later | v2.5.3 / hardened v2.7 | **yes (secret)** |
 | 11 | Public generic scoring profile | example superflex half-PPR | v2.6.3 | no |
 | 12 | Error-monitoring provider | Sentry (scrubbed) | **v2.7.4** | **yes (DSN)** |
-| 13 | Production domain | `ffdt.vercel.app` until provided | **v2.7.4** launch | **yes (domain)** |
+| 13 | Production domain | `blitzboard.an9.dev` (resolved, v2.8 rebrand) | **v2.7.4** launch | resolved |
 
 **Rule:** for the "needs user" rows, build to the default + adapter, keep the secret/provider out
 of the repo, and prompt the user **only** when that phase reaches the step — never block earlier
