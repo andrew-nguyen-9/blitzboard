@@ -1,43 +1,25 @@
-import { signUpWithEmail } from "@/app/actions/auth";
+import SignupForm from "@/components/SignupForm";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
-// Next 15: searchParams is async.
-export default async function SignupPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const sp = await searchParams;
-
+export default function SignupPage() {
   if (!isSupabaseConfigured()) {
     return (
-      <main>
-        <h1>Create account</h1>
-        <p>Sign-up is unavailable offline.</p>
+      <main className="mx-auto max-w-md px-4 py-16" aria-labelledby="signup-h">
+        <h1 id="signup-h" className="font-display text-heading">Create account</h1>
+        <p className="mt-3 text-body text-ink-muted">Sign-up is unavailable offline.</p>
       </main>
     );
   }
 
   return (
-    <main aria-labelledby="signup-h">
-      <h1 id="signup-h">Create account</h1>
-      {sp.error && <p role="alert">{sp.error}</p>}
-      <form action={signUpWithEmail}>
-        <label htmlFor="email">Email</label>
-        <input id="email" name="email" type="email" autoComplete="email" required />
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          minLength={8}
-          required
-        />
-        <button type="submit">Sign up</button>
-      </form>
-      <p>
-        <a href="/login">Already have an account?</a>
+    <main className="mx-auto max-w-md px-4 py-16" aria-labelledby="signup-h">
+      <h1 id="signup-h" className="font-display text-heading">Create account</h1>
+      <p className="mb-6 mt-2 text-body text-ink-muted">Join the war room.</p>
+      <SignupForm />
+      <p className="mt-6 text-label text-ink-muted">
+        <a href="/login" className="underline transition hover:text-accent">
+          Already have an account?
+        </a>
       </p>
     </main>
   );

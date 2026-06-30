@@ -23,17 +23,8 @@ export async function signInWithEmail(formData: FormData) {
   redirect(next);
 }
 
-export async function signUpWithEmail(formData: FormData) {
-  const supabase = await getServerSupabase();
-  if (!supabase) redirect("/signup?error=offline");
-  const { error } = await supabase.auth.signUp({
-    email: String(formData.get("email") ?? ""),
-    password: String(formData.get("password") ?? ""),
-    options: { emailRedirectTo: `${SITE}/auth/confirm` },
-  });
-  if (error) redirect(`/signup?error=${encodeURIComponent(error.message)}`);
-  redirect("/login?check=email");
-}
+// Email/password signup lives in the /api/auth/signup route (Epic 7): it adds rate-limiting,
+// hCaptcha/fallback bot defense, and envelope-encrypts the phone before signUp metadata.
 
 export async function signInWithGoogle(formData: FormData) {
   const supabase = await getServerSupabase();
