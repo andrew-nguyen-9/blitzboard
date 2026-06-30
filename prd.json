@@ -63,7 +63,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": [], "priority": 5, "passes": false, "notes": ""
+      "injectDeps": [], "priority": 5, "passes": true, "notes": "done — PR #31, merged to v3. One CSS-only Tooltip primitive (@/components/Tooltip) reused on deck + PlayerTable rows; clear-on-row-change via pointer-events:none (Playwright-verified). build/tsc/vitest(137) green."
     },
     {
       "id": "US-006", "epicId": "2", "segmentBranch": "v3-epic-2-homepage", "ui": true,
