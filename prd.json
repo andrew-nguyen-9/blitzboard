@@ -76,7 +76,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": ["3.2.done.md"], "priority": 6, "passes": false, "notes": ""
+      "injectDeps": ["3.2.done.md"], "priority": 6, "passes": true, "notes": "done — PR #32, merged to v3. Copy six tools, dep-free CSS scroll-snap deck carousel (equal cards), shared Tooltip. build/tsc/vitest green, Playwright 1280/390px. Rive=static SVG/CSS blueprint fallback (.riv authoring needs GUI editor — soft blocker logged, RiveInstrument upgrade path in 2.done.md)."
     },
     {
       "id": "US-007", "epicId": "4", "segmentBranch": "v3-epic-4-draft-unauth", "ui": true,
