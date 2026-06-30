@@ -69,5 +69,8 @@ jobs:
       - name: Compute projections + player values (VORP, superflex-aware)
         run: python value_engine_run.py --engine vorp
 
+      - name: Compute player values (Monte Carlo, percentile-based)
+        run: python value_engine_run.py --engine monte_carlo
+
       - name: Publish CDN player snapshots + manifest (v2.3)
-        run: python publish_snapshot.py --engines vorp
+        run: python publish_snapshot.py --engines vorp monte_carlo
