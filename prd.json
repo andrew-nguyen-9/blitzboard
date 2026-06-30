@@ -112,7 +112,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": ["3.1.done.md"], "priority": 9, "passes": false, "notes": ""
+      "injectDeps": ["3.1.done.md"], "priority": 9, "passes": true, "notes": "done — PR #35, merged to v3. Unauth /trades all-NFL calculator: new PlayerSearchIndex (trie+fuzzy+labeled bloom), position/team filters, value verdict, all-NFL RSS refocusing to traded players on submit. build/tsc/vitest(151)/bundle/Playwright green."
     },
     {
       "id": "US-010", "epicId": "12", "segmentBranch": "v3-epic-12-models", "ui": false,
