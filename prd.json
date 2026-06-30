@@ -51,7 +51,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": ["6.done.md"], "priority": 4, "passes": false, "notes": ""
+      "injectDeps": ["6.done.md"], "priority": 4, "passes": true, "notes": "done — PR #30, merged to v3. Signup via POST /api/auth/signup (rate-limit + hCaptcha/honeypot-math fallback + envelope-encrypted phone -> accounts.phone_encrypted). tsc/vitest(134)/build/axe green. Vercel BotID = gated no-op stub (deploy-only), upgrade path in 7.done.md."
     },
     {
       "id": "US-005", "epicId": "3.2", "segmentBranch": "v3-epic-3.2-tooltip", "ui": true,
