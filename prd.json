@@ -1,0 +1,224 @@
+{
+  "project": "BlitzBoard v3",
+  "branchName": "v3",
+  "description": "Autonomous v3 build: real snapshot + cut CI minutes, Supabase Auth (email+TOTP), homepage/draft/waiver/trades/player/header/footer pages, VORP + Monte Carlo models, SEO/mobile/perf polish. Each story is one Ralph segment dispatched to a dedicated subagent that reads docs/phases/v3/handoffs/<epicId>.md and the injected upstream .done.md notes. Segment sub-branch off v3; commit/push/PR per epic; never touch main.",
+  "userStories": [
+    {
+      "id": "US-001", "epicId": "1", "segmentBranch": "v3-epic-1-pipeline-minutes", "ui": false,
+      "title": "Epic 1 — Pipeline minutes cut",
+      "description": "As a maintainer, I want the daily ETL workflow to run in fewer minutes via caching/conditionals.",
+      "acceptanceCriteria": [
+        "etl_daily.yml caches pip + nflverse data; history_ingest gated to run-once-then-skip (re-run on workflow_dispatch / new season)",
+        "Skip steps when upstream unchanged; ubuntu-latest kept; no 11-season backtest in daily CI",
+        "Pipeline idempotent; npm run build / tsc --noEmit / vitest green where applicable",
+        "Typecheck passes"
+      ],
+      "injectDeps": [], "priority": 1, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-002", "epicId": "3.1", "segmentBranch": "v3-epic-3.1-publish-snapshot", "ui": true,
+      "title": "Epic 3.1 — Publish real snapshot",
+      "description": "As a user, I want the players page to show a real published snapshot, not the empty state.",
+      "acceptanceCriteria": [
+        "value_engine_run.py --engine vorp then publish_snapshot.py run against live Supabase (source frontend/.env.local; never print/commit keys)",
+        "Manifest + snapshot confirmed reading on the players page",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": ["1.done.md"], "priority": 2, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-003", "epicId": "6", "segmentBranch": "v3-epic-6-login", "ui": true,
+      "title": "Epic 6 — Login page",
+      "description": "As a user, I want to log in via Supabase Auth with forgot-password and optional TOTP 2FA.",
+      "acceptanceCriteria": [
+        "Login route; header profile icon links to login; forgot-password via email OTP/reset",
+        "TOTP 2FA opt-in at sign-in (no SMS provider; SMS interface stubbed)",
+        "Builds on v2.5 accounts/credential_vault/multi_league; RLS+policies on any new table; no secrets in client bundle",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": [], "priority": 3, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-004", "epicId": "7", "segmentBranch": "v3-epic-7-signup", "ui": true,
+      "title": "Epic 7 — Signup page",
+      "description": "As a new user, I want to sign up with bot defense and encrypted sensitive fields.",
+      "acceptanceCriteria": [
+        "Signup page (First, Last, Email, Phone, Password, Confirm) linked from login",
+        "Replicate ../portfolio-website hCaptcha + Vercel BotID + rate-limit on auth routes",
+        "App-layer envelope-encrypt phone/credentials client->server (reuse lib/crypto + pipeline/vault.py); passwords hashed server-side, never decrypted",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": ["6.done.md"], "priority": 4, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-005", "epicId": "3.2", "segmentBranch": "v3-epic-3.2-tooltip", "ui": true,
+      "title": "Epic 3.2 — Shared tooltip primitive",
+      "description": "As a user, I want one consistent opaque tooltip across the deck and player table.",
+      "acceptanceCriteria": [
+        "One opaque theme-aware tooltip reused on deck + PlayerTable.tsx",
+        "Enter/leave clears on row change even when overlaying next row; meaningful content",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": [], "priority": 5, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-006", "epicId": "2", "segmentBranch": "v3-epic-2-homepage", "ui": true,
+      "title": "Epic 2 — Homepage",
+      "description": "As a visitor, I want correct copy, a card carousel, shared tooltips, and a Rive background.",
+      "acceptanceCriteria": [
+        "app/page.tsx:108 'seven tools' -> 'six tools'; equal-size cards in CSS scroll-snap carousel (no dep)",
+        "Opaque shared tooltip primitive (Epic 3.2)",
+        "Rive blueprint bg animation via RiveInstrument.tsx, right-weighted, reduced-motion static fallback; if Rive authoring blocked ship static fallback + log",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": ["3.2.done.md"], "priority": 6, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-007", "epicId": "4", "segmentBranch": "v3-epic-4-draft-unauth", "ui": true,
+      "title": "Epic 4 — Draft (unauth)",
+      "description": "As a drafter, I want a league-rules editor, bye weeks, schedule import, and fixed auto-draft.",
+      "acceptanceCriteria": [
+        "League-rules editor pre-draft, default superflex 2QB; import rules from existing league",
+        "Bye weeks column from imported NFL schedule (nflverse/Sleeper); soft VORP penalty on K/DEF",
+        "Root-cause-fix auto-draft freeze (verify after Epic 3.1); Sleeper ID moved Manual->Sleeper Live; full-analysis = full detail page",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": ["3.1.done.md"], "priority": 7, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-008", "epicId": "9", "segmentBranch": "v3-epic-9-waiver-unauth", "ui": true,
+      "title": "Epic 9 — Waiver (unauth)",
+      "description": "As a visitor, I want a waiver page with an all-NFL-players RSS feed.",
+      "acceptanceCriteria": [
+        "RSS = all-NFL-players feed",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": ["3.1.done.md"], "priority": 8, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-009", "epicId": "10", "segmentBranch": "v3-epic-10-trades-unauth", "ui": true,
+      "title": "Epic 10 — Trades (unauth)",
+      "description": "As a visitor, I want a trade calculator with fast player search and RSS.",
+      "acceptanceCriteria": [
+        "Trade calculator w/ fast in-memory client index (trie/fuzzy), bloom pre-filter as labeled nicety (small N)",
+        "Position + NFL-team dropdown filters; RSS all-NFL, refocus to players-in-trade on submit",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": ["3.1.done.md"], "priority": 9, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-010", "epicId": "12", "segmentBranch": "v3-epic-12-models", "ui": false,
+      "title": "Epic 12 — Models (VORP + Monte Carlo)",
+      "description": "As an analyst, I want backtested VORP + net-new Monte Carlo season-distribution models, run locally and uploaded online.",
+      "acceptanceCriteria": [
+        "12.1 VORP backtest 2015-2025",
+        "12.2 Monte Carlo (net-new): season-long fantasy-point distributions per player (floor/ceiling/boom-bust), validated vs actual 2015-2025",
+        "Backtests run locally (not daily CI); local run automated to upload results to Supabase; optional manual-dispatch workflow; idempotent upload",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "injectDeps": ["1.done.md", "3.1.done.md"], "priority": 10, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-011", "epicId": "5", "segmentBranch": "v3-epic-5-league-authgate", "ui": true,
+      "title": "Epic 5 — League page -> auth-only",
+      "description": "As a user, I want the league page gated behind auth with return-to redirect.",
+      "acceptanceCriteria": [
+        "League page behind auth middleware; unauth -> redirect to login with return-to",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": ["6.done.md", "7.done.md"], "priority": 11, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-012", "epicId": "8", "segmentBranch": "v3-epic-8-authenticated", "ui": true,
+      "title": "Epic 8 — Authenticated section",
+      "description": "As an authenticated user, I want leagues/draft/waiver/trades/settings tailored to my connected leagues.",
+      "acceptanceCriteria": [
+        "Leagues: connect up to 3 via Sleeper+ESPN (LeagueImport.tsx + multi_league tables, RLS per auth.uid())",
+        "Draft(auth): league toggle instead of import selector; Waiver(auth): League Selector + RSS scope toggle default free-agents",
+        "Trades(auth): League Selector + team-focused RSS + multi-select trade calculator above suggestions, refocus on submit; Settings: change pw/email/phone, toggle 2FA, delete account",
+        "RLS+policies on new tables; no secrets in client bundle",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": ["3.1.done.md", "6.done.md", "7.done.md", "4.done.md", "9.done.md", "10.done.md"], "priority": 12, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-013", "epicId": "11", "segmentBranch": "v3-epic-11-player-page", "ui": true,
+      "title": "Epic 11 — Player page",
+      "description": "As a user, I want a fleshed-out player page from existing pipeline data.",
+      "acceptanceCriteria": [
+        "Flesh out from existing pipeline data (weekly logs, splits, trends, VORP + Monte Carlo outputs, Sparkline.tsx)",
+        "More stats, no new data source",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": ["3.1.done.md", "3.2.done.md", "12.done.md"], "priority": 13, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-014", "epicId": "13", "segmentBranch": "v3-epic-13-header", "ui": true,
+      "title": "Epic 13 — Header",
+      "description": "As a user, I want an icon-based header with theme defaulting to dark.",
+      "acceptanceCriteria": [
+        "a11y->icon; login/signup->profile icon; settings->gear icon (auth only)",
+        "Remove auto theme, default dark, keep light (ThemeToggle.tsx, ThemeScript.tsx); icons lucide-react if present else inline SVG",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": ["6.done.md", "7.done.md"], "priority": 14, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-015", "epicId": "14", "segmentBranch": "v3-epic-14-footer", "ui": true,
+      "title": "Epic 14 — Footer",
+      "description": "As a user, I want a footer with About/Privacy/Terms and site nav.",
+      "acceptanceCriteria": [
+        "About link, site-pages nav, an9.dev link; About describes VORP + Monte Carlo at methodology depth, no unverified accuracy numbers",
+        "Privacy + Terms mirroring ../soundcheck structure (app/privacy, app/terms)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": ["12.done.md"], "priority": 15, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-016", "epicId": "15", "segmentBranch": "v3-epic-15-seo", "ui": false,
+      "title": "Epic 15 — SEO",
+      "description": "As a maintainer, I want per-route SEO metadata, sitemap, and robots.",
+      "acceptanceCriteria": [
+        "Per-route metadata/OG, dynamic sitemap, robots.txt",
+        "Typecheck passes"
+      ],
+      "injectDeps": [], "priority": 16, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-017", "epicId": "16", "segmentBranch": "v3-epic-16-mobile", "ui": true,
+      "title": "Epic 16 — Mobile",
+      "description": "As a mobile user, I want every page responsive.",
+      "acceptanceCriteria": [
+        "QA + fix every page responsive across viewports",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": [], "priority": 17, "passes": false, "notes": ""
+    },
+    {
+      "id": "US-018", "epicId": "17", "segmentBranch": "v3-epic-17-perf", "ui": true,
+      "title": "Epic 17 — Perf",
+      "description": "As a user, I want fast key routes.",
+      "acceptanceCriteria": [
+        "Lighthouse pass on key routes; image/font/bundle trims; minimize data per page; practical not exhaustive",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "injectDeps": [], "priority": 18, "passes": false, "notes": ""
+    }
+  ]
+}
