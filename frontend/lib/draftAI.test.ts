@@ -18,6 +18,7 @@ import {
   pickForTeam,
   pickRawVorp,
   pickAdp,
+  candidatePool,
 } from "./draftAI";
 import { SUPERFLEX_ROSTER } from "./draft";
 import { runSnakeDraft, mulberry32 } from "./snakeDraft";
@@ -243,6 +244,45 @@ describe("full-draft regression", () => {
       expect(counts.K).toBeLessThanOrEqual(1);
       expect(counts.DST).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+describe("candidatePool (Epic 4 auto-draft freeze fix)", () => {
+  it("caps the board to top-N by projection but keeps K/DST reachable for late rounds", () => {
+    const pool: PlayerWithValue[] = [];
+    for (let i = 0; i < 300; i++) pool.push(mk(`wr${i}`, "WR", 300 - i));
+    pool.push(mk("k_top", "K", 140), mk("k_low", "K", 90), mk("dst1", "DST", 130));
+    const capped = candidatePool(pool, 80);
+    // bounded, not the full ~300-player universe (the cause of the O(pool²) freeze)
+    expect(capped.length).toBeLessThanOrEqual(80 + 4);
+    expect(capped.length).toBeLessThan(pool.length);
+    // skill players are the top projections
+    expect(capped.some((p) => p.id === "wr0")).toBe(true);
+    // K and DST survive the cap so the sim can still fill those slots late
+    expect(capped.some((p) => p.position === "K")).toBe(true);
+    expect(capped.some((p) => norm(p.position) === "DST")).toBe(true);
+  });
+  it("returns the pool unchanged when it is already small", () => {
+    const pool = [mk("a", "RB", 100), mk("b", "WR", 90)];
+    expect(candidatePool(pool, 80)).toHaveLength(2);
+  });
+});
+
+describe("soft K/DST penalty (4.6)", () => {
+  function ctx(pool: PlayerWithValue[], teamPicks: PlayerWithValue[], round = 4): any {
+    return { pool, teamPicks, roster: SUPERFLEX_ROSTER, benchSize: 6, allPicks: [], numTeams: 12, picksUntilNext: 1, round, totalRounds: 16 };
+  }
+  it("defers a first kicker behind a skill-position backup mid-draft", () => {
+    // A full starting core already rostered → the next skill player is a bench/backup, the kicker
+    // would fill the empty K slot. The soft penalty keeps the backup ahead so K/DST go later.
+    const team = [
+      mk("qb1", "QB", 300), mk("qb2", "QB", 280), mk("rb1", "RB", 250), mk("rb2", "RB", 240),
+      mk("wr1", "WR", 240, { boom: 250 }), mk("wr2", "WR", 230), mk("te1", "TE", 180),
+    ];
+    const wrBackup = mk("wr3", "WR", 150, { boom: 240 });
+    const kicker = mk("k1", "K", 140);
+    const ranked = scoreBoard(ctx([wrBackup, kicker], team));
+    expect(ranked[0].player.id).toBe("wr3");
   });
 });
 

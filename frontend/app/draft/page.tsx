@@ -2,6 +2,7 @@ import EmptyState from "@/components/EmptyState";
 import DraftRoom from "@/components/DraftRoom";
 import { getAllPlayersByValue } from "@/lib/queries";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { fetchTeamByes, attachByes } from "@/lib/byeWeeks";
 
 export const metadata = { title: "Draft Board" };
 
@@ -10,7 +11,11 @@ export const metadata = { title: "Draft Board" };
 // and degrades back to this exact board on any feed stall.
 export default async function DraftPage() {
   const live = isSupabaseConfigured();
-  const players = live ? await getAllPlayersByValue("vorp") : [];
+  // Import NFL byes from the schedule and attach by nfl_team (4.5) so the Bye column (4.2) fills
+  // and the draft policy's bye-cover term has data. Falls back to a baked snapshot when offline.
+  const players = live
+    ? attachByes(await getAllPlayersByValue("vorp"), await fetchTeamByes())
+    : [];
 
   if (!players.length) {
     return (

@@ -80,6 +80,7 @@ export interface PolicyParams {
   maxCeilingWeeks: number;       // cap on ceiling-week starts
   ceilingScale: number;          // scales boom-edge into ceiling weeks
   kdstCapRoundsFromEnd: number;  // K/DST become draftable only inside this many final rounds
+  kdstSoftPenalty: number;       // soft points shaved off K/DST so skill backups fill first (4.6)
   overfillDepth: Record<string, number>; // reasonable owned count per position before penalty
   overfillPenaltyPerExtra: number;        // points penalty per player past the depth cap
 }
@@ -96,9 +97,33 @@ export const DEFAULT_POLICY: PolicyParams = {
   maxCeilingWeeks: 4,
   ceilingScale: 6,
   kdstCapRoundsFromEnd: 2,
+  kdstSoftPenalty: 20,
   overfillDepth: { QB: 3, RB: 5, WR: 5, TE: 2, K: 1, DST: 1 },
   overfillPenaltyPerExtra: 25,
 };
+
+// Cap the board to a realistic candidate set before scoring. scoreBoard is O(pool²) — each
+// candidate walks the pool again in expectedReplacementAtNextTurn — so scoring the full ~4k
+// player universe per pick froze the live auto-draft (Epic 4 root cause; the empty-snapshot
+// theory was wrong — an empty pool no-ops). Top-N by projection is where every sane pick comes
+// from; we add a few K/DST so late-round defense/kicker picks stay reachable.
+// ponytail: N=80 matches the recommend path; raise only if a deeper board ever changes a pick.
+export function candidatePool(pool: PlayerWithValue[], n = 80): PlayerWithValue[] {
+  if (pool.length <= n) return pool;
+  const byProj = [...pool].sort((a, b) => proj(b) - proj(a));
+  const top = byProj.slice(0, n);
+  const have = new Set(top.map((p) => p.id));
+  for (const want of ["K", "DST"] as const) {
+    for (const p of byProj) {
+      if (norm(p.position) === want && !have.has(p.id)) {
+        top.push(p);
+        have.add(p.id);
+        if (top.filter((q) => norm(q.position) === want).length >= 2) break;
+      }
+    }
+  }
+  return top;
+}
 
 // Season projection in league scoring — the common unit for every additive term.
 export function proj(p: PlayerWithValue): number {
@@ -288,6 +313,13 @@ export function scoreBoard(ctx: AIContext, params: PolicyParams = DEFAULT_POLICY
       why.push("bench upside");
     }
     score -= overfillPenalty(p, ctx, params);
+    // Soft K/DST penalty (4.6): even a *first* kicker/defense is shaved so QB/RB/WR/TE bench
+    // depth fills ahead of them. Lifted in the final rounds (lateDraft) so the slots still fill.
+    const cpos = norm(p.position);
+    if ((cpos === "K" || cpos === "DST") && !lateDraft) {
+      score -= params.kdstSoftPenalty;
+      why.push("K/DST deferred");
+    }
     if (capped) {
       score -= 1e6; // demote below every legal pick without dropping it from the board
       why.push("K/DST capped");
