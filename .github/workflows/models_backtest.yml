@@ -1,0 +1,40 @@
+name: Models backtest — VORP + season Monte Carlo (manual)
+
+# Manual-dispatch ONLY (no schedule): the 2015-2025 backtest pulls ~11 seasons of
+# nflverse frames and is far too heavy for daily CI (Epic 12 keeps daily minutes low).
+# Run it on demand to refresh `model_backtest`; it has the service-role secret so the
+# upload actually writes (unlike a local run, whose env is anon-only).
+on:
+  workflow_dispatch:
+    inputs:
+      seasons:
+        description: "Season range or list (e.g. 2015-2025)"
+        required: false
+        default: "2015-2025"
+
+permissions:
+  contents: read
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pipeline
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # Untrusted dispatch input — sanitize to digits/space/dash before use.
+      SEASONS_RAW: ${{ github.event.inputs.seasons }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pipeline/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Run backtest + upload results
+        run: |
+          seasons=$(echo "${SEASONS_RAW:-2015-2025}" | tr -cd '0-9 -')
+          python -m backtest.models_backtest --seasons "${seasons:-2015-2025}"
