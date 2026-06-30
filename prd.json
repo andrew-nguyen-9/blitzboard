@@ -136,7 +136,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": ["6.done.md", "7.done.md"], "priority": 11, "passes": false, "notes": ""
+      "injectDeps": ["6.done.md", "7.done.md"], "priority": 11, "passes": true, "notes": "done — PR #37, merged to v3. League page gated in existing session-refresh middleware via new isProtectedPath; unauth /league -> 307 /login?next=%2Fleague, return-to lands back via safeNext. build/tsc clean, vitest(153) green, redirect screenshot-verified."
     },
     {
       "id": "US-012", "epicId": "8", "segmentBranch": "v3-epic-8-authenticated", "ui": true,
