@@ -56,6 +56,37 @@ export default async function Nav() {
           )}
         </ul>
         <div className="flex items-center gap-2">
+          {/* Mobile nav menu — the desktop link bar is hidden below md, so on phones the
+              sections are reachable here. Native <details> disclosure (no client JS,
+              keeps Nav a Server Component); reuses the .a11y marker-reset + panel styling. */}
+          <details className="a11y group relative md:hidden">
+            <summary
+              className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-ink-muted transition hover:bg-surface-elevated hover:text-ink"
+              aria-label="Menu"
+              title="Menu"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" role="img" aria-hidden focusable="false" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </summary>
+            <ul className="absolute right-0 z-50 mt-2 w-52 rounded-[var(--radius)] border border-line bg-surface p-2 text-ink shadow-[var(--glow)]">
+              {SECTIONS.map((s) => (
+                <li key={s.href}>
+                  <Link href={s.href} className="block rounded-md px-3 py-2 text-body text-ink-muted transition hover:bg-surface-elevated hover:text-ink">
+                    {s.label}
+                    {!s.ready && <span className="ml-1 text-[10px] text-accent/70">soon</span>}
+                  </Link>
+                </li>
+              ))}
+              {signedIn && (
+                <li>
+                  <Link href="/leagues" className="block rounded-md px-3 py-2 text-body text-ink-muted transition hover:bg-surface-elevated hover:text-ink">
+                    Leagues
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </details>
           <A11ySettings />
           <ThemeToggle />
           {signedIn ? (
