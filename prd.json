@@ -125,7 +125,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "injectDeps": ["1.done.md", "3.1.done.md"], "priority": 10, "passes": false, "notes": ""
+      "injectDeps": ["1.done.md", "3.1.done.md"], "priority": 10, "passes": true, "notes": "done (1 sub-step gated) — PR #36, merged to v3. Net-new SeasonSimulator (injury/usage/variance->floor/ceiling/boom-bust) + VORP/MC backtest 2015-2024 (VORP spearman 0.59, MC P10-P90 cov 0.37; 2025 data unpublished, auto-skipped). Supabase upload BLOCKED locally (anon-only .env, no service-role) -> dry-ran 22 rows idempotent; manual-dispatch models_backtest.yml holds CI secret + does real write. build/tsc/vitest(151)/py-checks green."
     },
     {
       "id": "US-011", "epicId": "5", "segmentBranch": "v3-epic-5-league-authgate", "ui": true,
