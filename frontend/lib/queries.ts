@@ -2,7 +2,6 @@
 // convention). Every helper is null-safe: returns empty/falsy when the client
 // is unconfigured so the UI renders empty states instead of throwing.
 import { getSupabase } from "./supabase";
-import { latestBoxBySleeper } from "./playerSort";
 import { careerRows, type SeasonRow } from "./playerStats";
 import type { BoxStats } from "./playerColumns";
 import type { Engine, Player, PlayerWithValue } from "./types";
@@ -101,26 +100,6 @@ export async function getPlayerDetail(idOrSleeper: string, engine: Engine = "vor
     projection: projection ?? null,
     history: (history as any[]) ?? [],
   };
-}
-
-// Latest-season box-score for a set of snapshot rows (keyed by sleeper id), for
-// the Players table's lazy box-column group. The table fetches only the visible
-// window's ids on demand, so this stays a bounded `in (...)` query, never the
-// whole universe. Null-safe: empty when offline or nothing matches.
-export async function getBoxStatsBySleeper(sleeperIds: string[]): Promise<Record<string, BoxStats>> {
-  const sb = getSupabase();
-  if (!sb || sleeperIds.length === 0) return {};
-  const { data: players, error: pe } = await sb
-    .from("players").select("id,sleeper_id").in("sleeper_id", sleeperIds);
-  if (pe || !players?.length) return {};
-  const ids = (players as Array<{ id: string }>).map((p) => p.id);
-  const { data: history, error: he } = await sb
-    .from("player_stats_history").select("player_id,season,fantasy_pts,stats").in("player_id", ids).is("week", null);
-  if (he) {
-    console.error("[queries.getBoxStatsBySleeper]", he.message);
-    return {};
-  }
-  return latestBoxBySleeper(players as any[], (history as any[]) ?? []);
 }
 
 export interface RosterTeam {

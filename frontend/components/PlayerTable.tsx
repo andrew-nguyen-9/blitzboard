@@ -149,8 +149,8 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
     missing.forEach((id) => fetchedBox.current.add(id));
     let alive = true;
     // dynamic import keeps supabase-js out of the default players bundle (box off by default)
-    import("@/lib/queries").then(({ getBoxStatsBySleeper }) =>
-      getBoxStatsBySleeper(missing).then((m) => alive && setBox((b) => ({ ...b, ...m }))),
+    import("@/lib/queries").then(({ getBoxStats }) =>
+      getBoxStats(missing).then((m) => alive && setBox((b) => ({ ...b, ...m }))),
     );
     return () => {
       alive = false;
