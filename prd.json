@@ -196,7 +196,7 @@
         "Per-route metadata/OG, dynamic sitemap, robots.txt",
         "Typecheck passes"
       ],
-      "injectDeps": [], "priority": 16, "passes": false, "notes": "BLOCKED — monthly spend limit hit; subagent aborted after 3 tool calls before any SEO work. Not shipped. Re-dispatch once limit raised."
+      "injectDeps": [], "priority": 16, "passes": true, "notes": "done — branch v3-epic-15-seo, PR base v3. Native App Router robots.ts + dynamic sitemap.ts (9 static public routes + DB-enumerated /players/[id]) + getSitemapPlayerIds() in queries.ts + player-specific generateMetadata OG. build/tsc/vitest(162) clean; robots.txt & sitemap.xml prerender verified (~1000 player urls)."
     },
     {
       "id": "US-017", "epicId": "16", "segmentBranch": "v3-epic-16-mobile", "ui": true,

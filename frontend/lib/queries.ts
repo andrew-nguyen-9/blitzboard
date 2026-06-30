@@ -315,3 +315,18 @@ export async function getPlayerCount(): Promise<number> {
     .select("id", { count: "exact", head: true });
   return count ?? 0;
 }
+
+// Canonical player ids for the sitemap (app/sitemap.ts). id-only read, capped well
+// under the 50k-URL sitemap limit. Null-safe → empty when unconfigured, so the
+// sitemap degrades to its static routes with no keys.
+// ponytail: single flat sitemap; split into a sitemap index if players ever exceed 50k.
+export async function getSitemapPlayerIds(): Promise<string[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb.from("players").select("id").order("full_name").limit(5000);
+  if (error) {
+    console.error("[queries.getSitemapPlayerIds]", error.message);
+    return [];
+  }
+  return (data ?? []).map((p: { id: string }) => p.id);
+}
