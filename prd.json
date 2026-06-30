@@ -174,7 +174,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": ["6.done.md", "7.done.md"], "priority": 14, "passes": false, "notes": ""
+      "injectDeps": ["6.done.md", "7.done.md"], "priority": 14, "passes": true, "notes": "done — PR #40, merged to v3. Removed auto/system theme (default dark, legacy prefs coerced via localStorage rewrite + .catch); header inline-SVG icons (a11y glyph, sun/moon toggle, profile->/login unauth / settings gear->/account auth-only). tsc/vitest(160)/build clean; dark+light header screenshots verified."
     },
     {
       "id": "US-015", "epicId": "14", "segmentBranch": "v3-epic-14-footer", "ui": true,
