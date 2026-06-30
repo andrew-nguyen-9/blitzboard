@@ -1,5 +1,6 @@
 import TradeCalculator from "@/components/TradeCalculator";
 import { getRecentNews } from "@/lib/queries";
+import { getMyLeagues } from "@/lib/queries.auth";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const metadata = { title: "Trade Calculator" };
@@ -12,11 +13,11 @@ export const dynamic = "force-dynamic"; // news refreshes; never serve stale
 // Epic 8 (auth) layers a League Selector + roster multi-select + team-focused RSS.
 export default async function TradesPage() {
   const live = isSupabaseConfigured();
-  const news = live ? await getRecentNews(12) : [];
+  const [news, myLeagues] = live ? await Promise.all([getRecentNews(12), getMyLeagues()]) : [[], []];
 
   return (
     <div className="py-12">
-      <TradeCalculator news={news} />
+      <TradeCalculator news={news} leagues={myLeagues.map((l) => ({ id: l.id, name: l.name ?? "League" }))} />
     </div>
   );
 }

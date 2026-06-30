@@ -74,6 +74,37 @@ export async function getActiveLeague(): Promise<UserLeague | null> {
   return leagues.find((l) => l.is_default) ?? leagues[0] ?? null;
 }
 
+export interface UserLeagueWithConfig extends UserLeague {
+  config: Record<string, unknown> | null;
+}
+
+// All connected leagues joined to their stored rules config — the authed draft/waiver/trade
+// surfaces use `config` (a LeagueConfig for Sleeper, a default shell for ESPN) for league context.
+export async function getMyLeaguesWithConfig(): Promise<UserLeagueWithConfig[]> {
+  const sb = await getServerSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from("user_leagues")
+    .select(
+      "id,platform,external_league_id,season,name,scoring_profile_id,is_default,league_rules(config)",
+    )
+    .order("created_at");
+  if (error) {
+    console.error("[queries.auth.getMyLeaguesWithConfig]", error.message);
+    return [];
+  }
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    platform: r.platform,
+    external_league_id: r.external_league_id,
+    season: r.season,
+    name: r.name,
+    scoring_profile_id: r.scoring_profile_id,
+    is_default: r.is_default,
+    config: r.league_rules?.config ?? null,
+  }));
+}
+
 // The active league's scoring rules config, or null. Joins user_leagues → league_rules.
 export async function getActiveLeagueRules(): Promise<Record<string, unknown> | null> {
   const sb = await getServerSupabase();
