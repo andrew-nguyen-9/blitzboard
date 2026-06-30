@@ -186,7 +186,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": ["12.done.md"], "priority": 15, "passes": false, "notes": ""
+      "injectDeps": ["12.done.md"], "priority": 15, "passes": true, "notes": "done — PR #41, merged to v3. Global Footer (Sections nav via Nav.SECTIONS, Info group, an9.dev link) + /about (methodology-depth VORP & Monte Carlo, no accuracy numbers) + /privacy + /terms (mirror soundcheck). build/tsc/vitest(160) clean, all four surfaces screenshot-verified."
     },
     {
       "id": "US-016", "epicId": "15", "segmentBranch": "v3-epic-15-seo", "ui": false,
