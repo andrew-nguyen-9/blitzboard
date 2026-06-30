@@ -233,7 +233,8 @@ describe("full-draft regression", () => {
     const totalRounds = picks.length / 12;
     const earlyByTeam: Record<number, { K: number; DST: number }> = {};
     for (const p of picks) {
-      if (Math.ceil(p.pickNo / 12) > totalRounds - 2) continue; // final 2 rounds are exempt
+      // final kdstCapRoundsFromEnd rounds are exempt (1.1 — locked to the policy param, not a literal)
+      if (Math.ceil(p.pickNo / 12) > totalRounds - DEFAULT_POLICY.kdstCapRoundsFromEnd) continue;
       const pos = norm(p.player.position);
       if (pos === "K" || pos === "DST") {
         earlyByTeam[p.team] ??= { K: 0, DST: 0 };
@@ -325,5 +326,109 @@ describe("policy selection (v2.4.3 backtest seams)", () => {
     const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(1), randomness: 0, chooser: (c: any) => c.pool[0] });
     expect(picks[0].player.id).toBe("p0");
     expect(picks[1].player.id).toBe("p1");
+  });
+});
+
+// ── e1 tuning ─────────────────────────────────────────────────────────────────
+
+// Realistic pool + per-policy roster quality, shared by the 1.3/1.4 backtest assertions.
+// optimalLineupPoints fills the superflex starting lineup INCLUDING the K and DST slots, so a
+// policy that never drafts K/DST (raw VORP, ADP-follow on projection) leaves those slots empty —
+// that structural gap is what the v2 policy's deferral converts into a win.
+function realisticPool(): PlayerWithValue[] {
+  const spec: [string, number, number, number][] = [
+    ["QB", 60, 300, 120], ["RB", 110, 290, 40], ["WR", 130, 285, 30],
+    ["TE", 45, 230, 50], ["K", 24, 140, 118], ["DST", 24, 135, 108],
+  ];
+  const players: PlayerWithValue[] = [];
+  let n = 0;
+  for (const [pos, count, top, bot] of spec) {
+    for (let k = 0; k < count; k++) {
+      const projPts = Math.round(top - ((top - bot) * k) / Math.max(1, count - 1));
+      players.push(mk(`${pos}${k}`, pos, projPts, { bye_week: (n % 14) + 1, nfl_team: `T${n % 32}` }));
+      n++;
+    }
+  }
+  // ADP = consensus projection rank → a strong best-available baseline, not a trivial one.
+  [...players].sort((a, b) => proj(b) - proj(a)).forEach((p, i) => { p.value!.adp = i + 1; });
+  return players;
+}
+
+function teamLineupTotal(players: PlayerWithValue[], picks: ReturnType<typeof runSnakeDraft>, numTeams = 12): number {
+  const byId = new Map(players.map((p) => [p.id, p]));
+  let sum = 0;
+  for (let t = 1; t <= numTeams; t++) {
+    const roster = picks.filter((pk) => pk.team === t).map((pk) => byId.get(pk.player.id)!);
+    sum += optimalLineupPoints(roster, SUPERFLEX_ROSTER);
+  }
+  return sum;
+}
+
+describe("1.2 — free-agent penalty (NEW term)", () => {
+  function ctx(pool: PlayerWithValue[]): any {
+    return { pool, teamPicks: [], roster: SUPERFLEX_ROSTER, benchSize: 6, allPicks: [], numTeams: 12, picksUntilNext: 1, round: 3, totalRounds: 16 };
+  }
+  it("(a) an FA with no signal sorts below a comparable rostered-team player", () => {
+    const fa = mk("wr_fa", "WR", 200, { nfl_team: null });            // higher projection…
+    const rostered = mk("wr_rostered", "WR", 150, { nfl_team: "KC" }); // …but on no team
+    const ranked = scoreBoard(ctx([fa, rostered]));
+    expect(ranked[0].player.id).toBe("wr_rostered"); // FA buried by faPenalty despite the edge
+  });
+  it("(b) an FA with a positive trend_score is reachable again (lift hook)", () => {
+    const fa = mk("wr_fa", "WR", 200, { nfl_team: null });
+    fa.metadata = { trend_score: 5 }; // a signing/news signal cancels the penalty
+    const rostered = mk("wr_rostered", "WR", 150, { nfl_team: "KC" });
+    const ranked = scoreBoard(ctx([fa, rostered]));
+    expect(ranked[0].player.id).toBe("wr_fa");
+  });
+  it("never penalizes the synthetic replacement (keys off pool candidates only)", () => {
+    // marginalStarterValue builds a __rep__ body with nfl_team:null but never puts it in ctx.pool;
+    // a normal rostered pick must therefore score positively (not buried by faPenalty).
+    const pool = [mk("rb1", "RB", 200, { nfl_team: "KC" })];
+    expect(scoreBoard(ctx(pool))[0].score).toBeGreaterThan(0);
+  });
+});
+
+describe("1.3 — more dynamic to rival drafting", () => {
+  const PRE_TUNE = { ...DEFAULT_POLICY, runDepletion: 1.6, runThresholdMult: 1.6 };
+  it("a positional run pulls the contested pick forward vs pre-tune coefficients", () => {
+    // A moderate RB run: 7 of the last 18 picks (rate 0.39) — hot under the tuned 1.4× threshold
+    // but NOT under the old 1.6×. So the tuned policy both detects it AND depletes harder.
+    const allPicks: any[] = [];
+    for (let i = 0; i < 18; i++) {
+      const pos = i < 7 ? "RB" : "WR";
+      allPicks.push({ pickNo: i + 1, team: (i % 12) + 1, player: { id: `h${i}`, position: pos } });
+    }
+    const rbs = Array.from({ length: 13 }, (_, i) => mk(`rb${i}`, "RB", 250 - i * 10));
+    const c: any = {
+      pool: rbs, teamPicks: [], roster: SUPERFLEX_ROSTER, benchSize: 6,
+      allPicks, numTeams: 12, picksUntilNext: 12, round: 2, totalRounds: 16,
+    };
+    const tuned = marginalStarterValue(rbs[0], c, DEFAULT_POLICY);
+    const pre = marginalStarterValue(rbs[0], c, PRE_TUNE);
+    expect(tuned).toBeGreaterThan(pre); // the run is worth more under the tuned coefficients
+  });
+  it("backtest still beats both naive baselines (no regression)", () => {
+    const players = realisticPool();
+    const seed = 7;
+    const v2 = teamLineupTotal(players, runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 }));
+    const raw = teamLineupTotal(players, runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0, chooser: pickRawVorp }));
+    const adp = teamLineupTotal(players, runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0, chooser: pickAdp }));
+    expect(v2).toBeGreaterThan(raw);
+    expect(v2).toBeGreaterThan(adp);
+  });
+});
+
+describe("1.4 — prioritize QB/RB/TE/WR over K/DST", () => {
+  it("K/DST appear only in the final rounds of a full sim", () => {
+    const players = realisticPool();
+    const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(11), randomness: 0 });
+    const totalRounds = picks.length / 12;
+    const kdstRounds = picks
+      .filter((p) => { const pos = norm(p.player.position); return pos === "K" || pos === "DST"; })
+      .map((p) => Math.ceil(p.pickNo / 12));
+    expect(kdstRounds.length).toBeGreaterThan(0); // they do get drafted (slots must fill)
+    // every K/DST lands in the late window, never through the early/bench skill rounds
+    expect(Math.min(...kdstRounds)).toBeGreaterThan(totalRounds - DEFAULT_POLICY.kdstCapRoundsFromEnd - 1);
   });
 });
