@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { loadSnapshot, type SnapshotPlayer } from "@/lib/snapshot";
 import { PlayerSearchIndex } from "@/lib/tradeSearch";
+import LeagueSelector, { type LeagueOpt } from "./LeagueSelector";
 import type { NewsItem } from "@/lib/queries";
 
 const POSITIONS = ["ALL", "QB", "RB", "WR", "TE", "K", "DST"] as const;
@@ -17,7 +18,7 @@ const sumVal = (ps: SnapshotPlayer[]) => ps.reduce((s, p) => s + pval(p), 0);
 // side, and see which side wins by value. The NEWS PULSE feed starts all-NFL and
 // refocuses to the players in the trade on submit. Epic 8 (auth) layers a League
 // Selector + roster multi-select + team-focused RSS on top of this.
-export default function TradeCalculator({ news }: { news: NewsItem[] }) {
+export default function TradeCalculator({ news, leagues = [] }: { news: NewsItem[]; leagues?: LeagueOpt[] }) {
   const [players, setPlayers] = useState<SnapshotPlayer[] | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "empty">("loading");
   const [q, setQ] = useState("");
@@ -26,6 +27,8 @@ export default function TradeCalculator({ news }: { news: NewsItem[] }) {
   const [sideA, setSideA] = useState<SnapshotPlayer[]>([]);
   const [sideB, setSideB] = useState<SnapshotPlayer[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [leagueId, setLeagueId] = useState(leagues[0]?.id ?? "");
+  const leagueName = leagues.find((l) => l.id === leagueId)?.name ?? leagues[0]?.name;
 
   useEffect(() => {
     let alive = true;
@@ -100,12 +103,16 @@ export default function TradeCalculator({ news }: { news: NewsItem[] }) {
             Search any NFL player, stack both sides, see who wins by value — no league needed.
           </p>
         </div>
-        {/* ponytail: unauth scope is fixed to all-NFL; it flips to the traded
-            players on submit. Epic 8 (auth) replaces this with a <LeagueSelector/>
-            + an all-NFL ↔ league/team scope toggle. */}
-        <span className="rounded-full border border-hairline px-3 py-1.5 text-label text-ink-muted">
-          Scope: <span className="text-ink">{submitted && tradePlayers.length ? "This trade" : "All NFL"}</span>
-        </span>
+        {/* Authed: a League Selector sets the trade context; the RSS feed below stays focused on
+            that league's players until submit, then flips to the players in the trade. Unauth: the
+            static all-NFL scope chip (flips to "This trade" on submit). */}
+        {leagues.length ? (
+          <LeagueSelector leagues={leagues} value={leagueId} onChange={setLeagueId} />
+        ) : (
+          <span className="rounded-full border border-hairline px-3 py-1.5 text-label text-ink-muted">
+            Scope: <span className="text-ink">{submitted && tradePlayers.length ? "This trade" : "All NFL"}</span>
+          </span>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
@@ -196,7 +203,7 @@ export default function TradeCalculator({ news }: { news: NewsItem[] }) {
         <aside className="glass h-fit p-4">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-label text-ink-muted">NEWS PULSE</h3>
-            <span className="text-label text-ink-muted/70">{submitted && tradePlayers.length ? "This trade" : "All NFL"}</span>
+            <span className="text-label text-ink-muted/70">{submitted && tradePlayers.length ? "This trade" : leagues.length ? leagueName : "All NFL"}</span>
           </div>
           <div className="space-y-3">
             {focusedNews.map((n, i) => (

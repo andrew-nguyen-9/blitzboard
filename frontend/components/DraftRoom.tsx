@@ -36,8 +36,26 @@ const STAT_COLS: { key: string; label: string; num?: boolean; get: (p: PlayerWit
   { key: "inj", label: "Inj", get: (p) => p.injury_status ?? "—" },
 ];
 
-export default function DraftRoom({ players }: { players: PlayerWithValue[] }) {
-  const [config, setConfig] = useState<LeagueConfig>(() => defaultConfig(12));
+// `savedLeagues` (Epic 8 authed draft): when present, the platform selector + import are replaced
+// by a 2-3 league toggle that swaps in each connected league's stored rules. Unauth passes none.
+export interface SavedLeague {
+  id: string;
+  name: string;
+  config: LeagueConfig;
+}
+
+export default function DraftRoom({
+  players,
+  savedLeagues,
+}: {
+  players: PlayerWithValue[];
+  savedLeagues?: SavedLeague[];
+}) {
+  const authed = !!savedLeagues?.length;
+  const [config, setConfig] = useState<LeagueConfig>(
+    () => savedLeagues?.[0]?.config ?? defaultConfig(12),
+  );
+  const [leagueId, setLeagueId] = useState(savedLeagues?.[0]?.id ?? "");
   const numTeams = config.numTeams;
   const ROSTER_SPOTS = config.rosterSlots.length + config.benchSize;
 
@@ -273,6 +291,14 @@ export default function DraftRoom({ players }: { players: PlayerWithValue[] }) {
   function toggleCol(key: string) {
     setCols((c) => (c.includes(key) ? c.filter((k) => k !== key) : [...c, key]));
   }
+  // Authed league toggle: swap in the selected connected league's rules and clear the board.
+  function pickLeague(id: string) {
+    const lg = savedLeagues?.find((l) => l.id === id);
+    if (!lg) return;
+    setLeagueId(id);
+    setConfig(lg.config);
+    setManualPicks([]);
+  }
 
   return (
     <div>
@@ -292,18 +318,20 @@ export default function DraftRoom({ players }: { players: PlayerWithValue[] }) {
           >
             {showRules ? "✕ Close rules" : "⚙ League rules"}
           </button>
-          <button
-            onClick={() => setShowImport((s) => !s)}
-            className="rounded-full border border-hairline px-3 py-1.5 text-label transition hover:bg-surface-elevated"
-          >
-            {showImport ? "✕ Close import" : "⚡ Import league (Sleeper / ESPN)"}
-          </button>
+          {!authed && (
+            <button
+              onClick={() => setShowImport((s) => !s)}
+              className="rounded-full border border-hairline px-3 py-1.5 text-label transition hover:bg-surface-elevated"
+            >
+              {showImport ? "✕ Close import" : "⚡ Import league (Sleeper / ESPN)"}
+            </button>
+          )}
         </div>
       </div>
 
       {showRules && <RulesEditor config={config} onChange={updateRules} imported={config.source !== "manual"} />}
 
-      {showImport && (
+      {showImport && !authed && (
         <LeagueImport
           onSleeperImport={handleSleeperImport}
           onEspnConnect={handleEspnConnect}
@@ -311,7 +339,23 @@ export default function DraftRoom({ players }: { players: PlayerWithValue[] }) {
         />
       )}
 
-      {/* sync bar */}
+      {/* Authed: a 2-3 league toggle replaces the Manual/Sleeper/ESPN selector. */}
+      {authed && savedLeagues!.length > 1 && (
+        <div className="glass mb-4 flex flex-wrap items-center gap-2 p-3">
+          <span className="text-label text-ink-muted">League:</span>
+          <div className="inline-flex rounded-full border border-hairline p-1 text-label" role="group" aria-label="Select league">
+            {savedLeagues!.map((l) => (
+              <button key={l.id} type="button" onClick={() => pickLeague(l.id)} aria-pressed={leagueId === l.id}
+                className={`max-w-[12rem] truncate rounded-full px-3 py-1 transition ${leagueId === l.id ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}>
+                {l.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* sync bar (unauth only — authed draft is manual over the connected league's rules) */}
+      {!authed && (
       <div className="glass mb-4 flex flex-wrap items-center gap-3 p-3">
         <div className="inline-flex rounded-full border border-hairline p-1 text-label">
           <button onClick={() => { setMode("manual"); setLiveSetup(null); }} className={`rounded-full px-3 py-1 transition ${mode === "manual" && !liveSetup ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}>Manual</button>
@@ -339,6 +383,7 @@ export default function DraftRoom({ players }: { players: PlayerWithValue[] }) {
           </button>
         )}
       </div>
+      )}
 
       {live && live.status === "error" && (
         <div className="mb-4 rounded-xl border border-red-400/40 bg-red-400/5 p-3 text-label text-red-300">

@@ -19,8 +19,8 @@ export default async function Nav() {
   // account security (2FA opt-in). Epic 13 fleshes out the full account menu here.
   const sb = await getServerSupabase();
   const signedIn = sb ? Boolean((await sb.auth.getUser()).data.user) : false;
-  const profileHref = signedIn ? "/auth/2fa" : "/login";
-  const profileLabel = signedIn ? "Account security" : "Sign in";
+  const profileHref = signedIn ? "/account" : "/login";
+  const profileLabel = signedIn ? "Account settings" : "Sign in";
 
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-bg/80 backdrop-blur">
@@ -46,6 +46,16 @@ export default async function Nav() {
               </Link>
             </li>
           ))}
+          {signedIn && (
+            <li>
+              <Link
+                href="/leagues"
+                className="rounded-full px-3 py-1.5 text-label text-ink-muted transition hover:bg-surface-elevated hover:text-ink"
+              >
+                Leagues
+              </Link>
+            </li>
+          )}
         </ul>
         <div className="flex items-center gap-2">
           <A11ySettings />

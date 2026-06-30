@@ -1,6 +1,8 @@
 import EmptyState from "@/components/EmptyState";
 import WaiverBoard from "@/components/WaiverBoard";
-import { getWaiverTargets, getRecentNews } from "@/lib/queries";
+import WaiverScope from "@/components/WaiverScope";
+import { getWaiverTargets, getRecentNews, getRosteredIds } from "@/lib/queries";
+import { getMyLeagues } from "@/lib/queries.auth";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const metadata = { title: "Waiver Wire" };
@@ -26,6 +28,23 @@ export default async function WaiversPage() {
           ? "No trending data yet. Run pipeline/news_sentiment.py to score news + Sleeper add/drop velocity."
           : "Connect Supabase and run the sentiment pipeline to surface waiver targets and FAAB bids."}
       </EmptyState>
+    );
+  }
+
+  // Authed: a signed-in user with ≥1 connected league gets the League Selector + an all-NFL ↔
+  // free-agents-on-waivers scope toggle (Epic 8). Signed-out / no league → the all-NFL page below.
+  const myLeagues = live ? await getMyLeagues() : [];
+  if (myLeagues.length) {
+    const rosteredIds = [...(await getRosteredIds())];
+    return (
+      <div className="py-12">
+        <WaiverScope
+          leagues={myLeagues.map((l) => ({ id: l.id, name: l.name ?? "League" }))}
+          targets={targets}
+          news={news}
+          rosteredIds={rosteredIds}
+        />
+      </div>
     );
   }
 
