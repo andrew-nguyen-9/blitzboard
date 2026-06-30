@@ -27,6 +27,27 @@ export const sleeperUsername = z
 
 export const sleeperLeagueId = z.string().trim().regex(/^\d+$/, "invalid league id");
 
+// Signup form (Epic 7). Names/phone are bounded; password is hashed server-side by Supabase
+// (bcrypt) and is never stored or logged by us. `confirm` must match `password`.
+export const signupInput = z
+  .object({
+    firstName: z.string().trim().min(1, "first name required").max(80),
+    lastName: z.string().trim().min(1, "last name required").max(80),
+    email: z.string().trim().email("invalid email").max(254),
+    phone: z
+      .string()
+      .trim()
+      .min(7, "invalid phone")
+      .max(32)
+      .regex(/^[0-9+().\-\s]+$/, "invalid phone"),
+    password: z.string().min(8, "password must be at least 8 characters").max(128),
+    confirm: z.string(),
+  })
+  .refine((d) => d.password === d.confirm, {
+    message: "passwords do not match",
+    path: ["confirm"],
+  });
+
 export type Validated<T> = { ok: true; data: T } | { ok: false; error: string };
 
 // Validate input against a schema; returns a discriminated result (never throws).

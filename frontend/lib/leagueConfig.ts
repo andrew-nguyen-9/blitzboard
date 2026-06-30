@@ -51,6 +51,72 @@ export function defaultTeams(numTeams: number, existing: LeagueTeam[] = []): Lea
   });
 }
 
+// ── Editable rules (4.1/4.3) ───────────────────────────────────────────────
+// The pre-draft rules editor edits a few high-signal toggles; everything else
+// (scarcity, sim AI, analysis) reads the derived rosterSlots. Default = superflex.
+export interface EditableRules {
+  numTeams: number;
+  superflex: boolean; // adds the OP (QB/RB/WR/TE) slot — the 2QB-capable superflex start
+  ppr: number;        // 0 | 0.5 | 1
+  useK: boolean;
+  useDST: boolean;
+  flex: number;       // RB/WR/TE flex slots
+}
+
+export function defaultRules(numTeams = 12): EditableRules {
+  return { numTeams, superflex: true, ppr: 0.5, useK: true, useDST: true, flex: 1 };
+}
+
+// Derive the starting lineup from the toggles (QB,2RB,2WR,TE, N×FLEX, [OP], [DST], [K]).
+export function rosterFromRules(r: EditableRules): RosterSlot[] {
+  const slots: RosterSlot[] = [
+    { slot: "QB", eligible: ["QB"] },
+    { slot: "RB", eligible: ["RB"] },
+    { slot: "RB", eligible: ["RB"] },
+    { slot: "WR", eligible: ["WR"] },
+    { slot: "WR", eligible: ["WR"] },
+    { slot: "TE", eligible: ["TE"] },
+  ];
+  for (let i = 0; i < Math.max(0, r.flex); i++) slots.push({ slot: "FLEX", eligible: ["RB", "WR", "TE"] });
+  if (r.superflex) slots.push({ slot: "OP", eligible: ["QB", "RB", "WR", "TE"] });
+  if (r.useDST) slots.push({ slot: "DST", eligible: ["DST", "DEF"] });
+  if (r.useK) slots.push({ slot: "K", eligible: ["K"] });
+  return slots;
+}
+
+// Read the editable toggles back out of a config so the editor stays a pure function of state
+// (no parallel `rules` state to drift from imported leagues).
+export function rulesFromConfig(config: LeagueConfig): EditableRules {
+  const slots = config.rosterSlots;
+  const has = (slot: string) => slots.some((s) => s.slot === slot);
+  const ppr = /\bPPR\b/.test(config.scoringLabel) && !/Half/.test(config.scoringLabel)
+    ? 1 : /Half-PPR/.test(config.scoringLabel) ? 0.5 : 0;
+  return {
+    numTeams: config.numTeams,
+    superflex: has("OP") || has("SF"),
+    ppr,
+    useK: has("K"),
+    useDST: has("DST"),
+    flex: slots.filter((s) => s.slot === "FLEX").length,
+  };
+}
+
+export function rulesScoringLabel(r: EditableRules): string {
+  const ppr = r.ppr >= 1 ? "PPR" : r.ppr >= 0.5 ? "Half-PPR" : "Standard";
+  return `${ppr}${r.superflex ? " · Superflex" : ""}`;
+}
+
+// Apply edited rules onto a config (preserving team names / source / draft id).
+export function applyRules(config: LeagueConfig, r: EditableRules): LeagueConfig {
+  return {
+    ...config,
+    numTeams: r.numTeams,
+    rosterSlots: rosterFromRules(r),
+    scoringLabel: rulesScoringLabel(r),
+    teams: defaultTeams(r.numTeams, config.teams),
+  };
+}
+
 // ── Sleeper roster_positions → our RosterSlot[] ────────────────────────────
 // Sleeper encodes the starting lineup as a flat array with "BN" entries for the
 // bench and "IR"/"TAXI" we ignore. Multi-position flex codes map to eligibility.

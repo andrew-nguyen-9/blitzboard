@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { AUTH_COOKIE_OPTIONS } from "@/lib/auth/cookies";
+import { isProtectedPath } from "@/lib/auth/redirect";
 
 // Refreshes the Supabase auth session on every request and rewrites the rotated session
 // cookies onto the response. Offline-safe: no env → pass the request through untouched.
@@ -26,6 +27,18 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     },
   });
 
-  await supabase.auth.getUser(); // triggers token refresh + cookie rewrite
+  const {
+    data: { user },
+  } = await supabase.auth.getUser(); // triggers token refresh + cookie rewrite
+
+  // Auth gate: unauth visitor on a protected route → /login with a return-to param.
+  if (!user && isProtectedPath(request.nextUrl.pathname)) {
+    const login = request.nextUrl.clone();
+    login.pathname = "/login";
+    login.search = "";
+    login.searchParams.set("next", request.nextUrl.pathname);
+    return NextResponse.redirect(login);
+  }
+
   return response;
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { m, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Reveal } from "@/components/motion";
 import { useReducedMotion } from "@/lib/reducedMotion";
 import { usePrefetchOnIntent } from "@/lib/usePrefetchOnIntent";
@@ -43,7 +43,7 @@ export default function TiltCard({
   }
 
   return (
-    <Reveal delay={index * 0.06} className="[perspective:900px]">
+    <Reveal delay={index * 0.06} className="h-full [perspective:900px]">
       <Link
         ref={ref}
         href={href}
@@ -53,15 +53,15 @@ export default function TiltCard({
         onPointerEnter={prefetch.onPointerEnter}
         onFocus={prefetch.onFocus}
         onPointerLeave={() => { mx.set(0.5); my.set(0.5); }}
-        className="group relative block"
+        className="group relative block h-full"
       >
-        <motion.div
+        <m.div
           style={enabled ? { rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" } : undefined}
-          className="glass relative overflow-hidden p-6"
+          className="glass relative flex h-full flex-col overflow-hidden p-6"
         >
           {/* cursor glare — only present when the tilt is engaged */}
           {enabled && (
-            <motion.div
+            <m.div
               aria-hidden
               className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
               style={{ background: glareBg }}
@@ -72,7 +72,7 @@ export default function TiltCard({
             <span className="text-label text-accent opacity-0 transition group-hover:opacity-100">↗</span>
           </div>
           <p className="mt-2 text-body text-ink-2" style={enabled ? { transform: "translateZ(20px)" } : undefined}>{desc}</p>
-        </motion.div>
+        </m.div>
       </Link>
     </Reveal>
   );

@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { loadSnapshot, type SnapshotPlayer } from "@/lib/snapshot";
 import { tierMap } from "@/lib/tiers";
+import { playerTooltipRows } from "@/lib/playerTooltip";
 import { usePrefetchOnIntent } from "@/lib/usePrefetchOnIntent";
 import EmptyState from "@/components/EmptyState";
+import Tooltip from "@/components/Tooltip";
 import type { Engine } from "@/lib/types";
 
 const POSITIONS = ["ALL", "QB", "RB", "WR", "TE", "K", "DST"] as const;
@@ -224,7 +226,7 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
                   aria-rowindex={vi.index + 2}
                   ref={rowVirt.measureElement}
                   data-index={vi.index}
-                  className={`${GRID} absolute left-0 top-0 w-full items-center border-b border-hairline/60 px-3 py-2.5 text-body transition hover:bg-surface-elevated`}
+                  className={`${GRID} group absolute left-0 top-0 w-full items-center border-b border-hairline/60 px-3 py-2.5 text-body transition hover:z-20 hover:bg-surface-elevated focus-within:z-20`}
                   style={{ transform: `translateY(${vi.start}px)` }}
                 >
                   <span role="cell" className="font-mono text-ink-muted">{p.rank ?? vi.index + 1}</span>
@@ -238,6 +240,24 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
                   <Num value={p.value} />
                   <Num value={p.vor} hideBelow="sm" />
                   <Num value={p.predictability} decimals={2} />
+                  {/* decorative: the same value/VOR/ρ are already in the row cells for SR */}
+                  <Tooltip
+                    decorative
+                    side="bottom"
+                    content={
+                      <>
+                        <p className="mb-1.5 font-semibold text-ink">{p.full_name}</p>
+                        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 font-mono tabular-nums">
+                          {playerTooltipRows(p, t).map((r) => (
+                            <Fragment key={r.label}>
+                              <dt className="text-ink-muted">{r.label}</dt>
+                              <dd className="text-right text-ink">{r.value}</dd>
+                            </Fragment>
+                          ))}
+                        </dl>
+                      </>
+                    }
+                  />
                 </div>
               );
             })}

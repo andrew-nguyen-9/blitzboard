@@ -3,7 +3,9 @@ import { z } from "zod";
 // User preference shape synced from v2.0 (a11y/theme). strictObject: unknown keys are rejected
 // so a malicious client can't smuggle extra columns into the prefs JSONB.
 export const prefsSchema = z.strictObject({
-  theme: z.enum(["light", "dark", "system"]).default("system"),
+  // Dark is the default; "light" is the only opt-out. Legacy "system"/"auto"
+  // values coerce to dark via .catch rather than throwing.
+  theme: z.enum(["light", "dark"]).catch("dark").default("dark"),
   reducedMotion: z.boolean().default(false),
   accent: z
     .string()
