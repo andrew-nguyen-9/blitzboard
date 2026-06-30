@@ -43,7 +43,7 @@ export default function TiltCard({
   }
 
   return (
-    <Reveal delay={index * 0.06} className="[perspective:900px]">
+    <Reveal delay={index * 0.06} className="h-full [perspective:900px]">
       <Link
         ref={ref}
         href={href}
@@ -53,11 +53,11 @@ export default function TiltCard({
         onPointerEnter={prefetch.onPointerEnter}
         onFocus={prefetch.onFocus}
         onPointerLeave={() => { mx.set(0.5); my.set(0.5); }}
-        className="group relative block"
+        className="group relative block h-full"
       >
         <motion.div
           style={enabled ? { rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" } : undefined}
-          className="glass relative overflow-hidden p-6"
+          className="glass relative flex h-full flex-col overflow-hidden p-6"
         >
           {/* cursor glare — only present when the tilt is engaged */}
           {enabled && (

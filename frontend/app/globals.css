@@ -439,3 +439,47 @@ main:has(.full-bleed) { overflow-x: clip; }
   animation-duration: 0.001ms !important;
   transition-duration: 0.001ms !important;
 }
+
+/* ── Deck carousel (v3) ───────────────────────────────────────────────────────
+   Equal-size cards on a horizontal scroll-snap rail — native overflow, no JS and
+   no carousel dep. A single-row grid stretches every card to the tallest one, so
+   all cards share one width (grid-auto-columns) and one height; each snaps to the
+   start edge. ~1.1 cards peek on mobile (the next-card sliver signals "scrollable")
+   and ~3 on desktop. Cards are links, so Tab moves through them and the focused
+   card scrolls into view natively — keyboard-operable without extra controls. */
+.deck-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 84%;
+  gap: var(--space-m);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0;
+  padding-bottom: var(--space-2xs);
+  scrollbar-width: thin;
+}
+@media (min-width: 640px) { .deck-rail { grid-auto-columns: 46%; } }
+@media (min-width: 1024px) { .deck-rail { grid-auto-columns: calc((100% - 2 * var(--space-m)) / 3); } }
+.deck-rail > * { scroll-snap-align: start; }
+
+/* ── Blueprint field (v3) ─────────────────────────────────────────────────────
+   Decorative football-play sketch behind the hero. The routes draw in on a slow
+   loop via stroke-dashoffset; the chalk grid, line of scrimmage and player marks
+   stay static. pathLength="1" normalises every route to a 0→1 dash space so one
+   keyframe draws them all regardless of real length. Reduced motion (OS pref or
+   the in-app data-motion toggle): no draw loop — the routes render fully drawn, so
+   the still frame is the complete play, not a half-sketched one (the global
+   animation-duration:0 reset alone would freeze them mid-draw / invisible). */
+.bp { display: block; height: 100%; width: 100%; }
+.bp-grid { opacity: 0.25; }
+.bp-static { opacity: 0.7; }
+.bp-route { stroke-dasharray: 1; stroke-dashoffset: 1; animation: bp-draw 7s var(--ease-inout) infinite alternate; }
+.bp-route:nth-of-type(2) { animation-delay: 0.6s; }
+.bp-route:nth-of-type(3) { animation-delay: 1.2s; }
+.bp-route:nth-of-type(4) { animation-delay: 1.8s; }
+@keyframes bp-draw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .bp-route { animation: none; stroke-dashoffset: 0; }
+}
+[data-motion="reduce"] .bp-route { animation: none; stroke-dashoffset: 0; }
