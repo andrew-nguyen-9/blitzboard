@@ -13,7 +13,7 @@
         "Pipeline idempotent; npm run build / tsc --noEmit / vitest green where applicable",
         "Typecheck passes"
       ],
-      "injectDeps": [], "priority": 1, "passes": false, "notes": ""
+      "injectDeps": [], "priority": 1, "passes": true, "notes": "done — PR #27, merged to v3. ETL caches pip+season marker; history gated --skip-if-cached (cron once-then-skip, new-season busts cache, dispatch forces). ubuntu-latest, idempotent, assert test."
     },
     {
       "id": "US-002", "epicId": "3.1", "segmentBranch": "v3-epic-3.1-publish-snapshot", "ui": true,
