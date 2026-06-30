@@ -27,13 +27,44 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+          cache-dependency-path: pipeline/requirements.txt
       - run: pip install -r requirements.txt
 
       - name: Ingest player universe (Sleeper)
         run: python player_ingest.py --trending
 
+      # History scope: on manual dispatch run exactly the requested seasons (no
+      # skip). On the daily cron, request 2022..latest-completed-season and let
+      # the marker skip the run when nothing's new — a freshly-started season
+      # makes `seasons` change, missing the cache, which IS the "new season
+      # detected" trigger. ponytail: month>=9 ⇒ that year is the latest season.
+      - name: Determine history scope
+        id: hist
+        env:
+          EVENT: ${{ github.event_name }}
+          # Untrusted dispatch input — keep in env, sanitize to digits/spaces.
+          REQUESTED: ${{ github.event.inputs.seasons }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            seasons=$(echo "${REQUESTED:-2022 2023 2024}" | tr -cd '0-9 ' | tr -s ' ' | sed 's/^ //;s/ $//')
+            echo "seasons=${seasons:-2022 2023 2024}" >> "$GITHUB_OUTPUT"
+            echo "skip=" >> "$GITHUB_OUTPUT"
+          else
+            y=$(date -u +%Y); [ "$(date -u +%-m)" -ge 9 ] || y=$((y - 1))
+            echo "seasons=$(seq 2022 "$y" | tr '\n' ' ' | sed 's/ $//')" >> "$GITHUB_OUTPUT"
+            echo "skip=--skip-if-cached" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Persist the ingested-seasons marker across runs. Key is the season list,
+      # so a new season ⇒ new key ⇒ cache miss ⇒ history actually re-ingests.
+      - name: Cache nflverse history marker
+        uses: actions/cache@v4
+        with:
+          path: pipeline/.nflverse_cache
+          key: nflverse-history-${{ steps.hist.outputs.seasons }}
+
       - name: Ingest historical stats (nflverse)
-        run: python history_ingest.py --seasons ${{ github.event.inputs.seasons || '2022 2023 2024' }}
+        run: python history_ingest.py --seasons ${{ steps.hist.outputs.seasons }} ${{ steps.hist.outputs.skip }}
 
       - name: Compute projections + player values (VORP, superflex-aware)
         run: python value_engine_run.py --engine vorp

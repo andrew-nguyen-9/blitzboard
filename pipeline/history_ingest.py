@@ -12,8 +12,35 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
+from datetime import datetime, timezone
+from pathlib import Path
 
 from common import console, get_supabase, upsert, fetch_all
+
+# Default marker recording which seasons were ingested, so daily CI can skip the
+# expensive nflverse download/upsert when nothing changed (past seasons are
+# immutable). Lives under a cached dir so it survives across CI runs.
+DEFAULT_MARKER = Path(".nflverse_cache/marker.json")
+
+
+def _marker_covers(marker: Path, seasons: list[int], weekly: bool) -> bool:
+    """True if a prior run already ingested every requested season at this
+    granularity — i.e. there is nothing new to do."""
+    try:
+        m = json.loads(marker.read_text())
+    except (OSError, ValueError):
+        return False
+    return m.get("weekly") == weekly and set(seasons) <= set(m.get("seasons", []))
+
+
+def _write_marker(marker: Path, seasons: list[int], weekly: bool) -> None:
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.write_text(json.dumps({
+        "seasons": sorted(set(seasons)),
+        "weekly": weekly,
+        "ingested_at": datetime.now(timezone.utc).isoformat(),
+    }))
 
 # Columns we care about from nfl_data_py seasonal/weekly frames.
 STAT_COLS = [
@@ -115,7 +142,16 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Ingest nflverse historical stats.")
     ap.add_argument("--seasons", type=int, nargs="+", required=True)
     ap.add_argument("--weekly", action="store_true", help="weekly granularity (default: seasonal)")
+    ap.add_argument("--marker", type=Path, default=DEFAULT_MARKER,
+                    help="path to the ingested-seasons marker (default: %(default)s)")
+    ap.add_argument("--skip-if-cached", action="store_true",
+                    help="exit early (no download/write) if the marker already covers these seasons")
     args = ap.parse_args()
+
+    if args.skip_if_cached and _marker_covers(args.marker, args.seasons, args.weekly):
+        console.print(f"[green]✓ history cached for {args.seasons} "
+                      f"({'weekly' if args.weekly else 'seasonal'}); skipping.[/green]")
+        return
 
     by_gsis, by_sleeper = _id_maps()
     if not by_gsis and not by_sleeper:
@@ -137,6 +173,7 @@ def main() -> None:
         d.execute()
 
     upsert("player_stats_history", rows, on_conflict="player_id,season,week")
+    _write_marker(args.marker, args.seasons, args.weekly)
 
 
 if __name__ == "__main__":
