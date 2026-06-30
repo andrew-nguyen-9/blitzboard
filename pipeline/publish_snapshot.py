@@ -36,13 +36,13 @@ from common import console, get_supabase, fetch_all
 # `data`, keyed by a short header — homogeneous columns gzip far better than
 # interleaved rows (the real 4,254-player universe is 78KB row-array vs ~59KB
 # columnar+rounded). `sid` (Sleeper id) is the row id: compact + stable, where
-# UUIDs are high-entropy and blow the budget. boom/bust are NOT shipped — the list
-# never renders them (they live on the lazy detail card). Tiers aren't shipped
-# either — the client derives them from rank (single source in lib/tiers.ts).
-COLS = ["sid", "n", "pos", "tm", "val", "vor", "rnk", "rho", "trend"]
+# UUIDs are high-entropy and blow the budget. adp/boom/bust/bye ARE shipped (the
+# shared column contract in lib/playerColumns.ts renders them). Tiers aren't
+# shipped — the client derives them from value gaps (single source in lib/tiers.ts).
+COLS = ["sid", "n", "pos", "tm", "val", "vor", "rnk", "rho", "trend", "adp", "boom", "bust", "bye"]
 # Round on the wire: 1dp is plenty for VOR-scale values, 2dp for ρ/trend (~9KB off
-# the full universe). rank is an int; strings pass through.
-ROUND = {"val": 1, "vor": 1, "rho": 2, "trend": 2}
+# the full universe). rank/bye are ints; strings pass through.
+ROUND = {"val": 1, "vor": 1, "rho": 2, "trend": 2, "adp": 1, "boom": 1, "bust": 1}
 WIRE_VERSION = 2
 BUCKET = "snapshots"
 MANIFEST_NAME = "manifest.json"
@@ -57,6 +57,7 @@ _SRC = {
     "sid": "sleeper_id", "n": "full_name", "pos": "position", "tm": "nfl_team",
     "val": "value", "vor": "vor", "rnk": "rank",
     "rho": "predictability", "trend": "trend",
+    "adp": "adp", "boom": "boom", "bust": "bust", "bye": "bye_week",
 }
 
 
@@ -110,8 +111,8 @@ def load_value_rows(engine: str) -> list[dict]:
     trend_score from the trending table. Paginates past the 1000-row cap."""
     rows = fetch_all(
         "player_value",
-        "rank,value,vor,predictability,player_id,"
-        "players!inner(sleeper_id,full_name,position,nfl_team)",
+        "rank,value,vor,predictability,boom,bust,adp,player_id,"
+        "players!inner(sleeper_id,full_name,position,nfl_team,bye_week)",
         apply=lambda q: q.eq("engine", engine).order("rank"),
     )
     trend = {t["player_id"]: t.get("trend_score") or 0
@@ -127,6 +128,8 @@ def load_value_rows(engine: str) -> list[dict]:
             "value": r.get("value"), "vor": r.get("vor"), "rank": r.get("rank"),
             "predictability": r.get("predictability"),
             "trend": trend.get(r["player_id"], 0),
+            "adp": r.get("adp"), "boom": r.get("boom"), "bust": r.get("bust"),
+            "bye_week": p.get("bye_week"),
         })
     return out
 
