@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { safeNext } from "./redirect";
+import { safeNext, isProtectedPath } from "./redirect";
 
 describe("safeNext", () => {
   it("passes through a same-origin path", () => {
@@ -14,5 +14,18 @@ describe("safeNext", () => {
     expect(safeNext(null)).toBe("/");
     expect(safeNext("")).toBe("/");
     expect(safeNext(undefined)).toBe("/");
+  });
+});
+
+describe("isProtectedPath", () => {
+  it("gates the league page and its subpaths", () => {
+    expect(isProtectedPath("/league")).toBe(true);
+    expect(isProtectedPath("/league/standings")).toBe(true);
+  });
+  it("leaves public routes open", () => {
+    expect(isProtectedPath("/")).toBe(false);
+    expect(isProtectedPath("/login")).toBe(false);
+    expect(isProtectedPath("/players")).toBe(false);
+    expect(isProtectedPath("/leaguex")).toBe(false); // prefix must be a path boundary
   });
 });
