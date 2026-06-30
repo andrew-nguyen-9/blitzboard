@@ -440,29 +440,6 @@ main:has(.full-bleed) { overflow-x: clip; }
   transition-duration: 0.001ms !important;
 }
 
-/* ── Deck carousel (v3) ───────────────────────────────────────────────────────
-   Equal-size cards on a horizontal scroll-snap rail — native overflow, no JS and
-   no carousel dep. A single-row grid stretches every card to the tallest one, so
-   all cards share one width (grid-auto-columns) and one height; each snaps to the
-   start edge. ~1.1 cards peek on mobile (the next-card sliver signals "scrollable")
-   and ~3 on desktop. Cards are links, so Tab moves through them and the focused
-   card scrolls into view natively — keyboard-operable without extra controls. */
-.deck-rail {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 84%;
-  gap: var(--space-m);
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline: 0;
-  padding-bottom: var(--space-2xs);
-  scrollbar-width: thin;
-}
-@media (min-width: 640px) { .deck-rail { grid-auto-columns: 46%; } }
-@media (min-width: 1024px) { .deck-rail { grid-auto-columns: calc((100% - 2 * var(--space-m)) / 3); } }
-.deck-rail > * { scroll-snap-align: start; }
-
 /* ── Blueprint field (v3) ─────────────────────────────────────────────────────
    Decorative football-play sketch behind the hero. The routes draw in on a slow
    loop via stroke-dashoffset; the chalk grid, line of scrimmage and player marks
@@ -483,3 +460,18 @@ main:has(.full-bleed) { overflow-x: clip; }
   .bp-route { animation: none; stroke-dashoffset: 0; }
 }
 [data-motion="reduce"] .bp-route { animation: none; stroke-dashoffset: 0; }
+
+/* BlitzField only: thin the defensive secondary on narrow viewports so the play
+   collapses to a recognizable front-seven skeleton. The remaining .bp-route blitz
+   paths keep the same motion on the reduced subset. */
+@media (max-width: 639px) { .bf-extra { display: none; } }
+
+/* ── Tooltip bubble ────────────────────────────────────────────────────────────
+   Keep the bubble a fully opaque chip so it stays readable floating over buttons
+   (accent green) and cards. The bg token (--bg-2) is already opaque; the bleed was
+   the hairline — the global `* { border-color: var(--line) }` default is alpha, so a
+   bright surface showed through the 1px edge. Pin it to an opaque surface. The
+   elevation glow is applied here too: Tailwind's shadow-[var(--glow)] can't parse the
+   comma-joined multi-layer var and dropped to `box-shadow:none`, so the chip floated
+   flat against bright backgrounds — restore it with the raw var. */
+[data-tooltip] { border-color: var(--bg-1); box-shadow: var(--glow); }
