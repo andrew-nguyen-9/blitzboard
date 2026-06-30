@@ -207,7 +207,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": [], "priority": 17, "passes": false, "notes": "BLOCKED — monthly spend limit hit; not dispatched. Re-dispatch once limit raised."
+      "injectDeps": [], "priority": 17, "passes": true, "notes": "done — PR #43, merged to v3. QA'd every public route at 390/768/1280; v2 design system already responsive. Fixed 2 breaks: WaiverBoard table forced mobile page-overflow (min-w-0 + scroll-in-card) and Nav had no mobile menu (added native <details> hamburger). build/tsc/vitest(162) green."
     },
     {
       "id": "US-018", "epicId": "17", "segmentBranch": "v3-epic-17-perf", "ui": true,
