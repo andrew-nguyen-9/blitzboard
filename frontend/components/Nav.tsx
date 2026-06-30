@@ -15,12 +15,10 @@ export const SECTIONS = [
 ] as const;
 
 export default async function Nav() {
-  // Signed-out → the profile icon is the way into auth (login). Signed-in → it points at
-  // account security (2FA opt-in). Epic 13 fleshes out the full account menu here.
+  // Signed-out → profile icon is the way into auth (login/signup). Signed-in → a settings
+  // gear opens the account surface (/account). Only one of the two shows at a time.
   const sb = await getServerSupabase();
   const signedIn = sb ? Boolean((await sb.auth.getUser()).data.user) : false;
-  const profileHref = signedIn ? "/account" : "/login";
-  const profileLabel = signedIn ? "Account settings" : "Sign in";
 
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-bg/80 backdrop-blur">
@@ -60,18 +58,33 @@ export default async function Nav() {
         <div className="flex items-center gap-2">
           <A11ySettings />
           <ThemeToggle />
-          <Link
-            href={profileHref}
-            aria-label={profileLabel}
-            title={profileLabel}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition hover:bg-surface-elevated hover:text-ink"
-          >
-            {/* Profile glyph; filled dot when signed in. Inherits currentColor → theme-adaptive. */}
-            <svg viewBox="0 0 24 24" className="h-5 w-5" role="img" aria-hidden focusable="false">
-              <circle cx="12" cy="8" r="4" fill={signedIn ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" />
-              <path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-          </Link>
+          {signedIn ? (
+            <Link
+              href="/account"
+              aria-label="Account settings"
+              title="Account settings"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition hover:bg-surface-elevated hover:text-ink"
+            >
+              {/* Settings gear (auth only). Inherits currentColor → theme-adaptive. */}
+              <svg viewBox="0 0 24 24" className="h-5 w-5" role="img" aria-hidden focusable="false" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              aria-label="Sign in"
+              title="Sign in"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition hover:bg-surface-elevated hover:text-ink"
+            >
+              {/* Profile glyph → the login/signup entry. Inherits currentColor → theme-adaptive. */}
+              <svg viewBox="0 0 24 24" className="h-5 w-5" role="img" aria-hidden focusable="false">
+                <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </Link>
+          )}
         </div>
       </nav>
     </header>

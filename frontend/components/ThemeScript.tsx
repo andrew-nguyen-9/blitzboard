@@ -1,12 +1,11 @@
 // Inline, render-blocking script that sets data-theme BEFORE first paint to
-// avoid a flash of the wrong theme. Reads saved preference or falls back to
-// the OS setting ("system"). Kept dependency-free on purpose.
+// avoid a flash of the wrong theme. Default is dark; only an explicit 'light'
+// preference opts out. Legacy 'system'/'auto' coerce to dark. Dependency-free.
 export default function ThemeScript() {
   const code = `(function(){try{
     var d = document.documentElement, ls = localStorage;
-    var p = ls.getItem('ffdt-theme') || 'system';
-    var sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    d.setAttribute('data-theme', p === 'system' ? sys : p);
+    var p = ls.getItem('ffdt-theme') === 'light' ? 'light' : 'dark';
+    d.setAttribute('data-theme', p);
     d.setAttribute('data-theme-pref', p);
     // restore a11y preferences (see A11ySettings) before first paint
     var ts = ls.getItem('ffdt-a11y-type-scale'); if(ts) d.setAttribute('data-type-scale', ts);

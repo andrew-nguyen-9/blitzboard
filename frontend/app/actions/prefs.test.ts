@@ -30,6 +30,8 @@ describe("updatePrefs", () => {
 
   it("rejects invalid prefs before any write", async () => {
     getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
-    await expect(updatePrefs({ theme: "neon" })).rejects.toThrow();
+    // legacy/unknown theme values coerce to dark, but a wrong type still fails validation
+    await expect(updatePrefs({ reducedMotion: "yes" })).rejects.toThrow();
+    expect(from).not.toHaveBeenCalled();
   });
 });
