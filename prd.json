@@ -162,7 +162,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": ["3.1.done.md", "3.2.done.md", "12.done.md"], "priority": 13, "passes": false, "notes": ""
+      "injectDeps": ["3.1.done.md", "3.2.done.md", "12.done.md"], "priority": 13, "passes": true, "notes": "done — PR #39, merged to v3. Per-season stats jsonb -> position-aware Career Production table + Tooltip value metrics + simulated P10-P90 band. MC has 0 live rows (Epic 12 upload gated to CI) so toggle gates to VORP, lights up once MC rows published. build/tsc/vitest green."
     },
     {
       "id": "US-014", "epicId": "13", "segmentBranch": "v3-epic-13-header", "ui": true,
