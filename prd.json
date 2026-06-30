@@ -150,7 +150,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": ["3.1.done.md", "6.done.md", "7.done.md", "4.done.md", "9.done.md", "10.done.md"], "priority": 12, "passes": false, "notes": ""
+      "injectDeps": ["3.1.done.md", "6.done.md", "7.done.md", "4.done.md", "9.done.md", "10.done.md"], "priority": 12, "passes": true, "notes": "done (2 sub-steps gated) — PR #38, merged to v3. All 5 auth surfaces (Leagues connect-up-to-3, draft 2-3 league toggle, waiver free-agents scope, trades league selector, settings incl. delete-account RPC); reused components, no new tables (RLS covers reused). build/tsc/vitest(155)/bundle green. GATED: ESPN full rule-import (no public settings proxy -> editable shell + encrypted cookies); live authed screenshots (need multi_league migration applied + real session) -> verified via compile/gate-redirects/unauth fallbacks."
     },
     {
       "id": "US-013", "epicId": "11", "segmentBranch": "v3-epic-11-player-page", "ui": true,
