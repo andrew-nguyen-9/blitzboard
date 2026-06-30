@@ -5,6 +5,7 @@ import type { SnapshotPlayer } from "./snapshot";
 const mk = (id: string, full_name: string, rank: number): SnapshotPlayer => ({
   id, full_name, position: "WR", nfl_team: "KC",
   value: null, vor: null, rank, predictability: null, trend: null,
+  adp: null, boom: null, bust: null, bye: null,
 });
 
 const players = [

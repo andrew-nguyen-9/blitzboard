@@ -2,6 +2,8 @@
 // convention). Every helper is null-safe: returns empty/falsy when the client
 // is unconfigured so the UI renders empty states instead of throwing.
 import { getSupabase } from "./supabase";
+import { careerRows, type SeasonRow } from "./playerStats";
+import type { BoxStats } from "./playerColumns";
 import type { Engine, Player, PlayerWithValue } from "./types";
 
 const PLAYER_COLS =
@@ -305,6 +307,43 @@ export async function getTrendingMap(): Promise<Record<string, number>> {
   if (!sb) return {};
   const { data } = await sb.from("trending").select("player_id,trend_score");
   return Object.fromEntries((data ?? []).map((t: any) => [t.player_id, t.trend_score]));
+}
+
+// Pure: bucket per-player season rows by sleeper_id, keep each player's latest
+// season as a flat box-score (careerRows is season-ascending → take the last).
+export function groupLatestBox(
+  rows: Array<{ player_id: string } & SeasonRow>,
+  idToSleeper: Map<string, string>,
+): Record<string, BoxStats> {
+  const bySleeper: Record<string, SeasonRow[]> = {};
+  for (const h of rows) {
+    const sid = idToSleeper.get(h.player_id);
+    if (sid) (bySleeper[sid] ??= []).push(h);
+  }
+  const out: Record<string, BoxStats> = {};
+  for (const sid in bySleeper) {
+    const cr = careerRows(bySleeper[sid]);
+    if (cr.length) out[sid] = cr[cr.length - 1];
+  }
+  return out;
+}
+
+// Latest-season box score per snapshot player, keyed by sleeper_id, for the
+// shared stat-column groups (lib/playerColumns.ts `box`). Two id-only/jsonb reads
+// resolve sleeper_id → players.id → player_stats_history. Null-safe → {} offline.
+export async function getBoxStats(sleeperIds: string[]): Promise<Record<string, BoxStats>> {
+  const sb = getSupabase();
+  if (!sb || !sleeperIds.length) return {};
+  const { data: ps } = await sb.from("players").select("id,sleeper_id").in("sleeper_id", sleeperIds);
+  const idToSleeper = new Map((ps ?? []).map((r: any) => [r.id as string, r.sleeper_id as string]));
+  if (!idToSleeper.size) return {};
+  const { data: hist } = await sb
+    .from("player_stats_history")
+    .select("player_id,season,fantasy_pts,stats")
+    .in("player_id", [...idToSleeper.keys()])
+    .is("week", null)
+    .order("season");
+  return groupLatestBox((hist ?? []) as Array<{ player_id: string } & SeasonRow>, idToSleeper);
 }
 
 export async function getPlayerCount(): Promise<number> {

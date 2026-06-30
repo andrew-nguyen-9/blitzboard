@@ -4,12 +4,29 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { loadSnapshot, type SnapshotPlayer } from "@/lib/snapshot";
 import { PlayerSearchIndex } from "@/lib/tradeSearch";
+import { tierMap } from "@/lib/tiers";
+import { playerTooltipRows } from "@/lib/playerTooltip";
+import { useCursorTooltip } from "@/components/CursorTooltip";
+import { PLAYER_COLUMNS, type ColDef, type ColGroup } from "@/lib/playerColumns";
+import { getBoxStats, type NewsItem } from "@/lib/queries";
+import type { BoxStats } from "@/lib/playerColumns";
 import LeagueSelector, { type LeagueOpt } from "./LeagueSelector";
-import type { NewsItem } from "@/lib/queries";
 
 const POSITIONS = ["ALL", "QB", "RB", "WR", "TE", "K", "DST"] as const;
 type Pos = (typeof POSITIONS)[number];
 const norm = (p?: string | null) => (p === "DEF" ? "DST" : p ?? "—");
+
+// Toggleable extra stat-column groups, shared with the Players table via
+// lib/playerColumns.ts (single source — the two tables can't diverge).
+const GROUPS: { key: ColGroup; label: string }[] = [
+  { key: "proj", label: "Proj" },
+  { key: "rank", label: "Rank" },
+  { key: "box", label: "Box" },
+  { key: "meta", label: "Meta" },
+];
+// Display a raw column value: null → "—", numbers honor the column's decimals.
+const fmtCol = (c: ColDef, v: number | string | null): string =>
+  v == null ? "—" : typeof v === "number" ? (c.decimals != null ? v.toFixed(c.decimals) : String(v)) : v;
 // trade value = the player's VORP value (fall back to VOR), summed per side.
 const pval = (p: SnapshotPlayer) => p.value ?? p.vor ?? 0;
 const sumVal = (ps: SnapshotPlayer[]) => ps.reduce((s, p) => s + pval(p), 0);
@@ -28,6 +45,9 @@ export default function TradeCalculator({ news, leagues = [] }: { news: NewsItem
   const [sideB, setSideB] = useState<SnapshotPlayer[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [leagueId, setLeagueId] = useState(leagues[0]?.id ?? "");
+  const [groups, setGroups] = useState<Set<ColGroup>>(new Set());
+  const [boxMap, setBoxMap] = useState<Record<string, BoxStats>>({});
+  const tip = useCursorTooltip();
   const leagueName = leagues.find((l) => l.id === leagueId)?.name ?? leagues[0]?.name;
 
   useEffect(() => {
@@ -44,6 +64,8 @@ export default function TradeCalculator({ news, leagues = [] }: { news: NewsItem
   }, []);
 
   const index = useMemo(() => (players ? new PlayerSearchIndex(players) : null), [players]);
+  const tiers = useMemo(() => (players ? tierMap(players) : {}), [players]);
+  const activeCols = useMemo(() => PLAYER_COLUMNS.filter((c) => groups.has(c.group)), [groups]);
   const teams = useMemo(
     () => (players ? (Array.from(new Set(players.map((p) => p.nfl_team).filter(Boolean))) as string[]).sort() : []),
     [players],
@@ -58,6 +80,27 @@ export default function TradeCalculator({ news, leagues = [] }: { news: NewsItem
     if (team !== "ALL") r = r.filter((p) => p.nfl_team === team);
     return r.filter((p) => !picked.has(p.id)).slice(0, 12);
   }, [index, players, q, pos, team, picked]);
+
+  // ponytail: box-score fetched lazily, only for the ≤12 visible results and only
+  // once the Box group is on. Every requested id is recorded (→ {} when no history)
+  // so a player without a box never re-fetches. Same ceiling as e3's Players table.
+  useEffect(() => {
+    if (!groups.has("box")) return;
+    const missing = results.map((p) => p.id).filter((id) => !(id in boxMap));
+    if (!missing.length) return;
+    let alive = true;
+    getBoxStats(missing).then((m) => {
+      if (!alive) return;
+      setBoxMap((prev) => {
+        const next = { ...prev };
+        for (const id of missing) next[id] = m[id] ?? {};
+        return next;
+      });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [groups, results, boxMap]);
 
   const add = (p: SnapshotPlayer, side: "A" | "B") =>
     (side === "A" ? setSideA : setSideB)((s) => [...s, p]);
@@ -96,6 +139,7 @@ export default function TradeCalculator({ news, leagues = [] }: { news: NewsItem
 
   return (
     <div>
+      {tip.element}
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-display-md">Trade Calculator</h1>
@@ -117,8 +161,39 @@ export default function TradeCalculator({ news, leagues = [] }: { news: NewsItem
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <div>
+          {/* action controls first — the trade is the focus; search/filters sit below it */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Side label="Side A" total={totalA} players={sideA} onRemove={(id) => remove(id, "A")} tiers={tiers} tip={tip} />
+            <Side label="Side B" total={totalB} players={sideB} onRemove={(id) => remove(id, "B")} tiers={tiers} tip={tip} />
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-hairline pt-4 text-label">
+            {sideA.length || sideB.length ? (
+              <>
+                <span>
+                  verdict{" "}
+                  <span className="font-mono text-ink">
+                    {Math.abs(delta) < 1 ? "even trade" : delta > 0 ? "Side A wins" : "Side B wins"}
+                    {Math.abs(delta) >= 1 && <span className="text-accent"> by {Math.abs(delta).toFixed(0)}</span>}
+                  </span>
+                </span>
+                <span>fairness <span className="font-mono text-ink">{Math.round(fairness * 100)}%</span></span>
+              </>
+            ) : (
+              <span className="text-ink-muted">Add players to each side to compare.</span>
+            )}
+            <button
+              type="button"
+              onClick={() => setSubmitted(true)}
+              disabled={!tradePlayers.length}
+              className="ml-auto rounded-full bg-accent px-4 py-1.5 text-label text-bg transition hover:opacity-90 disabled:opacity-40"
+            >
+              Analyze trade
+            </button>
+          </div>
+
           {/* search + filters — instant, fully client-side over the in-memory snapshot */}
-          <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className="mb-3 mt-8 flex flex-wrap items-center gap-3">
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -145,57 +220,71 @@ export default function TradeCalculator({ news, leagues = [] }: { news: NewsItem
             </select>
           </div>
 
-          {/* results — add to either side */}
-          <ul className="glass divide-y divide-hairline/60" aria-label="Search results">
-            {results.map((p) => (
-              <li key={p.id} className="flex items-center gap-3 px-4 py-2.5 text-body">
-                <span className="min-w-0 flex-1 truncate">
-                  <span className="font-medium">{p.full_name}</span>{" "}
-                  <span className="text-ink-muted">{norm(p.position)} · {p.nfl_team ?? "FA"}</span>
-                </span>
-                <span className="font-mono text-label text-accent">{pval(p).toFixed(0)}</span>
-                <button type="button" onClick={() => add(p, "A")}
-                  className="rounded-full border border-hairline px-2.5 py-1 text-label transition hover:border-accent"
-                  aria-label={`Add ${p.full_name} to side A`}>+ A</button>
-                <button type="button" onClick={() => add(p, "B")}
-                  className="rounded-full border border-hairline px-2.5 py-1 text-label transition hover:border-accent"
-                  aria-label={`Add ${p.full_name} to side B`}>+ B</button>
-              </li>
+          {/* optional stat-column groups — shared contract with the Players table */}
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-label">
+            <span className="text-ink-muted">Columns:</span>
+            {GROUPS.map((g) => (
+              <button
+                key={g.key}
+                type="button"
+                aria-pressed={groups.has(g.key)}
+                onClick={() =>
+                  setGroups((s) => {
+                    const n = new Set(s);
+                    if (n.has(g.key)) n.delete(g.key);
+                    else n.add(g.key);
+                    return n;
+                  })
+                }
+                className={`rounded-full px-3 py-1 transition ${groups.has(g.key) ? "bg-accent text-bg" : "border border-hairline text-ink-muted hover:text-ink"}`}
+              >
+                {g.label}
+              </button>
             ))}
-            {!results.length && (
-              <li className="px-4 py-6 text-center text-label text-ink-muted">No players match.</li>
-            )}
-          </ul>
-
-          {/* the two sides + verdict */}
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <Side label="Side A" total={totalA} players={sideA} onRemove={(id) => remove(id, "A")} />
-            <Side label="Side B" total={totalB} players={sideB} onRemove={(id) => remove(id, "B")} />
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-hairline pt-4 text-label">
-            {sideA.length || sideB.length ? (
-              <>
-                <span>
-                  verdict{" "}
-                  <span className="font-mono text-ink">
-                    {Math.abs(delta) < 1 ? "even trade" : delta > 0 ? "Side A wins" : "Side B wins"}
-                    {Math.abs(delta) >= 1 && <span className="text-accent"> by {Math.abs(delta).toFixed(0)}</span>}
+          {/* results — tabular; add to either side */}
+          <div role="table" aria-label="Search results" className="glass overflow-x-auto">
+            <div role="row" className="flex items-center gap-3 border-b border-hairline px-4 py-2 text-label uppercase text-ink-2">
+              <span role="columnheader" className="min-w-0 flex-1">Player</span>
+              <span role="columnheader" className="w-10 text-right">Val</span>
+              {activeCols.map((c) => (
+                <span key={c.key} role="columnheader" className="w-16 truncate text-right" title={c.label}>{c.label}</span>
+              ))}
+              <span className="w-[5.5rem]" aria-hidden />
+            </div>
+            {results.map((p) => {
+              const ctx = { tier: tiers[p.id], box: boxMap[p.id] ?? null };
+              return (
+                <div
+                  key={p.id}
+                  role="row"
+                  onPointerEnter={() => tip.show({ title: p.full_name, rows: playerTooltipRows(p, tiers[p.id]) })}
+                  onPointerLeave={tip.hide}
+                  className="flex items-center gap-3 border-b border-hairline/60 px-4 py-2.5 text-body last:border-0 transition hover:bg-surface-elevated"
+                >
+                  <span role="cell" className="min-w-0 flex-1 truncate">
+                    <span className="font-medium">{p.full_name}</span>{" "}
+                    <span className="text-ink-muted">{norm(p.position)} · {p.nfl_team ?? "FA"}</span>
                   </span>
-                </span>
-                <span>fairness <span className="font-mono text-ink">{Math.round(fairness * 100)}%</span></span>
-              </>
-            ) : (
-              <span className="text-ink-muted">Add players to each side to compare.</span>
+                  <span role="cell" className="w-10 text-right font-mono text-label text-accent">{pval(p).toFixed(0)}</span>
+                  {activeCols.map((c) => (
+                    <span key={c.key} role="cell" className="w-16 truncate text-right font-mono tabular-nums text-ink-muted">{fmtCol(c, c.get(p, ctx))}</span>
+                  ))}
+                  <span className="flex w-[5.5rem] justify-end gap-1.5">
+                    <button type="button" onClick={() => add(p, "A")}
+                      className="rounded-full border border-hairline px-2.5 py-1 text-label transition hover:border-accent"
+                      aria-label={`Add ${p.full_name} to side A`}>+ A</button>
+                    <button type="button" onClick={() => add(p, "B")}
+                      className="rounded-full border border-hairline px-2.5 py-1 text-label transition hover:border-accent"
+                      aria-label={`Add ${p.full_name} to side B`}>+ B</button>
+                  </span>
+                </div>
+              );
+            })}
+            {!results.length && (
+              <div role="row" className="px-4 py-6 text-center text-label text-ink-muted">No players match.</div>
             )}
-            <button
-              type="button"
-              onClick={() => setSubmitted(true)}
-              disabled={!tradePlayers.length}
-              className="ml-auto rounded-full bg-accent px-4 py-1.5 text-label text-bg transition hover:opacity-90 disabled:opacity-40"
-            >
-              Analyze trade
-            </button>
           </div>
         </div>
 
@@ -236,12 +325,14 @@ export default function TradeCalculator({ news, leagues = [] }: { news: NewsItem
 }
 
 function Side({
-  label, total, players, onRemove,
+  label, total, players, onRemove, tiers, tip,
 }: {
   label: string;
   total: number;
   players: SnapshotPlayer[];
   onRemove: (id: string) => void;
+  tiers: Record<string, number>;
+  tip: ReturnType<typeof useCursorTooltip>;
 }) {
   return (
     <div className="glass p-4">
@@ -252,7 +343,10 @@ function Side({
       {players.length ? (
         <div className="flex flex-wrap gap-1.5">
           {players.map((p) => (
-            <span key={p.id} className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-surface px-2.5 py-1 text-label">
+            <span key={p.id}
+              onPointerEnter={() => tip.show({ title: p.full_name, rows: playerTooltipRows(p, tiers[p.id]) })}
+              onPointerLeave={tip.hide}
+              className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-surface px-2.5 py-1 text-label">
               <Link href={`/players/${p.id}`} className="transition hover:text-accent">
                 {p.full_name} <span className="text-ink-muted">{norm(p.position)}</span>
               </Link>

@@ -13,8 +13,8 @@ const STORAGE_BASE =
 const MANIFEST_URL = `${STORAGE_BASE}/manifest.json`;
 
 // Columnar payload: one array per column under `data` (compresses far better than
-// row-arrays). boom/bust aren't shipped — the list never uses them (the lazy
-// detail card reads them live from player_value).
+// row-arrays). adp/boom/bust/bye ARE shipped — the shared column contract
+// (lib/playerColumns.ts) renders them; null when the snapshot predates them.
 export interface SnapshotPayload {
   v: number;
   profile: string;
@@ -35,6 +35,10 @@ export interface SnapshotPlayer {
   rank: number | null;
   predictability: number | null;
   trend: number | null;
+  adp: number | null;
+  boom: number | null;
+  bust: number | null;
+  bye: number | null;
 }
 
 const NUM = (x: unknown): number | null => (typeof x === "number" ? x : null);
@@ -49,6 +53,7 @@ export function decodeSnapshot(payload: SnapshotPayload): SnapshotPlayer[] {
   };
   const sid = col("sid"), n = col("n"), pos = col("pos"), tm = col("tm");
   const val = col("val"), vor = col("vor"), rnk = col("rnk"), rho = col("rho"), trend = col("trend");
+  const adp = col("adp"), boom = col("boom"), bust = col("bust"), bye = col("bye");
   const out: SnapshotPlayer[] = [];
   for (let i = 0; i < payload.count; i++) {
     out.push({
@@ -61,6 +66,10 @@ export function decodeSnapshot(payload: SnapshotPayload): SnapshotPlayer[] {
       rank: NUM(rnk?.[i]),
       predictability: NUM(rho?.[i]),
       trend: NUM(trend?.[i]),
+      adp: NUM(adp?.[i]),
+      boom: NUM(boom?.[i]),
+      bust: NUM(bust?.[i]),
+      bye: NUM(bye?.[i]),
     });
   }
   return out;

@@ -12,6 +12,10 @@ const base: SnapshotPlayer = {
   rank: 7,
   predictability: 0.823,
   trend: 3,
+  adp: 8.1,
+  boom: 140,
+  bust: 30,
+  bye: 9,
 };
 
 describe("playerTooltipRows", () => {

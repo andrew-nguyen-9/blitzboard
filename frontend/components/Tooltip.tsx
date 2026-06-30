@@ -33,7 +33,7 @@ export default function Tooltip({
       role={decorative ? undefined : "tooltip"}
       aria-hidden={decorative || undefined}
       data-tooltip
-      className={`pointer-events-none absolute left-1/2 z-30 -translate-x-1/2 ${place} w-max max-w-[15rem] rounded-lg border border-line bg-surface-elevated px-3 py-2 text-left text-[0.8rem] normal-case leading-snug tracking-normal text-ink opacity-0 shadow-[var(--glow)] transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 ${className}`}
+      className={`pointer-events-none absolute left-1/2 z-30 -translate-x-1/2 ${place} w-max max-w-[15rem] rounded-lg border bg-surface-elevated px-3 py-2 text-left text-[0.8rem] normal-case leading-snug tracking-normal text-ink opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 ${className}`}
     >
       {content}
     </span>

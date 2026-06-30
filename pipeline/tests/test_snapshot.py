@@ -27,8 +27,8 @@ def _row(sid, name, pos, tm, rank):
     return {
         "sleeper_id": sid, "full_name": name, "position": pos, "nfl_team": tm,
         "value": 120.5 - rank * 0.1, "vor": 88.3 - rank * 0.1, "rank": rank,
-        "tier": 1 + rank // 12, "boom": 140.0, "bust": 30.0,
-        "predictability": 0.73, "trend": 0,
+        "tier": 1 + rank // 12, "boom": 140.0, "bust": 30.0, "adp": 12.0 + rank,
+        "bye_week": 7, "predictability": 0.73, "trend": 0,
     }
 
 
@@ -48,32 +48,39 @@ def _universe(n: int) -> list[dict]:
 
 
 def test_payload_is_columnar_and_roundtrips():
-    """Columnar layout: one array per column (better gzip than row-arrays), and
-    boom/bust are NOT shipped (the list never uses them — the lazy card does)."""
+    """Columnar layout: one array per column (better gzip than row-arrays).
+    adp/boom/bust/bye ARE shipped (shared column contract); tier is NOT
+    (client-derived from value gaps in lib/tiers.ts)."""
     rows = [_row("4046", "Patrick Mahomes", "QB", "KC", 1),
             _row("6794", "Bijan Robinson", "RB", "ATL", 2)]
     payload = ps.build_payload(rows, profile="default", engine="vorp")
     assert payload["cols"][0] == "sid"
     assert "data" in payload and "rows" not in payload          # columnar, not row-arrays
     assert len(payload["data"]) == len(payload["cols"])         # one array per column
-    assert "boom" not in payload["cols"] and "bust" not in payload["cols"]
+    assert all(c in payload["cols"] for c in ("adp", "boom", "bust", "bye"))
+    assert "tier" not in payload["cols"]                        # client-derived
     assert payload["count"] == 2
     decoded = ps.decode_payload(payload)
     assert decoded[0]["sid"] == "4046"
     assert decoded[0]["n"] == "Patrick Mahomes"
     assert decoded[1]["pos"] == "RB"
     assert decoded[0]["rnk"] == 1
-    print("✓ payload is columnar (no boom/bust) and round-trips through build → decode")
+    assert decoded[0]["boom"] == 140.0 and decoded[0]["bust"] == 30.0
+    assert decoded[0]["adp"] == 13.0 and decoded[0]["bye"] == 7
+    print("✓ payload is columnar (adp/boom/bust/bye shipped, tier not) and round-trips")
 
 
 def test_floats_are_rounded_for_the_wire():
-    """val/vor round to 1dp, rho/trend to 2dp — ~9KB off the full universe."""
+    """val/vor/adp/boom/bust round to 1dp, rho/trend to 2dp; bye is int."""
     row = {"sleeper_id": "4046", "full_name": "P M", "position": "QB", "nfl_team": "KC",
-           "value": 199.6789, "vor": 141.1349, "rank": 1, "predictability": 0.7156, "trend": 0.3742}
+           "value": 199.6789, "vor": 141.1349, "rank": 1, "predictability": 0.7156,
+           "trend": 0.3742, "adp": 12.349, "boom": 188.66, "bust": 41.04, "bye_week": 9}
     [r] = ps.decode_payload(ps.build_payload([row], "default", "vorp"))
     assert r["val"] == 199.7 and r["vor"] == 141.1   # 1dp
     assert r["rho"] == 0.72 and r["trend"] == 0.37    # 2dp
-    print("✓ wire floats rounded (val/vor 1dp, rho/trend 2dp)")
+    assert r["adp"] == 12.3 and r["boom"] == 188.7 and r["bust"] == 41.0  # 1dp
+    assert r["bye"] == 9                              # int passthrough
+    print("✓ wire floats rounded (val/vor/adp/boom/bust 1dp, rho/trend 2dp, bye int)")
 
 
 def test_compress_decompress_roundtrip():
