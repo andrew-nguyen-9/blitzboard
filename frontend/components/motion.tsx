@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { motion, useInView, useMotionValue, useSpring, animate } from "framer-motion";
+import { m, useInView, useMotionValue, useSpring, animate } from "framer-motion";
 import { useReducedMotion } from "@/lib/reducedMotion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -47,7 +47,7 @@ export function Reveal({ children, delay = 0, y = 28, className }: {
   const armed = useArmedBelowFold(ref, reduced);
   const hidden = armed && !inView;
   return (
-    <motion.div
+    <m.div
       ref={ref}
       className={className}
       initial={false}
@@ -55,7 +55,7 @@ export function Reveal({ children, delay = 0, y = 28, className }: {
       transition={{ duration: 0.7, ease: EASE, delay }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -88,7 +88,7 @@ export function Magnetic({ children, strength = 0.4, className }: {
     y.set((e.clientY - (r.top + r.height / 2)) * strength);
   }
   return (
-    <motion.span
+    <m.span
       ref={ref}
       onPointerMove={onMove}
       onPointerLeave={() => { x.set(0); y.set(0); }}
@@ -96,7 +96,7 @@ export function Magnetic({ children, strength = 0.4, className }: {
       className={className}
     >
       {children}
-    </motion.span>
+    </m.span>
   );
 }
 

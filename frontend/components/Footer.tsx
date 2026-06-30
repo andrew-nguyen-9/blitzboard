@@ -43,7 +43,7 @@ export default function Footer() {
       <div className="border-t border-line">
         <p className="mx-auto max-w-wide px-5 py-5 text-label text-ink-2 md:px-8">
           © {new Date().getFullYear()} BlitzBoard · Made by{" "}
-          <a href={CREATOR} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+          <a href={CREATOR} target="_blank" rel="noreferrer" className="text-accent underline underline-offset-2">
             an9.dev
           </a>
         </p>
