@@ -38,7 +38,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": [], "priority": 3, "passes": false, "notes": ""
+      "injectDeps": [], "priority": 3, "passes": true, "notes": "done — PR #29, merged to v3. TOTP 2FA opt-in (/auth/2fa enroll + /auth/2fa/verify step-up) on existing Supabase Auth; header profile-icon entry; no new tables (Supabase owns MFA factors); SMS seam stubbed at lib/auth/sms.ts. build/tsc/vitest(125)/axe green."
     },
     {
       "id": "US-004", "epicId": "7", "segmentBranch": "v3-epic-7-signup", "ui": true,
