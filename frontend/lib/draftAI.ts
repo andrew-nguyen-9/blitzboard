@@ -35,7 +35,12 @@ export interface RunInfo {
 }
 
 // Positional pace over the most recent ~1.5 rounds — the league's live tendency.
-export function detectRuns(allPicks: MappedPick[], numTeams: number): RunInfo {
+// `params` is read for the run-detection threshold only (DEFAULT_POLICY = the single tuning home).
+export function detectRuns(
+  allPicks: MappedPick[],
+  numTeams: number,
+  params: PolicyParams = DEFAULT_POLICY,
+): RunInfo {
   const window = allPicks.slice(-Math.round(numTeams * 1.5));
   const count: Record<string, number> = {};
   for (const p of window) {
@@ -45,9 +50,11 @@ export function detectRuns(allPicks: MappedPick[], numTeams: number): RunInfo {
   const total = window.length || 1;
   const rate: Record<string, number> = {};
   for (const pos of POS_GROUPS) rate[pos] = (count[pos] ?? 0) / total;
-  // a "run" = position taken at >1.6× its fair share of a window
+  // a "run" = position taken at > runThresholdMult × its fair share of a window
   const fairShare = 1 / 4; // RB/WR/QB/TE compete for most early picks
-  const hot = POS_GROUPS.filter((pos) => (rate[pos] ?? 0) > fairShare * 1.6 && (count[pos] ?? 0) >= 3);
+  const hot = POS_GROUPS.filter(
+    (pos) => (rate[pos] ?? 0) > fairShare * params.runThresholdMult && (count[pos] ?? 0) >= 3,
+  );
   return { rate, count, hot };
 }
 
@@ -70,6 +77,8 @@ export const STARTABLE_WEEKS = 17;
 
 export interface PolicyParams {
   runDepletion: number;          // hot-position depletion multiplier in the replacement walk
+  runThresholdMult: number;      // a position is "running" past this × its fair share (lower = more sensitive)
+  faPenalty: number;             // points buried off a free agent (nfl_team==null) so ~zero FAs are drafted
   benchByeWeight: number;        // weight on bye-coverage starts
   benchInjuryWeight: number;     // weight on injury-cover starts
   benchCeilingWeight: number;    // weight on ceiling-week starts
@@ -86,7 +95,9 @@ export interface PolicyParams {
 }
 
 export const DEFAULT_POLICY: PolicyParams = {
-  runDepletion: 1.6,
+  runDepletion: 2.2,        // (1.3) up from 1.6 — a hot position depletes faster, pulling its picks forward
+  runThresholdMult: 1.4,    // (1.3) down from the old hardcoded 1.6 — detect runs sooner, react more dynamically
+  faPenalty: 1000,          // (1.2) heavy: an FA sorts below every rostered-team player; lifted by a positive trend signal
   benchByeWeight: 1,
   benchInjuryWeight: 1,
   benchCeilingWeight: 1,
@@ -180,7 +191,7 @@ export function marginalStarterValue(
   const base = optimalLineupPoints(ctx.teamPicks, ctx.roster);
   const candDelta = optimalLineupPoints([...ctx.teamPicks, cand], ctx.roster) - base;
   if (candDelta <= 0) return 0; // does not crack the starting lineup — Term B (bench) handles it
-  const runs = detectRuns(ctx.allPicks, ctx.numTeams);
+  const runs = detectRuns(ctx.allPicks, ctx.numTeams, params);
   // The replacement is the NEXT player you'd get, so exclude the candidate itself — otherwise a
   // position whose only body is the candidate would self-cancel to a 0 marginal (VONA).
   const others = ctx.pool.filter((p) => p.id !== cand.id);
@@ -323,6 +334,18 @@ export function scoreBoard(ctx: AIContext, params: PolicyParams = DEFAULT_POLICY
     if (capped) {
       score -= 1e6; // demote below every legal pick without dropping it from the board
       why.push("K/DST capped");
+    }
+    // Free-agent penalty (1.2): bury a player on no NFL team so ~zero FAs are drafted. Keys off
+    // pool candidates only, so the synthetic replacement (id __rep__) is never reached. Lift hook:
+    // a positive news/signing signal cancels the penalty.
+    // ponytail: signal read from metadata.trend_score (flat penalty when absent); upgrade path =
+    // join the `trending` table into getAllPlayersByValue so the draft load carries the signal.
+    if (p.nfl_team == null) {
+      const trend = typeof p.metadata?.trend_score === "number" ? p.metadata.trend_score : 0;
+      if (trend <= 0) {
+        score -= params.faPenalty;
+        why.push("free agent");
+      }
     }
     if (jitter > 0) score *= 1 + (rng() - 0.5) * jitter;
     return { player: p, score, reason: why.join(" · ") || "best available" };
