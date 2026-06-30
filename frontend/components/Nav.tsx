@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
 import A11ySettings from "./A11ySettings";
+import { getServerSupabase } from "@/lib/supabase/server";
 
 // The seven sections. `ready: false` routes render a "coming soon" empty state
 // (graceful degradation, inherited pattern) until their phase ships.
@@ -13,7 +14,14 @@ export const SECTIONS = [
   { href: "/trades", label: "Trades", ready: true },
 ] as const;
 
-export default function Nav() {
+export default async function Nav() {
+  // Signed-out → the profile icon is the way into auth (login). Signed-in → it points at
+  // account security (2FA opt-in). Epic 13 fleshes out the full account menu here.
+  const sb = await getServerSupabase();
+  const signedIn = sb ? Boolean((await sb.auth.getUser()).data.user) : false;
+  const profileHref = signedIn ? "/auth/2fa" : "/login";
+  const profileLabel = signedIn ? "Account security" : "Sign in";
+
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-bg/80 backdrop-blur">
       <nav aria-label="Primary" className="mx-auto flex max-w-wide items-center justify-between px-5 py-3 md:px-8">
@@ -42,6 +50,18 @@ export default function Nav() {
         <div className="flex items-center gap-2">
           <A11ySettings />
           <ThemeToggle />
+          <Link
+            href={profileHref}
+            aria-label={profileLabel}
+            title={profileLabel}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition hover:bg-surface-elevated hover:text-ink"
+          >
+            {/* Profile glyph; filled dot when signed in. Inherits currentColor → theme-adaptive. */}
+            <svg viewBox="0 0 24 24" className="h-5 w-5" role="img" aria-hidden focusable="false">
+              <circle cx="12" cy="8" r="4" fill={signedIn ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" />
+              <path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </Link>
         </div>
       </nav>
     </header>
