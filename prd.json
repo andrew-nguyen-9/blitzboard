@@ -89,7 +89,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": ["3.1.done.md"], "priority": 7, "passes": false, "notes": ""
+      "injectDeps": ["3.1.done.md"], "priority": 7, "passes": true, "notes": "done — PR #33, merged to v3. superflex-2QB rules editor, nflverse bye import affects drafting, soft K/DEF penalty, Sleeper-id->live option, full analysis page. Auto-draft freeze root cause = O(pool²) scoreBoard over full 4254 pool/pick; fixed via shared candidatePool() cap (top-80 + K/DST). build/tsc/vitest(143)/bundle green; 192/192 auto-draft instant."
     },
     {
       "id": "US-008", "epicId": "9", "segmentBranch": "v3-epic-9-waiver-unauth", "ui": true,
