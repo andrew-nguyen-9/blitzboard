@@ -196,7 +196,7 @@
         "Per-route metadata/OG, dynamic sitemap, robots.txt",
         "Typecheck passes"
       ],
-      "injectDeps": [], "priority": 16, "passes": false, "notes": ""
+      "injectDeps": [], "priority": 16, "passes": false, "notes": "BLOCKED — monthly spend limit hit; subagent aborted after 3 tool calls before any SEO work. Not shipped. Re-dispatch once limit raised."
     },
     {
       "id": "US-017", "epicId": "16", "segmentBranch": "v3-epic-16-mobile", "ui": true,
@@ -207,7 +207,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": [], "priority": 17, "passes": false, "notes": ""
+      "injectDeps": [], "priority": 17, "passes": false, "notes": "BLOCKED — monthly spend limit hit; not dispatched. Re-dispatch once limit raised."
     },
     {
       "id": "US-018", "epicId": "17", "segmentBranch": "v3-epic-17-perf", "ui": true,
@@ -218,7 +218,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": [], "priority": 18, "passes": false, "notes": ""
+      "injectDeps": [], "priority": 18, "passes": false, "notes": "BLOCKED — monthly spend limit hit; not dispatched. Re-dispatch once limit raised."
     }
   ]
 }
