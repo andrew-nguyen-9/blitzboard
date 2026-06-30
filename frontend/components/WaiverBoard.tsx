@@ -32,7 +32,10 @@ export default function WaiverBoard({ targets }: { targets: WaiverTarget[] }) {
   }, [targets, pos]);
 
   return (
-    <div>
+    // min-w-0: as a grid item (page grid / WaiverScope) the default min-width:auto
+    // would let the wide table force the track past the viewport on mobile — clamp it
+    // so the table scrolls inside its card instead of scrolling the page.
+    <div className="min-w-0">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap gap-1">
           {POSITIONS.map((p) => (
@@ -50,8 +53,8 @@ export default function WaiverBoard({ targets }: { targets: WaiverTarget[] }) {
         </label>
       </div>
 
-      <div className="glass overflow-hidden">
-        <table className="w-full text-left text-body">
+      <div className="glass overflow-x-auto">
+        <table className="w-full min-w-[40rem] text-left text-body">
           <thead className="border-b border-hairline text-label text-ink-muted">
             <tr>
               <th className="px-4 py-3">Player</th>
