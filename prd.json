@@ -25,7 +25,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": ["1.done.md"], "priority": 2, "passes": false, "notes": ""
+      "injectDeps": ["1.done.md"], "priority": 2, "passes": true, "notes": "done — real vorp snapshot live on Supabase (manifest default:vorp → 4254 players); players page renders it (Playwright-verified, empty state gone). build/tsc/vitest/bundle-audit green. Re-publish needs SUPABASE_SERVICE_ROLE_KEY (CI-only, not in local .env); snapshot already current so goal met."
     },
     {
       "id": "US-003", "epicId": "6", "segmentBranch": "v3-epic-6-login", "ui": true,
