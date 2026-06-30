@@ -30,3 +30,6 @@ next-env.d.ts
 
 # Generated graph-analysis artifacts (regenerable; carried personal abs paths)
 graphify-out/
+
+# v3 Epic 1: nflverse history-ingest marker (cached in CI, never committed)
+pipeline/.nflverse_cache/
