@@ -11,6 +11,7 @@ const PUBLIC_FILES = [
   "app/trades/page.tsx",
   "components/WaiverBoard.tsx",
   "components/TradeFinder.tsx",
+  "components/TradeCalculator.tsx",
 ];
 
 // Modules that read per-user / authenticated data. None may appear in a public-plane file.
