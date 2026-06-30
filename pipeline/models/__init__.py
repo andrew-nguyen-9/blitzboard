@@ -20,8 +20,14 @@ from .special_teams import KickerProjector, DefenseProjector
 from .predictability import Predictability, td_turnover_share
 from .sentiment import SentimentScorer, VaderScorer, PlayerMatcher, SentimentResult
 from .value_engine import ValueEngine, VorpEngine, MonteCarloEngine, PlayerValue
+from .season_sim import SeasonSimulator, SeasonOutcome, SimInput, from_per_game, from_projection
 
 __all__ = [
+    "SeasonSimulator",
+    "SeasonOutcome",
+    "SimInput",
+    "from_per_game",
+    "from_projection",
     "score_stats",
     "POSITION_FLOOR",
     "LeagueRules",
