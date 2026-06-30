@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, Anton, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 import ThemeScript from "@/components/ThemeScript";
 import Cursor from "@/components/Cursor";
 import SmoothScroll from "@/components/SmoothScroll";
@@ -54,9 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Cursor />
         <Nav />
         <main id="main" className="mx-auto max-w-wide px-5 md:px-8">{children}</main>
-        <footer className="mx-auto mt-24 max-w-wide border-t border-line px-5 py-10 text-label text-ink-2 md:px-8">
-          BlitzBoard · Data from Sleeper, nflverse &amp; ESPN · Built with Next.js + Supabase
-        </footer>
+        <Footer />
       </body>
     </html>
   );
