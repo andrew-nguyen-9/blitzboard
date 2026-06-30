@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import ThemeScript from "@/components/ThemeScript";
 import Cursor from "@/components/Cursor";
 import SmoothScroll from "@/components/SmoothScroll";
+import MotionProvider from "@/components/MotionProvider";
 
 // Self-hosted at build time via next/font (no render-blocking <link>, no layout
 // shift, clears @next/next/no-page-custom-font). Each exposes a CSS variable the
@@ -53,9 +54,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="grain-overlay" aria-hidden />
         <SmoothScroll />
         <Cursor />
-        <Nav />
-        <main id="main" className="mx-auto max-w-wide px-5 md:px-8">{children}</main>
-        <Footer />
+        <MotionProvider>
+          <Nav />
+          <main id="main" className="mx-auto max-w-wide px-5 md:px-8">{children}</main>
+          <Footer />
+        </MotionProvider>
       </body>
     </html>
   );
