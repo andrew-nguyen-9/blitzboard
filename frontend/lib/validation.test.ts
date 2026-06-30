@@ -22,7 +22,7 @@ describe("sleeper id/username schemas", () => {
     expect(validate(sleeperLeagueId, "abc; drop table").ok).toBe(false);
   });
   it("accepts alnum usernames, rejects injection-y input", () => {
-    expect(validate(sleeperUsername, "andrew_99").ok).toBe(true);
+    expect(validate(sleeperUsername, "example_99").ok).toBe(true);
     expect(validate(sleeperUsername, "a b/../x").ok).toBe(false);
   });
 });

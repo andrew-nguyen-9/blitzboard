@@ -3,7 +3,7 @@ import { getServerSupabase } from "@/lib/supabase/server";
 import { getMyLeagues } from "@/lib/queries.auth";
 import LeagueManager, { type ConnectedLeague } from "@/components/LeagueManager";
 
-export const metadata = { title: "My Leagues" };
+export const metadata = { title: "Your Leagues" };
 export const dynamic = "force-dynamic"; // reflects the latest connected leagues
 
 // Epic 8: the authed Leagues surface — connect up to 3 leagues (Sleeper + ESPN), pick the
@@ -21,7 +21,7 @@ export default async function LeaguesPage() {
   return (
     <div className="py-12">
       <div className="mb-8">
-        <h1 className="font-display text-display-md">My Leagues</h1>
+        <h1 className="font-display text-display-md">Your Leagues</h1>
         <p className="mt-2 text-body text-ink-muted">
           Connect up to three leagues. Your active league drives the draft board, waiver scope, and trade context.
         </p>
