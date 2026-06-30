@@ -218,7 +218,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": [], "priority": 18, "passes": false, "notes": "BLOCKED — monthly spend limit hit; not dispatched. Re-dispatch once limit raised."
+      "injectDeps": [], "priority": 18, "passes": true, "notes": "DONE — LazyMotion framer trim (First Load -14kB on /, /kit, /players/[id]); footer link a11y -> homepage Lighthouse 100/100/100/100; 162 vitest green."
     }
   ]
 }
