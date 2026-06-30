@@ -21,7 +21,15 @@ import type { Engine } from "@/lib/types";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const d = await getPlayerDetail(id);
-  return { title: d?.player.full_name ?? "Player" };
+  const p = d?.player;
+  if (!p) return { title: "Player" };
+  const where = [p.position, p.nfl_team ?? "Free Agent"].filter(Boolean).join(" · ");
+  const description = `${p.full_name} — ${where}. Value, projections, and career production in the BlitzBoard draft war room.`;
+  return {
+    title: p.full_name,
+    description,
+    openGraph: { title: `${p.full_name} · BlitzBoard`, description, type: "profile" as const },
+  };
 }
 
 // A labelled metric whose definition lives in the shared Tooltip (Epic 3.2). The
