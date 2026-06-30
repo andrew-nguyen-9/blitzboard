@@ -8,7 +8,7 @@ import ScrollCue from "@/components/ScrollCue";
 import TiltCard from "@/components/TiltCard";
 import Marquee from "@/components/Marquee";
 import Tooltip from "@/components/Tooltip";
-import BlueprintField from "@/components/BlueprintField";
+import BlitzField from "@/components/BlitzField";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +41,7 @@ export default async function Home() {
           so they run deterministically without blocking first paint. */}
       <section className="full-bleed relative isolate overflow-hidden">
         <div className="hero-media" aria-hidden />
-        <BlueprintField className="absolute inset-y-0 right-0 z-[-1] w-[68%] text-accent/35 md:w-[58%]" />
+        <BlitzField className="absolute inset-y-0 right-0 z-[-1] w-[68%] text-accent/35 md:w-[58%]" />
         <div className="relative mx-auto max-w-wide px-5 pb-20 pt-20 md:px-8 md:pb-28 md:pt-28">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-3 py-1.5 text-label uppercase text-ink-2 backdrop-blur">
             <span className="relative flex h-2 w-2">
@@ -132,11 +132,10 @@ export default async function Home() {
             />
           </span>
         </Reveal>
-        {/* Equal-size cards on a CSS scroll-snap rail — native overflow, no carousel
-            dep. Grid single-row stretches every card to the tallest, so widths and
-            heights match; each snaps to the start edge. Cards are links, so keyboard
-            users tab through them and the focused card scrolls into view natively. */}
-        <div role="group" aria-label="Tools" className="deck-rail">
+        {/* Static responsive grid — 1 col on mobile, 2 on small, 3 on desktop. No
+            horizontal scroll: every tool is visible at once. Cards are links, so
+            keyboard users tab straight through them in source order. */}
+        <div role="group" aria-label="Tools" className="grid grid-cols-1 gap-[var(--space-m)] sm:grid-cols-2 lg:grid-cols-3">
           {tiles.map((t, i) => (
             <TiltCard key={i} href={t.href} label={t.label} desc={t.desc} index={i} />
           ))}
