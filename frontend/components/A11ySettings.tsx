@@ -73,11 +73,15 @@ export default function A11ySettings() {
   return (
     <details className="a11y group relative">
       <summary
-        className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-line bg-surface-elevated px-3 py-1.5 text-label text-ink-muted transition hover:text-ink"
+        className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-ink-muted transition hover:bg-surface-elevated hover:text-ink"
         aria-label="Accessibility settings"
+        title="Accessibility settings"
       >
-        <span aria-hidden>⚙</span>
-        Access
+        {/* Universal accessibility glyph. Inherits currentColor → theme-adaptive. */}
+        <svg viewBox="0 0 24 24" className="h-5 w-5" role="img" aria-hidden focusable="false" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="4" r="1.6" />
+          <path d="M4 8h16M12 8v6m0 0l-3.5 6m3.5-6l3.5 6" />
+        </svg>
       </summary>
       <div
         role="group"
