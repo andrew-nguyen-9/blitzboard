@@ -7,6 +7,7 @@ import HeroHeadline from "@/components/HeroHeadline";
 import ScrollCue from "@/components/ScrollCue";
 import TiltCard from "@/components/TiltCard";
 import Marquee from "@/components/Marquee";
+import Tooltip from "@/components/Tooltip";
 
 export const dynamic = "force-dynamic";
 
@@ -105,7 +106,29 @@ export default async function Home() {
       <section className="mt-16">
         <Reveal className="mb-6 flex items-baseline justify-between">
           <h2 className="font-display text-display-md">The deck</h2>
-          <span className="text-label uppercase text-ink-2">seven tools, one spine</span>
+          <span className="group relative inline-flex items-center gap-1.5 text-label uppercase text-ink-2">
+            seven tools, one spine
+            <button
+              type="button"
+              aria-label="What the spine means"
+              aria-describedby="deck-spine-tip"
+              className="grid h-4 w-4 place-items-center rounded-full border border-line text-[9px] leading-none text-ink-2 transition hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+            >
+              i
+            </button>
+            <Tooltip
+              id="deck-spine-tip"
+              side="bottom"
+              content={
+                <span>
+                  Every tool runs on one spine —{" "}
+                  <b className="text-ink">LeagueRules</b>, <b className="text-ink">Projector</b>,{" "}
+                  <b className="text-ink">ValueEngine</b>, and <b className="text-ink">SentimentScorer</b> —
+                  so a ranking, a draft pick, and a trade all reflect your league&apos;s exact rules.
+                </span>
+              }
+            />
+          </span>
         </Reveal>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {tiles.map((t, i) => (
