@@ -100,7 +100,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "injectDeps": ["3.1.done.md"], "priority": 8, "passes": false, "notes": ""
+      "injectDeps": ["3.1.done.md"], "priority": 8, "passes": true, "notes": "done — PR #34, merged to v3. /waivers = unauth all-NFL waiver tool (RSS NEWS PULSE all-NFL feed; 'Scope: All NFL' chip is Epic 8's toggle insertion point; feed no longer hidden on sparse trending). One-file change reusing plumbing. build/tsc/vitest(143)/bundle/screenshot green."
     },
     {
       "id": "US-009", "epicId": "10", "segmentBranch": "v3-epic-10-trades-unauth", "ui": true,
