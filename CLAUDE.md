@@ -7,8 +7,8 @@ git artifact). This file adds the project's workflow, conventions, and tooling.
 ## What this project is (v2)
 
 A pipeline-driven NFL fantasy war room. Next.js 15 (App Router) + Supabase (Postgres) +
-Python cron pipeline. v1 (P0–P7) is archived under `docs/archive/v1/`. We are building
-**v2.0.0+** — see `docs/phases/v2/PHASES_OVERVIEW.md`. The spine is four interfaces:
+Python cron pipeline. v1 (P0–P7) is archived under `docs/archive/v1/`; v2 shipped through
+v2.7.0 (`docs/phases/v2/PHASES_OVERVIEW.md`); v3 has landed on `main`. The spine is four interfaces:
 `LeagueRules`, `Projector`, `ValueEngine`, `SentimentScorer` (`docs/architecture/ARCHITECTURE.md`).
 
 ## The workflow (non-negotiable)

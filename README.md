@@ -5,9 +5,10 @@ BlitzBoard is a pipeline-driven NFL fantasy war room: player intelligence, draft
 Next.js 15 (App Router) + Supabase (Postgres) + a Python cron pipeline.
 Production: [blitzboard.an9.dev](https://blitzboard.an9.dev).
 
-> **Status: v2 in planning.** v1 (P0–P7) shipped and is frozen as **v1.0.0** under
-> `docs/archive/v1/`. We are building **v2.0.0+** — a high-end, accessible, secure, multi-user
-> revamp. See `docs/overview/VISION.md` and `docs/phases/v2/PHASES_OVERVIEW.md`.
+> **Status: v3 shipped.** v1 (P0–P7) is frozen as **v1.0.0** under `docs/archive/v1/`.
+> v2 (the high-end, accessible, secure, multi-user revamp) shipped through **v2.7.0**.
+> v3 (Supabase Auth + TOTP, VORP/Monte Carlo models, full page suite, SEO/perf polish)
+> landed on `main`. See `docs/overview/VISION.md` and `docs/phases/v2/PHASES_OVERVIEW.md`.
 
 ## Documentation map
 
@@ -51,7 +52,7 @@ cp .env.example .env               # add keys when ready
 ## Stack
 
 Next.js 15 (App Router), Tailwind, Framer Motion + **Rive** + GSAP/Lenis for motion ·
-Supabase (Postgres, RLS) + **Auth.js** for accounts · Python 3.11 pipeline on GitHub Actions
+Supabase (Postgres, RLS) + **Supabase Auth** (email + TOTP) for accounts · Python 3.11 pipeline on GitHub Actions
 cron · Vercel hosting + CDN-cached data snapshots.
 
 ## Workflow at a glance
