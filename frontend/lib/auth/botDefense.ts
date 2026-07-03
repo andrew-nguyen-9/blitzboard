@@ -65,7 +65,7 @@ export function verifyFallback(fb: Fallback | undefined): boolean {
 // Bot Management enabled in the dashboard, so it's stubbed to a no-op here to keep the build
 // clean and local/offline dev unblocked. Upgrade path: `npm i botid`, wrap next.config with
 // `withBotId`, then here `const { checkBotId } = await import("botid/server"); const v = await
-// checkBotId(); return !v.isBot;`. Tracked as gated in docs/phases/v3/handoffs/7.done.md.
+// checkBotId(); return !v.isBot;`.
 export async function verifyBotId(): Promise<boolean> {
   return true;
 }
