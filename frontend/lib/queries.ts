@@ -4,7 +4,7 @@
 import { getSupabase } from "./supabase";
 import { careerRows, type SeasonRow } from "./playerStats";
 import type { BoxStats } from "./playerColumns";
-import type { Engine, Player, PlayerWithValue } from "./types";
+import type { Article, ArticleSummary, Engine, Player, PlayerWithValue } from "./types";
 
 const PLAYER_COLS =
   "id,sleeper_id,espn_id,full_name,position,nfl_team,bye_week,age,years_exp,status,injury_status,metadata";
@@ -344,6 +344,39 @@ export async function getBoxStats(sleeperIds: string[]): Promise<Record<string, 
     .is("week", null)
     .order("season");
   return groupLatestBox((hist ?? []) as Array<{ player_id: string } & SeasonRow>, idToSleeper);
+}
+
+// Articles feed (Epic 9b), newest first. Card projection omits the heavy `body`.
+// Null-safe → [] offline, so /articles renders an empty state with no backend.
+export async function getArticles(limit = 30): Promise<ArticleSummary[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from("articles")
+    .select("id,slug,title,summary,category,source,published_at")
+    .order("published_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.error("[queries.getArticles]", error.message);
+    return [];
+  }
+  return (data as ArticleSummary[]) ?? [];
+}
+
+// One article by its URL slug (the article detail page). Null when absent/offline.
+export async function getArticleBySlug(slug: string): Promise<Article | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from("articles")
+    .select("id,slug,title,summary,body,category,source,published_at")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) {
+    console.error("[queries.getArticleBySlug]", error.message);
+    return null;
+  }
+  return (data as Article) ?? null;
 }
 
 export async function getPlayerCount(): Promise<number> {
