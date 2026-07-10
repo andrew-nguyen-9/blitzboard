@@ -41,6 +41,10 @@ export default async function Home() {
           so they run deterministically without blocking first paint. */}
       <section className="full-bleed relative isolate overflow-hidden">
         <div className="hero-media" aria-hidden />
+        {/* Masked neon-grid overlay (war-room-hero template) — layered over the
+            hero-media wash, faded to the top-right so it reads as texture behind
+            the headline, never behind the body copy. Static/paint-only. */}
+        <div className="neon-grid hero-grid" aria-hidden />
         {/* Decorative play-field: a RIGHT-column accent on desktop. Below md the hero
             stacks to one column and the body copy spans full width, so the field's
             X/O marks would sit BEHIND the paragraph — line-art under text reads as
