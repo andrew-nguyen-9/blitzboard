@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { rateLimit, verifyFallback, humanCheck } from "./botDefense";
+import { rateLimit, verifyFallback, humanCheck, verifyHCaptcha } from "./botDefense";
 
 describe("rateLimit", () => {
   afterEach(() => vi.useRealTimers());
@@ -35,6 +35,31 @@ describe("verifyFallback", () => {
   });
   it("rejects missing input", () => {
     expect(verifyFallback(undefined)).toBe(false);
+  });
+});
+
+describe("verifyHCaptcha (server-side token verification)", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("skips (passes) when HCAPTCHA_SECRET is not configured — degrade, don't block", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    expect(await verifyHCaptcha("any-token", {})).toBe(true);
+    expect(fetchSpy).not.toHaveBeenCalled(); // no network when unconfigured
+  });
+  it("rejects a missing token when the secret IS configured", async () => {
+    expect(await verifyHCaptcha(undefined, { HCAPTCHA_SECRET: "s" })).toBe(false);
+  });
+  it("verifies the token against siteverify and returns its success flag", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ success: true }), { status: 200 }),
+    );
+    expect(await verifyHCaptcha("good", { HCAPTCHA_SECRET: "s" })).toBe(true);
+  });
+  it("returns false when siteverify reports failure", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ success: false }), { status: 200 }),
+    );
+    expect(await verifyHCaptcha("bad", { HCAPTCHA_SECRET: "s" })).toBe(false);
   });
 });
 

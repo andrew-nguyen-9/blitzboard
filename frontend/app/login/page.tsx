@@ -30,6 +30,17 @@ const primaryBtn =
 const ghostBtn =
   "w-full rounded-full border border-hairline bg-surface px-6 py-3 font-semibold text-ink transition hover:border-accent";
 
+// Auth redirects carry short error codes; render them as human copy (unknown codes — e.g. a raw
+// provider/Supabase message — pass through unchanged so nothing is swallowed).
+const ERROR_COPY: Record<string, string> = {
+  oauth: "Google sign-in is unavailable right now. Try email, or contact support.",
+  auth: "We couldn't complete sign-in. Please try again.",
+  offline: "Sign-in is unavailable offline.",
+};
+function friendlyError(code: string): string {
+  return ERROR_COPY[code] ?? code;
+}
+
 // Next 15: searchParams is async.
 export default async function LoginPage({
   searchParams,
@@ -63,7 +74,7 @@ export default async function LoginPage({
 
           {sp.error && (
             <p role="alert" className="mb-4 rounded-2xl border border-hairline bg-surface px-4 py-3 text-label text-[#E0573A]">
-              {sp.error}
+              {friendlyError(sp.error)}
             </p>
           )}
           {sp.check === "email" && (
