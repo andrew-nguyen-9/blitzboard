@@ -86,6 +86,14 @@ jobs:
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
         run: python news_sentiment.py
 
+      # E9b: publish modeling-finding articles from the context artifact the
+      # step above just wrote. Idempotent (upsert by slug) and degrade-safe — a
+      # missing/neutral artifact emits honest "not yet ingested" articles or
+      # none, never failing the pipeline.
+      - name: Generate context articles (E9b)
+        continue-on-error: true
+        run: python articles_generate.py
+
       - name: Compute projections + player values (VORP, superflex-aware)
         run: python value_engine_run.py --engine vorp
 
