@@ -81,6 +81,23 @@ No wiring, no registry edit — `discover()` / `run_all()` pick it up automatica
 | Odds            | `adapters/odds.py`             | `ODDS_API_KEY`                | the-odds-api free tier ~500 req/mo; user-provisioned; no popularity field | E5           |
 | Injuries        | *(pending)*                    | `INJURY_API_KEY` (optional)   | ESPN/Sleeper injury JSON is keyless; key only if a source needs it | E3        |
 | College stats   | `ingest/college_ingest.py`     | `CFBD_API_KEY`                | collegefootballdata.com free tier; free user key, rate-limited  | E2           |
+| News (RSS)      | `news_sentiment.py` (`FEEDS`)  | none                          | ESPN/PFT/Yahoo/CBS/FantasyPros/NFL.com public RSS — no key, no quota | E6      |
+| News (Reddit)   | `news_sentiment.py` (`FEEDS`)  | none                          | r/fantasyfootball + r/nfl public `.rss` — keyless; ~60 req/min courtesy | E6   |
+| News (Reddit+)  | `news_sentiment.py` (praw)     | `REDDIT_CLIENT_ID/SECRET`     | OPTIONAL richer path (self-text/hot); keyless ⇒ skipped, `.rss` covers it | E6  |
 
 *Pending* rows are the placeholders staged by F2; the owning unit adds the adapter
 module using this pattern (F2 does not implement source-specific adapters).
+
+## News auto-refresh (E6)
+
+`news_sentiment.py` refreshes the feed at **$0** every 30 min (08:00–01:00, waiver
+days) via the `Refresh news feed + trending (E6/news)` step in `etl_daily.yml`. It
+reuses the F2 **adapter shape** without a full `Adapter` subclass: each source is a
+`NewsSource(name, fetch)` whose `fetch()` returns already-normalized article dicts,
+run through `collect()`, which enforces a **stale-fallback** degrade contract — a
+source that **raises or returns nothing** falls back to its last-good batch cached
+on disk (`pipeline/.news_cache.json`, gitignored); a fresh pull refreshes it. One
+dead source therefore degrades to stale-or-skip and can **never fail the run**.
+`news_articles` dedupes on `url` and `trending` is a replaced snapshot, so the step
+is idempotent. All sources are keyless; `REDDIT_CLIENT_ID/SECRET` only add the
+richer praw path and, when absent, the run silently keeps the keyless Reddit `.rss`.

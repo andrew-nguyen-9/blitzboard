@@ -74,6 +74,18 @@ jobs:
         continue-on-error: true
         run: python -m ingest.context_ingest --season "$(date -u +%Y)"
 
+      # E6/news: refresh the news feed from free RSS + keyless Reddit (.rss) and
+      # recompute the trending signal. All sources are keyless; the richer praw
+      # Reddit path only joins when REDDIT_CLIENT_ID/SECRET are set. Degrade-safe
+      # with stale-fallback (a down source reuses its last-good batch), so it is
+      # idempotent and never fails the pipeline — hence continue-on-error.
+      - name: Refresh news feed + trending (E6/news)
+        continue-on-error: true
+        env:
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+        run: python news_sentiment.py
+
       - name: Compute projections + player values (VORP, superflex-aware)
         run: python value_engine_run.py --engine vorp
 
