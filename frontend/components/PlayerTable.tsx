@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { loadSnapshot, type SnapshotPlayer } from "@/lib/snapshot";
 import { tierMap } from "@/lib/tiers";
-import { playerTooltipRows } from "@/lib/playerTooltip";
+import { columnTips, playerTooltipRows } from "@/lib/playerTooltip";
 import { compareCells } from "@/lib/playerSort";
 import { PLAYER_COLUMNS, type BoxStats, type ColCtx, type ColDef, type ColGroup } from "@/lib/playerColumns";
 import { usePrefetchOnIntent } from "@/lib/usePrefetchOnIntent";
 import { useCursorTooltip } from "@/components/CursorTooltip";
+import Tooltip from "@/components/Tooltip";
+import { teamLogoUrl } from "@/lib/teams";
 import EmptyState from "@/components/EmptyState";
 import type { Engine } from "@/lib/types";
 
@@ -47,11 +50,24 @@ function PlayerRowLink({ id, className, children }: { id: string; className?: st
   );
 }
 
-// Generic dynamic cell over a ColDef; null → "—", numbers mono/right with decimals.
+// Generic dynamic cell over a ColDef; null → "—", numbers mono/right with decimals
+// (+ optional suffix like "%"). The team meta cell also renders the team logo.
 function ColCell({ col, p, ctx }: { col: ColDef; p: SnapshotPlayer; ctx: ColCtx }) {
   const v = col.get(p, ctx);
-  const text = v == null ? "—" : typeof v === "number" ? v.toFixed(col.decimals ?? 0) : String(v);
   const numeric = !TEXT_COLS.has(col.key);
+  const text =
+    v == null ? "—" : typeof v === "number" ? `${v.toFixed(col.decimals ?? 0)}${col.suffix ?? ""}` : String(v);
+  if (col.key === "team") {
+    const logo = typeof v === "string" ? teamLogoUrl(v) : null;
+    return (
+      <span role="cell" className="flex min-w-0 items-center gap-1.5 text-ink-muted">
+        {logo && (
+          <Image src={logo} alt="" width={16} height={16} unoptimized className="h-4 w-4 shrink-0 object-contain" />
+        )}
+        <span className="truncate">{text}</span>
+      </span>
+    );
+  }
   return (
     <span role="cell" className={`truncate ${numeric ? "text-right font-mono tabular-nums text-ink" : "text-ink-muted"}`}>
       {text}
@@ -126,7 +142,22 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
   );
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bodyScrollRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const [listOffset, setListOffset] = useState(0);
+
+  // The sticky header lives OUTSIDE the body's horizontal scroller (a horizontal
+  // overflow ancestor would become sticky's scroll container and untether it from
+  // the window — the root of the old header drift bug). To keep columns aligned we
+  // match the header's width to the scrollable content and translate it by the
+  // body's scrollLeft, so it tracks the body sideways while staying window-sticky.
+  const syncHeader = useCallback(() => {
+    const body = bodyScrollRef.current;
+    const head = headerRef.current;
+    if (!body || !head) return;
+    head.style.width = `${body.scrollWidth}px`;
+    head.style.transform = `translateX(${-body.scrollLeft}px)`;
+  }, []);
 
   // Single scroll region = the window (no inner overflow div → no double scrollbar).
   const rowVirt = useWindowVirtualizer({
@@ -160,11 +191,14 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
   // The list's document offset drives the window virtualizer's scrollMargin.
   // Recompute when layout above the list can shift (status, column count, resize).
   useLayoutEffect(() => {
-    const measure = () => setListOffset(scrollRef.current?.offsetTop ?? 0);
+    const measure = () => {
+      setListOffset(scrollRef.current?.offsetTop ?? 0);
+      syncHeader();
+    };
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [status, activeCols.length]);
+  }, [status, activeCols.length, syncHeader]);
 
   function toggleSort(k: string) {
     if (sort === k) setAsc(!asc);
@@ -175,11 +209,13 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
   }
 
   // Sortable column header — aria-sort lives on the columnheader (not the button).
-  const Th = ({ k, children, justify }: { k: string; children: ReactNode; justify?: "end" }) => (
+  // An optional `tip` composes the shared Tooltip primitive (E10-owned; usage only)
+  // to define the metric on hover/focus. `group relative` scopes the bubble here.
+  const Th = ({ k, children, justify, tip }: { k: string; children: ReactNode; justify?: "end"; tip?: string }) => (
     <div
       role="columnheader"
       aria-sort={sort === k ? (asc ? "ascending" : "descending") : "none"}
-      className={`flex items-center ${justify === "end" ? "justify-end" : ""}`}
+      className={`group relative flex items-center ${justify === "end" ? "justify-end" : ""}`}
     >
       <button
         type="button"
@@ -190,6 +226,7 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
         {children}
         <span aria-hidden className="text-accent">{sort === k ? (asc ? "▲" : "▼") : ""}</span>
       </button>
+      {tip && <Tooltip decorative side="bottom" content={tip} />}
     </div>
   );
 
@@ -281,52 +318,71 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
         ))}
       </div>
 
-      {/* virtualized table — window-scrolled (one scroll region); only visible rows in the DOM */}
-      <div className="glass overflow-x-auto" role="table" aria-rowcount={sorted.length} aria-label="Players ranked by value">
-        <div style={grid} className="sticky top-14 z-10 gap-x-2 border-b border-hairline bg-bg/95 px-3 py-2 backdrop-blur" role="row" aria-rowindex={1}>
-          <Th k="rank">#</Th>
-          <Th k="name">Player</Th>
-          <Th k="rho" justify="end">ρ</Th>
-          {activeCols.map((c) =>
-            c.sortable ? (
-              <Th key={c.key} k={c.key} justify={TEXT_COLS.has(c.key) ? undefined : "end"}>{c.label}</Th>
-            ) : (
-              <div key={c.key} role="columnheader" className="flex items-center px-1 text-label uppercase text-ink-2">{c.label}</div>
-            ),
-          )}
+      {/* virtualized table — window-scrolled; the header is pinned to the WINDOW and
+          horizontally synced to the body's own scroller (syncHeader), so it never
+          drifts and its columns stay aligned across breakpoints. */}
+      <div className="glass" role="table" aria-rowcount={sorted.length} aria-label="Players ranked by value">
+        {/* sticky header: window-pinned (no overflow ancestor to trap it); overflowX:clip
+            clips the synced-wide header without creating a scroll container, so vertical
+            tooltips still escape downward. */}
+        <div
+          role="rowgroup"
+          className="sticky top-14 z-30 border-b border-hairline bg-bg/95 backdrop-blur"
+          style={{ overflowX: "clip" }}
+        >
+          <div ref={headerRef} style={grid} className="gap-x-2 px-3 py-2" role="row" aria-rowindex={1}>
+            <Th k="rank" tip="Overall rank by projected value under the active engine.">#</Th>
+            <Th k="name">Player</Th>
+            <Th k="rho" justify="end" tip="Predictability ρ — how repeatable this player's scoring is year to year; low ρ discounts value.">ρ</Th>
+            {activeCols.map((c) =>
+              c.sortable ? (
+                <Th key={c.key} k={c.key} justify={TEXT_COLS.has(c.key) ? undefined : "end"} tip={columnTips[c.key]}>{c.label}</Th>
+              ) : (
+                <div key={c.key} role="columnheader" className="flex items-center px-1 text-label uppercase text-ink-2">{c.label}</div>
+              ),
+            )}
+          </div>
         </div>
 
-        <div ref={scrollRef} role="rowgroup" style={{ height: rowVirt.getTotalSize(), position: "relative" }}>
-          {items.map((vi) => {
-            const p = sorted[vi.index];
-            if (!p) return null;
-            const t = tiers[p.id];
-            const ctx = ctxOf(p);
-            return (
-              <div
-                key={p.id}
-                role="row"
-                aria-rowindex={vi.index + 2}
-                ref={rowVirt.measureElement}
-                data-index={vi.index}
-                style={{ ...grid, transform: `translateY(${vi.start - listOffset}px)` }}
-                className="group absolute left-0 top-0 w-full items-center gap-x-2 border-b border-hairline/60 px-3 py-2.5 text-body transition hover:z-20 hover:bg-surface-elevated focus-within:z-20"
-                onMouseEnter={() => tip.show({ title: p.full_name, rows: playerTooltipRows(p, t) })}
-                onMouseLeave={tip.hide}
-              >
-                <span role="cell" className="font-mono text-ink-muted">{p.rank ?? vi.index + 1}</span>
-                <span role="cell" className="min-w-0 truncate font-medium">
-                  <PlayerRowLink id={p.id} className="transition hover:text-accent">{p.full_name}</PlayerRowLink>
-                  {t && <span className="ml-2 rounded bg-surface-elevated px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">T{t}</span>}
-                  {p.trend != null && p.trend > 0 && <span className="ml-1.5 align-middle text-[10px] text-accent" title={`${p.trend} adds`}>▲</span>}
-                </span>
-                <span role="cell" className="block text-right font-mono tabular-nums text-ink">
-                  {p.predictability == null ? "—" : p.predictability.toFixed(2)}
-                </span>
-                {activeCols.map((c) => <ColCell key={c.key} col={c} p={p} ctx={ctx} />)}
-              </div>
-            );
-          })}
+        <div ref={bodyScrollRef} onScroll={syncHeader} className="overflow-x-auto" role="presentation">
+          <div ref={scrollRef} role="rowgroup" style={{ height: rowVirt.getTotalSize(), position: "relative" }}>
+            {items.map((vi) => {
+              const p = sorted[vi.index];
+              if (!p) return null;
+              const t = tiers[p.id];
+              const ctx = ctxOf(p);
+              const logo = teamLogoUrl(p.nfl_team);
+              return (
+                <div
+                  key={p.id}
+                  role="row"
+                  aria-rowindex={vi.index + 2}
+                  ref={rowVirt.measureElement}
+                  data-index={vi.index}
+                  style={{ ...grid, transform: `translateY(${vi.start - listOffset}px)` }}
+                  className="group absolute left-0 top-0 w-full items-center gap-x-2 border-b border-hairline/60 px-3 py-2.5 text-body transition hover:z-20 hover:bg-surface-elevated focus-within:z-20"
+                  onMouseEnter={() => tip.show({ title: p.full_name, rows: playerTooltipRows(p, t) })}
+                  onMouseLeave={tip.hide}
+                >
+                  <span role="cell" className="font-mono text-ink-muted">{p.rank ?? vi.index + 1}</span>
+                  <span role="cell" className="flex min-w-0 items-center gap-2 font-medium">
+                    {logo && (
+                      <Image src={logo} alt="" width={18} height={18} unoptimized className="h-[18px] w-[18px] shrink-0 object-contain" />
+                    )}
+                    <span className="min-w-0 truncate">
+                      <PlayerRowLink id={p.id} className="transition hover:text-accent">{p.full_name}</PlayerRowLink>
+                      {t && <span className="ml-2 rounded bg-surface-elevated px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">T{t}</span>}
+                      {p.trend != null && p.trend > 0 && <span className="ml-1.5 align-middle text-[10px] text-accent" title={`${p.trend} adds`}>▲</span>}
+                    </span>
+                  </span>
+                  <span role="cell" className="block text-right font-mono tabular-nums text-ink">
+                    {p.predictability == null ? "—" : p.predictability.toFixed(2)}
+                  </span>
+                  {activeCols.map((c) => <ColCell key={c.key} col={c} p={p} ctx={ctx} />)}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
