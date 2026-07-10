@@ -66,6 +66,14 @@ jobs:
       - name: Ingest historical stats (nflverse)
         run: python history_ingest.py --seasons ${{ steps.hist.outputs.seasons }} ${{ steps.hist.outputs.skip }}
 
+      # E3/backtest: environmental + team-context ingest for the projection
+      # factors. Keyless (Open-Meteo) and degrade-safe — a network/data outage
+      # emits a neutral report and never fails the pipeline, so this step is
+      # idempotent and safe to run unattended before projections.
+      - name: Ingest environmental/team context (E3/backtest)
+        continue-on-error: true
+        run: python -m ingest.context_ingest --season "$(date -u +%Y)"
+
       - name: Compute projections + player values (VORP, superflex-aware)
         run: python value_engine_run.py --engine vorp
 

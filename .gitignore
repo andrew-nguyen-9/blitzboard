@@ -39,5 +39,8 @@ graphify-out/
 
 # v3 Epic 1: nflverse history-ingest marker (cached in CI, never committed)
 pipeline/.nflverse_cache/
+
+# E3: auto-generated environmental/context report (regenerated each cron run)
+pipeline/artifacts/
 .gstack/
 .orchestrator/
