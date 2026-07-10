@@ -78,7 +78,7 @@ No wiring, no registry edit — `discover()` / `run_all()` pick it up automatica
 | source          | module                         | key (env var)                 | free-tier limit                                                  | owner (unit) |
 |-----------------|--------------------------------|-------------------------------|-----------------------------------------------------------------|--------------|
 | Sleeper (state) | `adapters/sleeper_state.py`    | none                          | no key; ~1000 req/min courtesy cap, cache responses             | F2 (reference) |
-| Odds            | *(pending)*                    | `ODDS_API_KEY`                | the-odds-api free tier ~500 req/mo; user-provisioned            | E5           |
+| Odds            | `adapters/odds.py`             | `ODDS_API_KEY`                | the-odds-api free tier ~500 req/mo; user-provisioned; no popularity field | E5           |
 | Injuries        | *(pending)*                    | `INJURY_API_KEY` (optional)   | ESPN/Sleeper injury JSON is keyless; key only if a source needs it | E3        |
 | College stats   | `ingest/college_ingest.py`     | `CFBD_API_KEY`                | collegefootballdata.com free tier; free user key, rate-limited  | E2           |
 
