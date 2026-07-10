@@ -8,6 +8,7 @@ import { tierMap } from "@/lib/tiers";
 import { playerTooltipRows } from "@/lib/playerTooltip";
 import { useCursorTooltip } from "@/components/CursorTooltip";
 import { PLAYER_COLUMNS, type ColDef, type ColGroup } from "@/lib/playerColumns";
+import { randomFairTrade, FAIR_TRADE_BAND } from "@/lib/trade";
 import { getBoxStats, type NewsItem } from "@/lib/queries";
 import type { BoxStats } from "@/lib/playerColumns";
 import LeagueSelector, { type LeagueOpt } from "./LeagueSelector";
@@ -106,6 +107,21 @@ export default function TradeCalculator({ news, leagues = [] }: { news: NewsItem
     (side === "A" ? setSideA : setSideB)((s) => [...s, p]);
   const remove = (id: string, side: "A" | "B") =>
     (side === "A" ? setSideA : setSideB)((s) => s.filter((p) => p.id !== id));
+
+  // Fair-trade pool: draw balanced swaps from recognizable, valued players (top ~150
+  // by value) rather than the deep 4k tail, so the dice yield names you'd actually deal.
+  const fairPool = useMemo(
+    () => (players ? [...players].filter((p) => pval(p) > 0).sort((a, b) => pval(b) - pval(a)).slice(0, 150) : []),
+    [players],
+  );
+  // Roll a randomized balanced trade within the parity band and drop it on the two sides.
+  const rollFairTrade = () => {
+    const t = randomFairTrade(fairPool, { value: pval });
+    if (!t) return;
+    setSideA(t.give);
+    setSideB(t.get);
+    setSubmitted(false);
+  };
 
   const totalA = sumVal(sideA);
   const totalB = sumVal(sideB);
@@ -218,6 +234,16 @@ export default function TradeCalculator({ news, leagues = [] }: { news: NewsItem
               <option value="ALL">All teams</option>
               {teams.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
+            {/* Randomized fair trade — both sides land within ±{band}% by value. */}
+            <button
+              type="button"
+              onClick={rollFairTrade}
+              disabled={fairPool.length < 2}
+              title={`Generate a balanced trade (sides within ${Math.round(FAIR_TRADE_BAND * 100)}% by value)`}
+              className="ml-auto rounded-full border border-hairline px-3 py-1.5 text-label text-ink transition hover:border-accent disabled:opacity-40"
+            >
+              🎲 Fair trade
+            </button>
           </div>
 
           {/* optional stat-column groups — shared contract with the Players table */}
