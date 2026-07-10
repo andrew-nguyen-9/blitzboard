@@ -7,6 +7,12 @@ import type { CSSProperties } from "react";
 // static headline under reduced motion through the same CSS contract the kit
 // uses. Whitespace tokens are kept as plain (breakable) text so the line still
 // wraps normally on small screens — no clipping.
+//
+// F1 proof of the Neon North Star: the accent line renders with `.neon-text`
+// (charged --neon colour + a static text-glow, docs/design-system/NORTH_STAR.md
+// §Glow). The glow is paint-only — no animation — so it is inert under reduced
+// motion, and AA contrast is carried by the solid --neon colour (13.5:1 dark /
+// 5.1:1 light on bg-0), never the halo.
 
 type Line = { text: string; accent?: boolean };
 
@@ -15,7 +21,7 @@ export default function HeroHeadline({ lines, className }: { lines: Line[]; clas
   return (
     <h1 className={className}>
       {lines.map((line, li) => (
-        <span key={li} className={`hero-line${line.accent ? " text-accent" : ""}`}>
+        <span key={li} className={`hero-line${line.accent ? " neon-text" : ""}`}>
           {line.text.split(/(\s+)/).map((tok, ti) =>
             /\s/.test(tok) || tok === "" ? (
               tok

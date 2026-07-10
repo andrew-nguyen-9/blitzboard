@@ -73,6 +73,20 @@
   /* elevation / glass */
   --glass: oklch(from var(--bg-1) l c h / 0.6);
   --glow: 0 0 0 1px var(--line), 0 8px 40px oklch(0 0 0 / 0.4);
+
+  /* ── Neon North Star (v4 F1) — ADDITIVE layer over the accent, derived from the
+     same --accent-h so it stays league-tinted. Never overrides --accent/base
+     tokens. Spec + verified contrast ratios: docs/design-system/NORTH_STAR.md. */
+  --neon: oklch(0.86 0.2 var(--accent-h));           /* charged accent (13.5:1 on bg-0) */
+  --neon-ink: oklch(0.2 0.03 var(--accent-h));       /* text ON a neon fill (12.5:1) */
+  --neon-dim: oklch(0.62 0.14 var(--accent-h));      /* neon graphic/edge (≥5:1 on bg) */
+  --neon-soft: oklch(from var(--neon) l c h / 0.16); /* halo / wash fill */
+  --neon-glow: 0 0 1px var(--neon), 0 0 14px oklch(from var(--neon) l c h / 0.55),
+    0 0 44px oklch(from var(--neon) l c h / 0.28);   /* box glow (elevation) */
+  --neon-glow-text: 0 0 18px oklch(from var(--neon) l c h / 0.55),
+    0 0 40px oklch(from var(--neon) l c h / 0.3);    /* text glow (dark-native) */
+  --glass-neon: oklch(from var(--bg-1) l c h / 0.55); /* frosted neon panel fill */
+
   /* type faces (theme-independent; applied via :root). next/font exposes each
      family as a self-hosted CSS variable on <html> (zero layout shift, no render-
      blocking <link>); the quoted name is a fallback if the variable is absent. */
@@ -112,6 +126,18 @@
   --warn: oklch(0.62 0.15 75);
   --glass: oklch(from var(--bg-1) l c h / 0.7);
   --glow: 0 8px 30px -12px oklch(0 0 0 / 0.18);
+
+  /* ── Neon North Star (v4 F1) — light "daytime broadcast": neon reads as a deep,
+     saturated ink (glow is inherently a dark effect, so it is dialled right down
+     on paper). Deepened to clear AA as text on paper. Ratios: NORTH_STAR.md. */
+  --neon: oklch(0.49 0.18 var(--accent-h));          /* neon-as-ink (5.1:1 on bg-0) */
+  --neon-ink: oklch(0.98 0.01 var(--accent-h));      /* text ON a neon fill (5.4:1) */
+  --neon-dim: oklch(0.5 0.16 var(--accent-h));       /* neon graphic/edge (≥5:1 on bg) */
+  --neon-soft: oklch(from var(--neon) l c h / 0.1);
+  --neon-glow: 0 0 0 1px oklch(from var(--neon) l c h / 0.4),
+    0 6px 22px -10px oklch(from var(--neon) l c h / 0.4);
+  --neon-glow-text: 0 0 12px oklch(from var(--neon) l c h / 0.18); /* barely-there on paper */
+  --glass-neon: oklch(from var(--bg-1) l c h / 0.72);
 
   /* legacy aliases */
   --bg: var(--bg-0);
@@ -227,6 +253,46 @@ table {
   background: var(--bg-1);
   border: 1px solid var(--line);
   border-radius: 1rem;
+}
+
+/* ── Neon North Star primitives (v4 F1) ──────────────────────────────────────
+   Static utilities for the four primitives — glow, glass, texture, edge. All are
+   token-driven (light/dark swap for free) and paint-only (no animation), so they
+   are inert under reduced motion; a neon element that *pulses* opts in separately
+   and must null the pulse under reduced motion. Spec: docs/design-system/NORTH_STAR.md. */
+
+/* GLOW — charged text (the signature). Neon colour + soft halo; the halo dials to
+   near-nothing on paper via --neon-glow-text. Contrast is carried by the solid
+   colour, never the glow, so it stays AA when the glow is stripped. */
+.neon-text { color: var(--neon); text-shadow: var(--neon-glow-text); }
+
+/* GLOW — elevation. A neon box halo for a raised/active surface. */
+.neon-glow { box-shadow: var(--neon-glow); }
+
+/* EDGE — a hairline neon border with a faint inner wash (the "lit tube" rim). */
+.neon-edge {
+  border: 1px solid var(--neon-dim);
+  box-shadow: inset 0 0 0 1px oklch(from var(--neon) l c h / 0.15);
+}
+
+/* GLASS — frosted panel, neon-lit rim. Falls back to a solid fill when
+   backdrop-filter is unsupported. --blur collapses to 0 under high-contrast. */
+.glass-neon {
+  background: var(--glass-neon);
+  -webkit-backdrop-filter: blur(var(--blur));
+  backdrop-filter: blur(var(--blur));
+  border: 1px solid var(--neon-dim);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--neon-glow);
+}
+
+/* TEXTURE — a faint neon circuit grid for empty/hero surfaces. Decorative only
+   (pair with aria-hidden); the low alpha keeps it well under the text plane. */
+.neon-grid {
+  background-image:
+    linear-gradient(oklch(from var(--neon) l c h / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(from var(--neon) l c h / 0.06) 1px, transparent 1px);
+  background-size: 2.5rem 2.5rem;
 }
 
 /* ── Custom broadcast cursor ─────────────────────────────────────────────── */
