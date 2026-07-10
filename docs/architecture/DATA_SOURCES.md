@@ -80,7 +80,7 @@ No wiring, no registry edit — `discover()` / `run_all()` pick it up automatica
 | Sleeper (state) | `adapters/sleeper_state.py`    | none                          | no key; ~1000 req/min courtesy cap, cache responses             | F2 (reference) |
 | Odds            | *(pending)*                    | `ODDS_API_KEY`                | the-odds-api free tier ~500 req/mo; user-provisioned            | E5           |
 | Injuries        | *(pending)*                    | `INJURY_API_KEY` (optional)   | ESPN/Sleeper injury JSON is keyless; key only if a source needs it | E3        |
-| College stats   | *(pending)*                    | `CFBD_API_KEY`                | collegefootballdata.com free tier; free user key, rate-limited  | E2           |
+| College stats   | `ingest/college_ingest.py`     | `CFBD_API_KEY`                | collegefootballdata.com free tier; free user key, rate-limited  | E2           |
 
 *Pending* rows are the placeholders staged by F2; the owning unit adds the adapter
 module using this pattern (F2 does not implement source-specific adapters).
