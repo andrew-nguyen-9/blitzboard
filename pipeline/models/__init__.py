@@ -15,6 +15,16 @@ from .projector import (
     RegressionProjector,
     ConsensusProjector,
     EnsembleProjector,
+    apply_factors,
+)
+from .factors import (
+    Factor,
+    FactorContext,
+    MULTIPLIER,
+    DELTA,
+    discover_factors,
+    default_factors,
+    ReferenceFactor,
 )
 from .special_teams import KickerProjector, DefenseProjector
 from .predictability import Predictability, td_turnover_share
@@ -40,6 +50,14 @@ __all__ = [
     "RegressionProjector",
     "ConsensusProjector",
     "EnsembleProjector",
+    "apply_factors",
+    "Factor",
+    "FactorContext",
+    "MULTIPLIER",
+    "DELTA",
+    "discover_factors",
+    "default_factors",
+    "ReferenceFactor",
     "KickerProjector",
     "DefenseProjector",
     "Predictability",

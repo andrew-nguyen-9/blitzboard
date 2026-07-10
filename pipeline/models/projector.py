@@ -16,9 +16,11 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from .scoring import score_stats, POSITION_FLOOR
+from .factors.base import DELTA, Factor, FactorContext
+from .factors.loader import default_factors
 
 PROJECTED_GAMES = 16  # account for injury/rest vs the 17-game slate
 
@@ -275,12 +277,58 @@ class ConsensusProjector(Projector):
         )
 
 
+# ── factor composition (F3) ─────────────────────────────────────────────────
+def apply_factors(
+    projection: Projection, ctx: FactorContext, factors: list[Factor],
+) -> Projection:
+    """Compose pure factors onto a projection (see factors/base.py).
+
+    multipliers scale the distribution, deltas shift it:
+        mean' = mean * ∏(mult) + Σ(delta)
+    floor/ceiling/stdev scale by ∏(mult) and shift by Σ(delta), preserving the
+    ±1.28σ shape. Returns the projection UNCHANGED when the net effect is identity
+    (so the shipped identity ReferenceFactor is a true no-op → zero regression)."""
+    if not factors:
+        return projection
+    mult, delta = 1.0, 0.0
+    applied: dict[str, float] = {}
+    for f in factors:
+        v = f.value_for(ctx)
+        if f.kind == DELTA:
+            delta += v
+            if v:
+                applied[f.name] = round(v, 4)
+        else:
+            mult *= v
+            if v != 1.0:
+                applied[f.name] = round(v, 4)
+    if mult == 1.0 and delta == 0.0:
+        return projection
+    mean = max(projection.mean * mult + delta, 0.0)
+    by_stat = {**projection.by_stat, "factors": applied} if applied else projection.by_stat
+    return replace(
+        projection,
+        mean=round(mean, 2),
+        stdev=round(projection.stdev * mult, 2),
+        floor=round(projection.floor * mult + delta, 2),
+        ceiling=round(projection.ceiling * mult + delta, 2),
+        by_stat=by_stat,
+    )
+
+
 # ── the shipping projector: ensemble of the above ───────────────────────────
 class EnsembleProjector(Projector):
     source = "ensemble"
 
-    def __init__(self, projectors: list[tuple[Projector, float]]):
+    def __init__(
+        self,
+        projectors: list[tuple[Projector, float]],
+        factors: list[Factor] | None = None,
+    ):
         self.projectors = projectors  # [(projector, weight)]
+        # None → auto-discover factors/*.py (E1/E2/E3/E5 extend by adding a file,
+        # ZERO edit here). Pass [] to opt out (backtests/isolation tests).
+        self.factors = list(default_factors()) if factors is None else list(factors)
 
     def project(self, player):
         subs: list[tuple[Projection, float]] = []
@@ -298,9 +346,17 @@ class EnsembleProjector(Projector):
         within = sum((p.stdev ** 2) * w for p, w in subs) / wsum
         between = sum(((p.mean - mean) ** 2) * w for p, w in subs) / wsum
         stdev = math.sqrt(within + between)
-        return Projection(
+        proj = Projection(
             player_id=player["id"], season=subs[0][0].season, source=self.source,
             mean=round(mean, 2), stdev=round(stdev, 2),
             floor=round(mean - 1.28 * stdev, 2), ceiling=round(mean + 1.28 * stdev, 2),
             by_stat={"inputs": {p.source: p.mean for p, _ in subs}},
         )
+        if self.factors:
+            base = self.projectors[0][0]
+            ctx = FactorContext.from_player(
+                player, proj.season,
+                store=getattr(base, "store", None), rules=getattr(base, "rules", None),
+            )
+            proj = apply_factors(proj, ctx, self.factors)
+        return proj
