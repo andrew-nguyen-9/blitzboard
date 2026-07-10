@@ -7,6 +7,7 @@
 import type { PlayerWithValue } from "./types";
 import type { RosterSlot } from "./draft";
 import { fillRoster, SUPERFLEX_ROSTER } from "./draft";
+import { BYE_WEEKS_2026 } from "./byeWeeks";
 import type { MappedPick } from "./sleeperDraft";
 
 const POS_GROUPS = ["QB", "RB", "WR", "TE", "K", "DST"] as const;
@@ -92,6 +93,10 @@ export interface PolicyParams {
   kdstSoftPenalty: number;       // soft points shaved off K/DST so skill backups fill first (4.6)
   overfillDepth: Record<string, number>; // reasonable owned count per position before penalty
   overfillPenaltyPerExtra: number;        // points penalty per player past the depth cap
+  // ── e1 (v4) ──────────────────────────────────────────────────────────────
+  injuryDiscount: Record<string, number>; // injury_status (lower-cased) → availability multiplier
+  byeStackPenalty: number;       // points shaved per current starter already on a candidate's bye week
+  emptyOffensiveStarterBonus: number; // lift for a candidate that fills an EMPTY startable offensive slot
 }
 
 export const DEFAULT_POLICY: PolicyParams = {
@@ -111,6 +116,16 @@ export const DEFAULT_POLICY: PolicyParams = {
   kdstSoftPenalty: 20,
   overfillDepth: { QB: 3, RB: 5, WR: 5, TE: 2, K: 1, DST: 1 },
   overfillPenaltyPerExtra: 25,
+  // e1: availability-adjusted draft value — a listed injury shaves a pick's worth so a
+  // healthy comparable outranks it (spec cat 5). Draft-facing (steeper than the season
+  // projection factor) since a draft can't stream a Week-1 IR. Identity when absent.
+  injuryDiscount: {
+    questionable: 0.9, q: 0.9, doubtful: 0.75, d: 0.75, out: 0.6, o: 0.6,
+    na: 0.6, inactive: 0.6, cov: 0.75, sus: 0.5, suspended: 0.5,
+    pup: 0.4, nfi: 0.4, ir: 0.35, injured_reserve: 0.35, dnr: 0.35,
+  },
+  byeStackPenalty: 12,           // e1: discourage piling starters onto one bye week (spec cat 4)
+  emptyOffensiveStarterBonus: 140, // e1: never leave a startable offensive slot empty at draft end
 };
 
 // Cap the board to a realistic candidate set before scoring. scoreBoard is O(pool²) — each
@@ -279,6 +294,57 @@ export interface ScoredPick {
   reason: string;
 }
 
+// ── e1 (v4) draft-awareness terms ───────────────────────────────────────────
+
+// Availability multiplier from a player's injury designation (identity when healthy
+// or unlisted). So an injured/questionable body's value drops below a healthy
+// comparable and the AI takes the healthy one (spec cat 5). Degrades to 1 with no data.
+export function injuryAvailability(cand: PlayerWithValue, params: PolicyParams): number {
+  const s = (cand.injury_status ?? "").trim().toLowerCase();
+  if (!s) return 1;
+  return params.injuryDiscount[s] ?? params.injuryDiscount[s.replace(/\s+/g, "_")] ?? 1;
+}
+
+// Bye week from the row, falling back to the baked schedule snapshot (byeWeeks.ts) by
+// nfl_team — so bye reasoning fires even when the player row didn't carry bye_week.
+function resolveBye(p: PlayerWithValue | null | undefined): number | null {
+  if (!p) return null;
+  return p.bye_week ?? (p.nfl_team ? BYE_WEEKS_2026[p.nfl_team] ?? null : null);
+}
+
+// Penalty for STACKING a bye: count current starters already sharing the candidate's
+// bye week. Piling another starter onto that week leaves more empty lineup slots that
+// week, so a pick covering a DIFFERENT bye outranks a marginally higher one that stacks
+// an existing hole (spec cat 4).
+export function byeStackPenalty(
+  cand: PlayerWithValue,
+  ctx: AIContext,
+  params: PolicyParams = DEFAULT_POLICY,
+): number {
+  const bye = resolveBye(cand);
+  if (bye == null) return 0;
+  const starters = fillRoster(ctx.teamPicks, ctx.roster).starters
+    .map((s) => s.player)
+    .filter((p): p is PlayerWithValue => !!p);
+  const shared = starters.filter((s) => resolveBye(s) === bye).length;
+  return shared * params.byeStackPenalty;
+}
+
+// Offensive starting slots (K/DST excluded) — the ones we must never leave empty.
+const OFFENSIVE_SLOTS = new Set(["QB", "RB", "WR", "TE", "FLEX", "OP", "WRRB", "WRTE"]);
+
+// True when adding this candidate fills a currently-EMPTY startable offensive slot it is
+// eligible for. Scoring this positively guarantees the auto-draft fills every startable
+// offensive slot before spending a pick on bench depth or K/DST (the draft-end invariant).
+export function fillsEmptyOffensiveStarter(cand: PlayerWithValue, ctx: AIContext): boolean {
+  const pos = cand.position ?? "";
+  if (norm(pos) === "K" || norm(pos) === "DST") return false;
+  const fill = fillRoster(ctx.teamPicks, ctx.roster);
+  return ctx.roster.some(
+    (s, i) => OFFENSIVE_SLOTS.has(s.slot) && !fill.starters[i].player && s.eligible.includes(pos),
+  );
+}
+
 // Hard K/DST cap: a 2nd kicker/defense is ineligible until the final rounds.
 export function isCapped(
   cand: PlayerWithValue,
@@ -322,6 +388,27 @@ export function scoreBoard(ctx: AIContext, params: PolicyParams = DEFAULT_POLICY
     } else {
       score = bench;
       why.push("bench upside");
+    }
+    // e1: availability discount — shave the unavailable share of a listed player's
+    // projected points (proportional to the projection, so a high-ceiling injured stud
+    // is docked hardest) so a healthy comparable outranks it. Identity when unlisted.
+    const avail = injuryAvailability(p, params);
+    if (avail < 1) {
+      score -= (1 - avail) * Math.max(0, proj(p));
+      why.push("injury discount");
+    }
+    // e1: guarantee startable offensive slots fill before bench/K/DST — the draft-end
+    // invariant. Additive + equal across offensive-slot fillers, so it never reorders
+    // among them, only lifts them over depth/defense picks.
+    if (fillsEmptyOffensiveStarter(p, ctx)) {
+      score += params.emptyOffensiveStarterBonus;
+      why.push("fills starter");
+    }
+    // e1: don't pile another starter onto a bye week already shared by the lineup.
+    const byeStack = byeStackPenalty(p, ctx, params);
+    if (byeStack > 0) {
+      score -= byeStack;
+      why.push("bye stack");
     }
     score -= overfillPenalty(p, ctx, params);
     // Soft K/DST penalty (4.6): even a *first* kicker/defense is shaved so QB/RB/WR/TE bench

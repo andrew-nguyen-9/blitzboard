@@ -30,8 +30,15 @@ CONSENSUS_W = 18.0      # consensus (Sleeper search_rank) nudge for the deep/ben
 PEAK_AGE = {"RB": 24, "WR": 26, "TE": 26, "QB": 29, "K": 30, "DST": 99}
 
 # ── Predictability discount + streamer replacement (#3: K/DEF overvalued) ─────
-DISCOUNT_K = 1.0                       # f(ρ)=ρ^k exponent; tuned by backtest (v2.4.3)
-STREAMER_PCT = 0.60                    # K/DEF replacement = this points-percentile (upper-middle)
+# v4/E1 tuning: DISCOUNT_K 1.0→1.2 and STREAMER_PCT 0.60→0.62. A steeper ρ^k pushes
+# the low-ρ (unreproducible) K/DEF pool further toward its streamer baseline while
+# leaving high-ρ offense's ORDER intact (uniform-ρ scales every offensive premium by
+# the same factor — proven by test_no_offense_reorder_under_uniform_predictability),
+# and the slightly higher streamer percentile lifts the K/DEF replacement bar so the
+# elite↔replacement gap collapses harder. Net: every real starter (32 QB + ~64
+# RB/WR/TE) out-ranks the best K/DEF (test_draft_fixtures::test_real_starters...).
+DISCOUNT_K = 1.2                       # f(ρ)=ρ^k exponent; v4/E1 tune (was 1.0)
+STREAMER_PCT = 0.62                    # K/DEF replacement = this points-percentile (v4/E1 tune, was 0.60)
 STREAMER_POSITIONS = ("K", "DST")     # positions everyone streams off waivers
 MC_VOL_GAIN = 0.6                      # how much low ρ widens Monte Carlo σ (v2.2.3.1)
 
