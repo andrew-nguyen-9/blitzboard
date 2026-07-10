@@ -55,3 +55,8 @@ These are part of the v2 dev workflow. They are token/quality multipliers — us
 Builds clean (`npm run build`, `tsc --noEmit`), respects reduced-motion, RLS on new tables,
 pipeline scripts idempotent, accessibility checks pass, no secrets in client bundles.
 Full checklist: `docs/workflow/DEFINITION_OF_DONE.md`.
+
+<!-- Canonical machine-greppable lines (orchestrator GATE 1 + cleaning). Prose above is the human detail. -->
+DoD: (cd frontend && npm run build && npm run typecheck && npm run lint && npm test) && (cd pipeline && python -m pytest)
+Secrets: frontend `.env.local` (anon key = public reads, RLS-enforced); pipeline via GitHub Actions secrets / Supabase vault; service-role key = pipeline only, never in client bundle
+Branches: per-unit `v4/<unit>` off `integration`; PR-based land to `main`
