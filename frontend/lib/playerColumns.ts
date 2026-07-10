@@ -24,6 +24,8 @@ export interface ColDef {
   get: (p: SnapshotPlayer, ctx: ColCtx) => number | string | null;
   sortable?: boolean;
   decimals?: number;
+  /** appended to numeric cells (e.g. "%"); rendered by the consuming cell. */
+  suffix?: string;
 }
 
 // snapshot-field column: pull a field off the decoded row, null-safe.
@@ -35,6 +37,28 @@ const field = (
 // box-score column: pull a key off ctx.box; null when the row's box isn't loaded.
 const box = (key: string, label: string, decimals = 0): ColDef =>
   ({ key, label, group: "box", sortable: true, decimals, get: (_p, ctx) => ctx.box?.[key] ?? null });
+
+// ── Advanced per-player rate metrics (E2) ───────────────────────────────────
+// E2's advancedMetrics(history) in lib/playerStats.ts computes these over a full
+// career; the Explorer lazily loads only the latest-season box (lib/queries.
+// groupLatestBox), so here they are latest-season rates using the SAME formulas +
+// definitions (playerStats.ts §Advanced metrics + docs/research/ANALYTICS_SURVEY.md).
+// Null when the denominator is absent, so a QB and a WR each surface only what
+// applies. Header tooltips/definitions live in lib/playerTooltip.ts `columnTips`.
+const bn = (b: BoxStats, k: string): number => {
+  const v = b[k];
+  return typeof v === "number" && Number.isFinite(v) ? v : 0;
+};
+const rate = (numer: number, denom: number): number | null => (denom > 0 ? numer / denom : null);
+
+// derived box metric: computed from the loaded box row; null when box unloaded.
+const metric = (
+  key: string, label: string, decimals: number,
+  calc: (b: BoxStats) => number | null, suffix?: string,
+): ColDef => ({
+  key, label, group: "box", sortable: true, decimals, suffix,
+  get: (_p, ctx) => (ctx.box ? calc(ctx.box) : null),
+});
 
 export const PLAYER_COLUMNS: ColDef[] = [
   field("value", "Value", "proj", (p) => p.value, 1),
@@ -50,6 +74,15 @@ export const PLAYER_COLUMNS: ColDef[] = [
   box("rec", "Rec"),
   box("rec_yds", "Rec Yds"),
   box("fantasy_pts", "Pts", 1),
+  // E2 advanced rate metrics (latest-season) — position-aware via null denominators.
+  metric("scrim_ypg", "Scrim Y/G", 1, (b) => rate(bn(b, "rush_yds") + bn(b, "rec_yds"), bn(b, "games"))),
+  metric("ypc", "YPC", 1, (b) => rate(bn(b, "rush_yds"), bn(b, "carries"))),
+  metric("ypr", "YPR", 1, (b) => rate(bn(b, "rec_yds"), bn(b, "rec"))),
+  metric("ypt", "YPT", 1, (b) => rate(bn(b, "rec_yds"), bn(b, "tgt"))),
+  metric("catch_pct", "Catch %", 0, (b) => rate(bn(b, "rec") * 100, bn(b, "tgt")), "%"),
+  metric("td_per_opp", "TD/Opp", 1, (b) => rate((bn(b, "rush_td") + bn(b, "rec_td")) * 100, bn(b, "carries") + bn(b, "tgt")), "%"),
+  metric("pass_ypg", "Pass Y/G", 1, (b) => (bn(b, "pass_yds") > 0 ? rate(bn(b, "pass_yds"), bn(b, "games")) : null)),
+  metric("td_int", "TD:INT", 1, (b) => (bn(b, "pass_yds") > 0 ? rate(bn(b, "pass_td"), bn(b, "int")) : null)),
   field("pos", "Pos", "meta", (p) => p.position),
   field("team", "Team", "meta", (p) => p.nfl_team),
   field("bye", "Bye", "meta", (p) => p.bye),

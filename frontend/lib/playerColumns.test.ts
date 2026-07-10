@@ -31,3 +31,33 @@ describe("playerColumns accessors (one per group + null-safe path)", () => {
     expect(find("pos").get({ ...p, position: null }, {})).toBeNull();
   });
 });
+
+describe("advanced rate metrics (E2 keys, latest-season box)", () => {
+  const b = { games: 10, carries: 100, rush_yds: 500, rush_td: 4, rec: 40, rec_yds: 400, rec_td: 2, tgt: 60 };
+  it("computes per-opportunity rates from the loaded box", () => {
+    expect(find("ypc").get(p, { box: b })).toBeCloseTo(5); // 500 / 100
+    expect(find("ypr").get(p, { box: b })).toBeCloseTo(10); // 400 / 40
+    expect(find("ypt").get(p, { box: b })).toBeCloseTo(400 / 60);
+    expect(find("catch_pct").get(p, { box: b })).toBeCloseTo((40 / 60) * 100);
+    expect(find("scrim_ypg").get(p, { box: b })).toBeCloseTo(90); // (500 + 400) / 10
+    expect(find("td_per_opp").get(p, { box: b })).toBeCloseTo((6 / 160) * 100);
+  });
+  it("is null when the box is not loaded", () => {
+    expect(find("ypc").get(p, { box: null })).toBeNull();
+    expect(find("ypc").get(p, {})).toBeNull();
+  });
+  it("drops the metric on a zero/absent denominator (no divide-by-zero)", () => {
+    expect(find("ypc").get(p, { box: { carries: 0, rush_yds: 0 } })).toBeNull();
+    expect(find("pass_ypg").get(p, { box: { games: 10, pass_yds: 0 } })).toBeNull();
+  });
+  it("gates QB passing metrics on pass_yds and TD:INT on a positive denominator", () => {
+    const qb = { games: 16, pass_yds: 4000, pass_td: 30, int: 10 };
+    expect(find("pass_ypg").get(p, { box: qb })).toBeCloseTo(250);
+    expect(find("td_int").get(p, { box: qb })).toBeCloseTo(3);
+    expect(find("td_int").get(p, { box: { pass_yds: 4000, pass_td: 30, int: 0 } })).toBeNull();
+  });
+  it("carries a % suffix on percentage metrics", () => {
+    expect(find("catch_pct").suffix).toBe("%");
+    expect(find("td_per_opp").suffix).toBe("%");
+  });
+});

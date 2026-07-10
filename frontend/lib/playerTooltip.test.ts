@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { playerTooltipRows } from "@/lib/playerTooltip";
+import { columnTips, playerTooltipRows } from "@/lib/playerTooltip";
 import type { SnapshotPlayer } from "@/lib/snapshot";
 
 const base: SnapshotPlayer = {
@@ -47,5 +47,22 @@ describe("playerTooltipRows", () => {
   it("shows downward and flat trends", () => {
     expect(playerTooltipRows({ ...base, trend: -4 }).find((x) => x.label === "Trend")?.value).toBe("▼ 4");
     expect(playerTooltipRows({ ...base, trend: 0 }).find((x) => x.label === "Trend")?.value).toBe("flat");
+  });
+
+  it("surfaces boom·bust and adp in the hover card", () => {
+    const r = Object.fromEntries(playerTooltipRows(base, 2).map((x) => [x.label, x.value]));
+    expect(r["Boom · Bust"]).toBe("140 · 30");
+    expect(r["ADP"]).toBe("8.1");
+  });
+});
+
+describe("columnTips", () => {
+  it("defines a definition for every non-meta Explorer column key", () => {
+    const keys = [
+      "value", "vor", "boom", "bust", "rank", "adp", "tier",
+      "pass_yds", "rush_yds", "rec", "rec_yds", "fantasy_pts",
+      "scrim_ypg", "ypc", "ypr", "ypt", "catch_pct", "td_per_opp", "pass_ypg", "td_int",
+    ];
+    for (const k of keys) expect(columnTips[k]).toBeTruthy();
   });
 });
