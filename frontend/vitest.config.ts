@@ -12,6 +12,10 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // The full 12-team auto-draft sims (draftAI.*.test.ts) run 15–30s each; the
+    // 5s default made them flake as timeouts under machine load. Generous global
+    // ceiling keeps the suite deterministic without per-test overrides.
+    testTimeout: 60000,
     include: [
       "lib/**/*.test.ts",
       "components/**/*.test.ts",
