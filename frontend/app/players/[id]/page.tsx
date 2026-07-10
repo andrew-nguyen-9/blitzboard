@@ -11,6 +11,7 @@ import PredictabilityMeter from "@/components/PredictabilityMeter";
 import Sparkline from "@/components/Sparkline";
 import Tooltip from "@/components/Tooltip";
 import { StatTable } from "@/components/StatTable";
+import PlayerAnalytics from "@/components/PlayerAnalytics";
 import { getPlayerDetail } from "@/lib/queries";
 import { careerColumns, careerRows, careerSummary } from "@/lib/playerStats";
 import { gaussianSamples } from "@/lib/viz";
@@ -247,6 +248,9 @@ export default async function PlayerDetailPage({
           )}
         </div>
       </div>
+
+      {/* advanced metrics + rookie college context + multi-position analysis (E2) */}
+      <PlayerAnalytics player={player} history={history} />
 
       {/* career production — the per-season stats jsonb, position-aware */}
       <div className="glass mt-6 p-6">

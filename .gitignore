@@ -39,5 +39,11 @@ graphify-out/
 
 # v3 Epic 1: nflverse history-ingest marker (cached in CI, never committed)
 pipeline/.nflverse_cache/
+
+# E6: news stale-fallback cache (last-good articles per source, regenerated each run)
+pipeline/.news_cache.json
+
+# E3: auto-generated environmental/context report (regenerated each cron run)
+pipeline/artifacts/
 .gstack/
 .orchestrator/

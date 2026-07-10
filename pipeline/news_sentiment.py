@@ -8,8 +8,20 @@ corpus), then compute a blended `trending` signal:
 
     trend = narrative (news sentiment)  ⊕  behavior (Sleeper add/drop velocity)
 
-Runs every 30 min, 08:00–01:00, on waiver-relevant days only (see workflow).
-Network-failure-safe: a dead feed is skipped, not fatal.
+SOURCES (all free, no key — the $0 refresh; see docs/architecture/DATA_SOURCES.md):
+    RSS   — ESPN, ProFootballTalk, Yahoo, CBS, FantasyPros, NFL.com
+    Reddit— r/fantasyfootball + r/nfl via PUBLIC .rss (keyless). The richer praw
+            path (self-text, hot ranking) is an OPTIONAL keyed source that only
+            joins the run when REDDIT_CLIENT_ID/SECRET are set — absent ⇒ skipped.
+
+CADENCE: every 30 min, 08:00–01:00, on waiver-relevant days (news-refresh workflow
+step; see .github/workflows/etl_daily.yml). Idempotent — `news_articles` dedupes on
+`url`, `trending` is a replaced snapshot; re-running writes no partial/dup rows.
+
+DEGRADE / STALE-FALLBACK (E6): each source runs through `collect()` in the F2
+adapter shape (fetch → normalize, degrade-safe). A source that RAISES or returns
+nothing falls back to its last-good batch cached on disk (`.news_cache.json`);
+a fresh pull refreshes that cache. One dead source can NEVER fail the run.
 
 Usage:
     python news_sentiment.py
@@ -19,20 +31,34 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import math
 import os
+from collections import namedtuple
 
 from common import console, get_supabase, upsert, fetch_all, retry_api
 from models import VaderScorer, PlayerMatcher
 
-# Free RSS feeds (no keys). Add/remove freely.
+# Free RSS feeds (no keys). Keyless Reddit rides in as public `.rss`. Add/remove freely.
 FEEDS = [
     ("ESPN NFL", "https://www.espn.com/espn/rss/nfl/news"),
     ("PFT", "https://profootballtalk.nbcsports.com/feed/"),
     ("Yahoo NFL", "https://sports.yahoo.com/nfl/rss.xml"),
     ("CBS NFL", "https://www.cbssports.com/rss/headlines/nfl/"),
+    ("FantasyPros", "https://www.fantasypros.com/nfl/rss/news.php"),
+    ("NFL.com", "https://www.nfl.com/feeds/rss/news"),
+    ("r/fantasyfootball", "https://www.reddit.com/r/fantasyfootball/.rss"),
+    ("r/nfl", "https://www.reddit.com/r/nfl/.rss"),
 ]
 SLEEPER_TRENDING = "https://api.sleeper.app/v1/players/nfl/trending/{kind}?lookback_hours=24&limit=200"
+
+# Stale-fallback store: last-good articles per source, so a down source degrades
+# to its previous batch instead of vanishing (or crashing) the run.
+STALE_CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".news_cache.json")
+
+# One news source in the F2 adapter shape: a `name` + a `fetch()` that returns
+# already-normalized article dicts. `collect()` wraps it with the degrade contract.
+NewsSource = namedtuple("NewsSource", "name fetch")
 
 
 @retry_api
@@ -44,54 +70,101 @@ def _get_json(url: str):
         return r.json()
 
 
-def fetch_rss(max_articles: int) -> list[dict]:
-    import feedparser
-
-    out: list[dict] = []
-    for source, url in FEEDS:
-        try:
-            feed = feedparser.parse(url)
-        except Exception as e:
-            console.print(f"[yellow]⚠ feed failed {source}: {e}[/yellow]")
-            continue
-        for e in feed.entries[: max_articles // max(len(FEEDS), 1) + 5]:
-            published = None
-            if getattr(e, "published_parsed", None):
-                published = dt.datetime(*e.published_parsed[:6]).isoformat()
-            out.append({
-                "source": source,
-                "url": e.get("link"),
-                "title": e.get("title", ""),
-                "body": e.get("summary", "") or e.get("title", ""),
-                "published_at": published,
-            })
-    console.print(f"[cyan]RSS: {len(out)} articles[/cyan]")
-    return out[:max_articles]
+def _normalize_entry(source: str, e) -> dict:
+    """Pure: one feed entry → one article row (dict-friendly, no network)."""
+    published = None
+    pp = e.get("published_parsed") or e.get("updated_parsed")
+    if pp:
+        published = dt.datetime(*pp[:6]).isoformat()
+    return {
+        "source": source,
+        "url": e.get("link"),
+        "title": e.get("title", ""),
+        "body": e.get("summary", "") or e.get("title", ""),
+        "published_at": published,
+    }
 
 
-def fetch_reddit(limit: int = 80) -> list[dict]:
-    cid, csec = os.getenv("REDDIT_CLIENT_ID"), os.getenv("REDDIT_CLIENT_SECRET")
-    if not cid or not csec:
-        console.print("[dim]Reddit creds not set — skipping[/dim]")
-        return []
-    try:
+def _rss_fetcher(source: str, url: str, cap: int):
+    """Build a keyless RSS `fetch()` for one feed (Reddit `.rss` included)."""
+    def fetch() -> list[dict]:
+        import feedparser
+        feed = feedparser.parse(url)
+        return [_normalize_entry(source, e) for e in feed.entries[:cap]]
+    return fetch
+
+
+def _reddit_praw_fetcher(limit: int = 80):
+    """OPTIONAL keyed source: richer Reddit via praw. Keyless ⇒ returns [] so the
+    public `.rss` source above still covers Reddit (degrade, not error)."""
+    def fetch() -> list[dict]:
+        cid, csec = os.getenv("REDDIT_CLIENT_ID"), os.getenv("REDDIT_CLIENT_SECRET")
+        if not cid or not csec:
+            return []
         import praw
         reddit = praw.Reddit(client_id=cid, client_secret=csec,
                              user_agent=os.getenv("REDDIT_USER_AGENT", "ffdt/0.1"))
         out = []
         for post in reddit.subreddit("fantasyfootball").hot(limit=limit):
             out.append({
-                "source": "r/fantasyfootball",
+                "source": "r/fantasyfootball (praw)",
                 "url": f"https://reddit.com{post.permalink}",
                 "title": post.title,
                 "body": (post.selftext or post.title)[:2000],
                 "published_at": dt.datetime.utcfromtimestamp(post.created_utc).isoformat(),
             })
-        console.print(f"[cyan]Reddit: {len(out)} posts[/cyan]")
         return out
-    except Exception as e:
-        console.print(f"[yellow]⚠ Reddit fetch failed: {e}[/yellow]")
-        return []
+    return fetch
+
+
+def build_sources(max_articles: int, use_reddit: bool = True) -> list[NewsSource]:
+    """Assemble the degrade-safe source list in the F2 adapter shape."""
+    cap = max_articles // max(len(FEEDS), 1) + 5
+    srcs = [NewsSource(name, _rss_fetcher(name, url, cap)) for name, url in FEEDS]
+    if use_reddit:
+        srcs.append(NewsSource("r/fantasyfootball (praw)", _reddit_praw_fetcher()))
+    return srcs
+
+
+def _load_cache() -> dict:
+    try:
+        with open(STALE_CACHE, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_cache(cache: dict) -> None:
+    try:
+        with open(STALE_CACHE, "w", encoding="utf-8") as f:
+            json.dump(cache, f)
+    except OSError as e:  # cache is best-effort; a write failure never fails the run
+        console.print(f"[dim]news cache write skipped: {e}[/dim]")
+
+
+def collect(sources: list[NewsSource], cache: dict) -> list[dict]:
+    """Run every source degrade-safe with stale-fallback (E6).
+
+    A source that RAISES or returns nothing falls back to its last-good cached
+    batch; a source with fresh results refreshes the cache. Never raises — one
+    dead source can't fail the run. `cache` is mutated in place (persist via
+    `_save_cache`)."""
+    out: list[dict] = []
+    for src in sources:
+        try:
+            arts = src.fetch() or []
+        except Exception as e:
+            console.print(f"[yellow]⚠ {src.name} down: {e}[/yellow]")
+            arts = []
+        if arts:
+            cache[src.name] = arts  # fresh pull → new last-good
+        else:
+            arts = cache.get(src.name, [])
+            if arts:
+                console.print(f"[dim]{src.name}: no fresh pull — {len(arts)} stale (last-good)[/dim]")
+        out.extend(arts)
+    console.print(f"[cyan]collected {len(out)} articles across {len(sources)} sources[/cyan]")
+    return out
 
 
 def compute_trending(sb, article_rows: list[dict], players: list[dict]) -> list[dict]:
@@ -154,9 +227,10 @@ def main() -> None:
     matcher = PlayerMatcher(players)
     scorer = VaderScorer()
 
-    articles = fetch_rss(args.max_articles)
-    if not args.no_reddit:
-        articles += fetch_reddit()
+    cache = _load_cache()
+    sources = build_sources(args.max_articles, use_reddit=not args.no_reddit)
+    articles = collect(sources, cache)[: args.max_articles]
+    _save_cache(cache)
 
     rows = []
     for a in articles:

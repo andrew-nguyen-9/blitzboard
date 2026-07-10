@@ -73,7 +73,7 @@ export default function A11ySettings() {
   return (
     <details className="a11y group relative">
       <summary
-        className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full text-ink-muted transition hover:bg-surface-elevated hover:text-ink"
+        className="flex h-11 w-11 md:h-9 md:w-9 cursor-pointer list-none items-center justify-center rounded-full text-ink-muted transition hover:bg-surface-elevated hover:text-ink"
         aria-label="Accessibility settings"
         title="Accessibility settings"
       >
@@ -94,7 +94,7 @@ export default function A11ySettings() {
             {SCALES.map((s) => (
               <label
                 key={s.v}
-                className={`flex-1 cursor-pointer rounded-md border border-line py-1.5 text-center text-label outline-accent focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 ${
+                className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-md border border-line text-center text-label outline-accent focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 ${
                   scale === s.v ? "bg-accent text-accent-ink" : "text-ink-muted hover:text-ink"
                 }`}
               >
@@ -111,12 +111,12 @@ export default function A11ySettings() {
           </div>
         </fieldset>
 
-        <label className="mt-4 flex items-center justify-between gap-2 text-body">
+        <label className="mt-4 flex min-h-11 items-center justify-between gap-2 text-body">
           Reduce motion
           <input type="checkbox" checked={motion} onChange={(e) => chMotion(e.target.checked)} />
         </label>
 
-        <label className="mt-3 flex items-center justify-between gap-2 text-body">
+        <label className="mt-3 flex min-h-11 items-center justify-between gap-2 text-body">
           High contrast
           <input type="checkbox" checked={contrast} onChange={(e) => chContrast(e.target.checked)} />
         </label>
@@ -126,7 +126,7 @@ export default function A11ySettings() {
           <select
             value={cvd}
             onChange={(e) => chCvd(e.target.value as Cvd)}
-            className="rounded-md border border-line bg-surface-elevated px-2 py-1.5 text-body-lg text-ink"
+            className="min-h-11 rounded-md border border-line bg-surface-elevated px-2 py-1.5 text-body-lg text-ink"
           >
             {CVDS.map((c) => (
               <option key={c.v} value={c.v}>

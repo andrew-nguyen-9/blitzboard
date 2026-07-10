@@ -66,6 +66,34 @@ jobs:
       - name: Ingest historical stats (nflverse)
         run: python history_ingest.py --seasons ${{ steps.hist.outputs.seasons }} ${{ steps.hist.outputs.skip }}
 
+      # E3/backtest: environmental + team-context ingest for the projection
+      # factors. Keyless (Open-Meteo) and degrade-safe — a network/data outage
+      # emits a neutral report and never fails the pipeline, so this step is
+      # idempotent and safe to run unattended before projections.
+      - name: Ingest environmental/team context (E3/backtest)
+        continue-on-error: true
+        run: python -m ingest.context_ingest --season "$(date -u +%Y)"
+
+      # E6/news: refresh the news feed from free RSS + keyless Reddit (.rss) and
+      # recompute the trending signal. All sources are keyless; the richer praw
+      # Reddit path only joins when REDDIT_CLIENT_ID/SECRET are set. Degrade-safe
+      # with stale-fallback (a down source reuses its last-good batch), so it is
+      # idempotent and never fails the pipeline — hence continue-on-error.
+      - name: Refresh news feed + trending (E6/news)
+        continue-on-error: true
+        env:
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+        run: python news_sentiment.py
+
+      # E9b: publish modeling-finding articles from the context artifact the
+      # step above just wrote. Idempotent (upsert by slug) and degrade-safe — a
+      # missing/neutral artifact emits honest "not yet ingested" articles or
+      # none, never failing the pipeline.
+      - name: Generate context articles (E9b)
+        continue-on-error: true
+        run: python articles_generate.py
+
       - name: Compute projections + player values (VORP, superflex-aware)
         run: python value_engine_run.py --engine vorp
 

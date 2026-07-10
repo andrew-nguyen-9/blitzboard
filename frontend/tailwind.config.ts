@@ -17,6 +17,12 @@ const config: Config = {
         accent: "var(--accent)",
         "accent-ink": "var(--accent-ink)",
         "accent-soft": "var(--accent-soft)",
+        // Neon North Star (v4 F1) — additive charged-accent layer, data-theme
+        // swapped. See docs/design-system/NORTH_STAR.md. Never overrides --accent.
+        neon: "var(--neon)",
+        "neon-ink": "var(--neon-ink)",
+        "neon-dim": "var(--neon-dim)",
+        "neon-soft": "var(--neon-soft)",
         bg: "var(--bg-0)",
         surface: "var(--bg-1)",
         "surface-elevated": "var(--bg-2)",
@@ -50,13 +56,28 @@ const config: Config = {
         label: ["0.75rem", { lineHeight: "1.2", letterSpacing: "0.14em", fontWeight: "600" }],
       },
       maxWidth: { wide: "1440px" },
+      boxShadow: {
+        // Neon North Star glow (v4 F1). Multi-layer var — consume via this key so
+        // Tailwind emits the raw box-shadow value intact.
+        neon: "var(--neon-glow)",
+      },
       keyframes: {
         "fade-up": {
           "0%": { opacity: "0", transform: "translateY(16px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        // Neon ignite/breathe (v4 E10). Box-shadow only (compositor-safe). Resting
+        // 0/100% is the fully-lit --neon-glow; globals.css nulls the loop to this
+        // frame under reduced motion. See NORTH_STAR.md §Motion language.
+        "neon-pulse": {
+          "0%, 100%": { boxShadow: "var(--neon-glow)" },
+          "50%": { boxShadow: "0 0 1px var(--neon), 0 0 8px oklch(from var(--neon) l c h / 0.32)" },
+        },
       },
-      animation: { "fade-up": "fade-up 0.5s ease-out both" },
+      animation: {
+        "fade-up": "fade-up 0.5s ease-out both",
+        "neon-pulse": "neon-pulse 2.4s var(--ease-inout) infinite",
+      },
     },
   },
   plugins: [],

@@ -70,7 +70,9 @@ function FooterLink({
   external?: boolean;
   children: React.ReactNode;
 }) {
-  const cls = "text-body text-ink-2 transition-colors hover:text-ink";
+  // inline-flex + min-h-11: a ≥44px touch target on phones (WCAG 2.5.5) without
+  // widening the link's clickable text beyond its label.
+  const cls = "inline-flex min-h-11 items-center text-body text-ink-2 transition-colors hover:text-ink";
   return (
     <li>
       {external ? (
