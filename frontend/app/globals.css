@@ -206,6 +206,11 @@ body {
   transition: background-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
 }
 
+/* Neon text selection (v4 E10) — the charged accent as a highlight, app-wide.
+   Paint-only (inert under reduced motion); --neon-soft is a wash so --ink-0 text
+   stays fully legible over it. */
+::selection { background: var(--neon-soft); color: var(--ink-0); }
+
 /* Keyboard focus — visible everywhere for keyboard users (accent ring ≥3:1),
    suppressed for pointer interactions. */
 :focus-visible {
@@ -295,6 +300,17 @@ table {
   background-size: 2.5rem 2.5rem;
 }
 
+/* DYNAMIC — ignite/breathe (v4 E10). An element crossing into its live/selected
+   state may opt into `animate-neon-pulse` (Tailwind keyframes; box-shadow only →
+   compositor-safe). The 0%/100% frame is the FULLY-LIT --neon-glow, so when the
+   loop is nulled under reduced motion it lands on the correct lit still-frame — the
+   per-component contract from NORTH_STAR.md §Motion language. Must be paired with a
+   non-color state cue at the call site (the glow alone never encodes meaning). */
+@media (prefers-reduced-motion: reduce) {
+  .animate-neon-pulse { animation: none !important; box-shadow: var(--neon-glow); }
+}
+[data-motion="reduce"] .animate-neon-pulse { animation: none !important; box-shadow: var(--neon-glow); }
+
 /* ── Custom broadcast cursor ─────────────────────────────────────────────── */
 @media (pointer: fine) {
   body { cursor: none; }
@@ -335,7 +351,10 @@ body.cursor-hover .cursor-dot { opacity: 0; }
 .link-wipe { position: relative; }
 .link-wipe::after {
   content: ""; position: absolute; left: 0; bottom: -2px; height: 1.5px; width: 100%;
-  background: var(--accent); transform: scaleX(0); transform-origin: right;
+  /* charged neon underline (v4 E10) — the hover "signal" reads as a lit tube.
+     Graphic: neon on bg-0 clears AA-graphic (13.5 dark / 5.1 light vs accent 10.3 / 4.5). */
+  background: var(--neon); box-shadow: 0 0 6px oklch(from var(--neon) l c h / 0.5);
+  transform: scaleX(0); transform-origin: right;
   transition: transform .4s cubic-bezier(.6,0,.2,1);
 }
 .link-wipe:hover::after { transform: scaleX(1); transform-origin: left; }
@@ -540,4 +559,11 @@ main:has(.full-bleed) { overflow-x: clip; }
    elevation glow is applied here too: Tailwind's shadow-[var(--glow)] can't parse the
    comma-joined multi-layer var and dropped to `box-shadow:none`, so the chip floated
    flat against bright backgrounds — restore it with the raw var. */
-[data-tooltip] { border-color: var(--bg-1); box-shadow: var(--glow); }
+[data-tooltip] {
+  /* v4 E10: lit-tube rim. --neon-dim is an opaque solid (not the alpha --line),
+     so it seals the 1px edge that used to bleed AND reads as neon. Graphic on the
+     bg-2 chip clears AA-graphic (4.65 dark / 4.55 light). AA is carried by the
+     opaque ink-on-bg-2 text, never the rim/glow, so stripping the glow stays legible. */
+  border-color: var(--neon-dim);
+  box-shadow: var(--glow), 0 0 12px oklch(from var(--neon) l c h / 0.18);
+}
