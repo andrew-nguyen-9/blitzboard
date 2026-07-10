@@ -42,7 +42,7 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label={label}
       title={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition hover:bg-surface-elevated hover:text-ink"
+      className="flex h-11 w-11 md:h-9 md:w-9 items-center justify-center rounded-full text-ink-muted transition hover:bg-surface-elevated hover:text-ink"
     >
       {/* Sun when dark (click → light), moon when light (click → dark). Inherits currentColor. */}
       {theme === "dark" ? (

@@ -72,7 +72,7 @@ export default function SearchBar({ initialQuery = "", autoFocus = true }: { ini
           role="combobox"
           aria-expanded={hasHits}
           aria-controls="search-results"
-          className="w-full bg-transparent text-body outline-none placeholder:text-ink-muted"
+          className="min-h-11 w-full bg-transparent text-body outline-none placeholder:text-ink-muted"
         />
         {res && (
           <span className="shrink-0 text-label text-ink-muted tabular-nums" aria-live="polite">

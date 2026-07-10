@@ -41,7 +41,19 @@ export default async function Home() {
           so they run deterministically without blocking first paint. */}
       <section className="full-bleed relative isolate overflow-hidden">
         <div className="hero-media" aria-hidden />
-        <BlitzField className="absolute inset-y-0 right-0 z-[-1] w-[68%] text-accent/35 md:w-[58%]" />
+        {/* Decorative play-field: a RIGHT-column accent on desktop. Below md the hero
+            stacks to one column and the body copy spans full width, so the field's
+            X/O marks would sit BEHIND the paragraph — line-art under text reads as
+            noise and blends the copy into the background (the reported phone
+            readability bug). Hidden on phones; the hero-media wash still carries the
+            band. Contrast contract: body text never overlaps a decorative layer
+            (NORTH_STAR §Contrast / a11y).
+            The wrapper owns visibility+position because BlitzField's own `.bp` rule
+            sets `display:block` and — being authored after the utilities layer —
+            would beat a `hidden` on the svg itself; on a plain div `hidden` wins. */}
+        <div aria-hidden className="hidden md:block absolute inset-y-0 right-0 z-[-1] w-[58%] text-accent/35">
+          <BlitzField className="h-full w-full" />
+        </div>
         <div className="relative mx-auto max-w-wide px-5 pb-20 pt-20 md:px-8 md:pb-28 md:pt-28">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-3 py-1.5 text-label uppercase text-ink-2 backdrop-blur">
             <span className="relative flex h-2 w-2">

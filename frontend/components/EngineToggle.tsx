@@ -18,13 +18,13 @@ export default function EngineToggle({ active }: { active: Engine }) {
     <div className="inline-flex rounded-full border border-hairline bg-surface p-1 text-label">
       <button
         onClick={() => set("vorp")}
-        className={`rounded-full px-3 py-1 transition ${active === "vorp" ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}
+        className={`flex min-h-11 items-center rounded-full px-4 transition ${active === "vorp" ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}
       >
         VORP
       </button>
       <button
         onClick={() => set("monte_carlo")}
-        className={`rounded-full px-3 py-1 transition ${active === "monte_carlo" ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}
+        className={`flex min-h-11 items-center rounded-full px-4 transition ${active === "monte_carlo" ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}
       >
         Monte Carlo
       </button>
