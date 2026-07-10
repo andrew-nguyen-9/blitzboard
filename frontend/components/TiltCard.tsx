@@ -32,8 +32,9 @@ export default function TiltCard({
   const ry = useSpring(useTransform(mx, [0, 1], [-7, 7]), { stiffness: 150, damping: 15 });
   const glareX = useTransform(mx, (v) => `${v * 100}%`);
   const glareY = useTransform(my, (v) => `${v * 100}%`);
+  // v4 E10: charged neon glare (NORTH_STAR.md §Primitives → Glow) instead of the flat accent wash.
   const glareBg = useTransform([glareX, glareY], ([x, y]) =>
-    `radial-gradient(380px circle at ${x} ${y}, var(--accent-soft), transparent 60%)`);
+    `radial-gradient(380px circle at ${x} ${y}, var(--neon-soft), transparent 60%)`);
 
   function onMove(e: React.PointerEvent) {
     if (!enabled) return;
@@ -57,7 +58,7 @@ export default function TiltCard({
       >
         <m.div
           style={enabled ? { rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" } : undefined}
-          className="glass relative flex h-full flex-col overflow-hidden p-6"
+          className="glass relative flex h-full flex-col overflow-hidden p-6 transition-[box-shadow,border-color] duration-300 group-hover:border-neon-dim group-hover:shadow-neon group-focus-within:border-neon-dim group-focus-within:shadow-neon"
         >
           {/* cursor glare — only present when the tilt is engaged */}
           {enabled && (
@@ -69,7 +70,7 @@ export default function TiltCard({
           )}
           <div className="flex items-center justify-between" style={enabled ? { transform: "translateZ(40px)" } : undefined}>
             <h3 className="font-display text-heading link-wipe">{label}</h3>
-            <span className="text-label text-accent opacity-0 transition group-hover:opacity-100">↗</span>
+            <span className="text-label text-neon opacity-0 transition group-hover:opacity-100">↗</span>
           </div>
           <p className="mt-2 text-body text-ink-2" style={enabled ? { transform: "translateZ(20px)" } : undefined}>{desc}</p>
         </m.div>

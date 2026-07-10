@@ -66,8 +66,18 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(16px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        // Neon ignite/breathe (v4 E10). Box-shadow only (compositor-safe). Resting
+        // 0/100% is the fully-lit --neon-glow; globals.css nulls the loop to this
+        // frame under reduced motion. See NORTH_STAR.md §Motion language.
+        "neon-pulse": {
+          "0%, 100%": { boxShadow: "var(--neon-glow)" },
+          "50%": { boxShadow: "0 0 1px var(--neon), 0 0 8px oklch(from var(--neon) l c h / 0.32)" },
+        },
       },
-      animation: { "fade-up": "fade-up 0.5s ease-out both" },
+      animation: {
+        "fade-up": "fade-up 0.5s ease-out both",
+        "neon-pulse": "neon-pulse 2.4s var(--ease-inout) infinite",
+      },
     },
   },
   plugins: [],

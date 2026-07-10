@@ -127,3 +127,28 @@ export function CountUp({ to, decimals = 0, className, suffix = "" }: {
     </span>
   );
 }
+
+// ── Ignite: ramp a neon glow in when an element crosses into its live/selected ──
+// state (NORTH_STAR.md §Motion language, the "ignite" register). Compositor-safe:
+// only the opacity of an aria-hidden glow layer animates, never layout/filter. The
+// active state renders fully lit and under reduced motion the ramp is instant, so it
+// always lands on the correct lit still-frame. The glow never encodes meaning alone —
+// pair it with a label/icon/position cue at the call site (§Color independence).
+export function Ignite({ children, active = true, radius = "inherit", className }: {
+  children: ReactNode; active?: boolean; radius?: string; className?: string;
+}) {
+  const reduced = useReducedMotion();
+  return (
+    <span className={`relative inline-flex ${className ?? ""}`}>
+      <m.span
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{ borderRadius: radius, boxShadow: "var(--neon-glow)" }}
+        initial={false}
+        animate={{ opacity: active ? 1 : 0 }}
+        transition={{ duration: reduced ? 0 : 0.24, ease: EASE }}
+      />
+      {children}
+    </span>
+  );
+}
