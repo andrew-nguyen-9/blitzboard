@@ -7,10 +7,11 @@ position/team instead of being fit on one noisy game):
 
 Two-stage generative structure (brief §"Two-stage generative"):
 
-    OPPORTUNITY   team_plays(pace) ─▶ per-player usage **share** (Dirichlet α) ─▶
+    OPPORTUNITY   team_plays(pace) ─▶ usage **share ~ Dirichlet(α)** (sampled, per team) ─▶
                   player opportunities ~ NegBin(team_plays · share, conc)
-    EFFICIENCY    yards ~ Gamma(mean = opp · yards-per-opp)   [conditioned on opp]
-                  TDs   ~ Poisson(opp · td_rate)              [td_rate regressed hard]
+    EFFICIENCY    catch% ~ Beta ─▶ receptions = opp · catch% ─▶
+                  yards ~ Gamma(mean = receptions · yards-per-reception)  [conditioned on opp]
+                  TDs   ~ Poisson(opp · td_rate)                          [td_rate regressed hard]
 
 Opportunity and efficiency are *separate* linear predictors so the two layers can be read
 back independently (a WR's volume vs his catch efficiency) — E2/E3/E6 consume them apart.
@@ -40,7 +41,12 @@ import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
 
-from blitz_engine.projection.families import gamma_family, negbin_family, poisson_family
+from blitz_engine.projection.families import (
+    beta_family,
+    gamma_family,
+    negbin_family,
+    poisson_family,
+)
 from blitz_engine.projection.priors import PriorSet, default_priors
 
 if TYPE_CHECKING:
@@ -61,6 +67,14 @@ __all__ = [
 
 #: Hard clamp on any single bounded-multiplicative factor (brief: "mult, bounded").
 FACTOR_BOUNDS = (0.5, 2.0)
+
+#: Weakly-informative catch/completion-rate prior (spec §Global: "catch/comp% ~ Beta").
+#: No receptions/attempts are observed, so the rate is prior-regularised (mean ≈ league
+#: catch rate, moderate concentration) and only *weakly* updated by yards — this pins the
+#: catch·yards-per-reception ridge so the Beta adds honest efficiency noise without an
+#: unidentified positional level (see `projection_model`). Tightened enough to converge.
+CATCH_RATE_MEAN = 0.65
+CATCH_RATE_CONCENTRATION = 15.0
 
 
 # ── input contract ────────────────────────────────────────────────────────────
@@ -277,8 +291,16 @@ def projection_model(
         league_opp + team_opp[team_of] + pos_opp[pos_of] + player_opp + lat_opp + factor_log
     )
     alpha = numpyro.deterministic("dirichlet_alpha", jnp.exp(appeal))  # (P,) Dirichlet conc
-    team_alpha = jax.ops.segment_sum(alpha, team_of, num_segments=data.n_teams)
-    share = numpyro.deterministic("share", alpha / team_alpha[team_of])  # (P,) usage share
+    # SAMPLED per-team Dirichlet usage share via its Gamma representation: g_i ~ Gamma(α_i),
+    # share = g / team-sum(g) is exactly Dirichlet(α) over each team and — unlike a batched
+    # `dist.Dirichlet` — handles ragged team sizes through the same segment-sum the
+    # deterministic path used. This is the *non-centred* form (independent Gammas, no simplex
+    # transform), so usage-share uncertainty is now sampled (injuries auto-redistribute via α)
+    # while the share mean stays α/Σα — the deterministic value, so no fit regresses.
+    with numpyro.plate("player_share_plate", P):
+        share_g = numpyro.sample("share_gamma", dist.Gamma(alpha, jnp.ones(P)))
+    team_share = jax.ops.segment_sum(share_g, team_of, num_segments=data.n_teams)
+    share = numpyro.deterministic("share", share_g / team_share[team_of])  # (P,) usage share
     mu_opp = numpyro.deterministic("mu_opportunity", team_plays * share[obs_player])
     opp_conc = numpyro.sample("opp_concentration", dist.HalfNormal(opp_pr.dispersion_scale))
     numpyro.sample(
@@ -296,8 +318,20 @@ def projection_model(
     pos_eff = _hier_effect("pos_efficiency", data.n_positions, eff_pr.position, "pos_eff_scale")
     with numpyro.plate("player_eff_plate", P):
         player_eff = numpyro.sample("player_efficiency", dist.Normal(0.0, eff_pr.player.scale))
-    log_ypo = league_eff + pos_eff[pos_of] + player_eff + lat_eff
-    ypo = numpyro.deterministic("yards_per_opp", jnp.exp(log_ypo))  # (P,)
+    log_ypr = league_eff + pos_eff[pos_of] + player_eff + lat_eff
+    ypr = jnp.exp(log_ypr)  # (P,) yards per *reception* (per productive opportunity)
+    # SAMPLED catch/completion rate (Beta): opportunities (targets) convert to receptions at
+    # a rate in (0,1). No receptions are observed, so the rate is prior-regularised and only
+    # weakly updated through yards; its mean ≈ CATCH_RATE_MEAN keeps the catch·ypr product
+    # (hence the yards mean) unchanged while the Beta injects honest efficiency uncertainty
+    # into yards → points. Exposed as `catch_rate`/`receptions` for E6 to read back.
+    with numpyro.plate("player_catch_plate", P):
+        catch_rate = numpyro.sample(
+            "catch_rate",
+            beta_family(jnp.full(P, CATCH_RATE_MEAN), jnp.full(P, CATCH_RATE_CONCENTRATION)),
+        )
+    ypo = numpyro.deterministic("yards_per_opp", catch_rate * ypr)  # (P,) effective yards/opp
+    numpyro.deterministic("receptions", (opp_basis + 1e-3) * catch_rate[obs_player])
     mu_yards = numpyro.deterministic("mu_yards", (opp_basis + 1e-3) * ypo[obs_player])
     yards_conc = numpyro.sample("yards_concentration", dist.HalfNormal(eff_pr.dispersion_scale))
     numpyro.sample(
