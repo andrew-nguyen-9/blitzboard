@@ -1,4 +1,5 @@
-"""Engine data layer: ingest (fill the store) + validation (gate the model) + sources.
+"""Engine data layer: ingest (fill the store) + validation (gate the model) + sources +
+reconciliation.
 
 `ingest/`     — 2014+ play-by-play + nflverse advanced stats into the ParquetStore
                 (chunked, float32, idempotent upsert). E0-ingest.
@@ -10,5 +11,8 @@
                 engine `ParquetStore` instead of Supabase. The existing cron adapters
                 stay in `pipeline/adapters/` and are imported, never moved
                 (see `blitz_engine.pipeline_bridge`).
+`reconcile/`  — (E4fix-team-reconcile) resolves each player's current NFL team across
+                disagreeing sources and gates publish when too many players are
+                unassigned or sources conflict.
 """
 from __future__ import annotations
