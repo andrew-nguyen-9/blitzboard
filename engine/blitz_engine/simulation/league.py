@@ -71,6 +71,7 @@ class LeagueConfig:
     min_batch: int = 100  # smallest season-batch before suggesting a cloud-burst
     sos_risk_lambda: float = 0.5  # nonlinear SOS risk-adjust: mean + lambda * std
     tie_on_points: bool = True  # standings tiebreak by season points-for
+    playoff_week_weight: float = 1.0  # value weight on playoff-week scoring (1.0 = neutral)
 
 
 _DEFAULT_SPEC = CorrelationSpec()
@@ -81,7 +82,7 @@ _DEFAULT_CONFIG = LeagueConfig()
 class LeagueResult:
     """Per-roster season outcomes + the distributional strength-of-schedule."""
 
-    standings: pd.DataFrame  # roster_id + p_playoffs/p_bye/p_final/p_champion + avg_wins/pf
+    standings: pd.DataFrame  # +p_playoffs/p_bye/p_final/p_champion/avg_wins/pf/weighted_value
     sos: pd.DataFrame  # roster_id + opp_mean/opp_std/sos/sos_z (+ latent_sos if supplied)
     n_seasons: int
     batch_seasons: int  # the (possibly degraded) batch actually streamed
@@ -246,6 +247,7 @@ def simulate_league(
     champ_ct = np.zeros(n_teams, dtype=np.int64)
     wins_sum = np.zeros(n_teams, dtype=np.float64)
     pf_sum = np.zeros(n_teams, dtype=np.float64)
+    playoff_pf_sum = np.zeros(n_teams, dtype=np.float64)  # own scoring in playoff weeks only
     opp_sum = np.zeros(n_teams, dtype=np.float64)
     opp_sq = np.zeros(n_teams, dtype=np.float64)
 
@@ -270,6 +272,7 @@ def simulate_league(
         np.add.at(wins_sum, mh[None, :].repeat(b, 0), h_win)
         np.add.at(wins_sum, ma[None, :].repeat(b, 0), a_win)
         pf_sum += reg.sum(axis=(0, 1))
+        playoff_pf_sum += scores[:, n_reg:, :].sum(axis=(0, 1))  # value-weight seam
         # opponent-score moments (each team faces one opponent per regular week)
         np.add.at(opp_sum, mh[None, :].repeat(b, 0), as_)
         np.add.at(opp_sum, ma[None, :].repeat(b, 0), hs)
@@ -302,6 +305,9 @@ def simulate_league(
         done += b
 
     inv = 1.0 / config.n_seasons
+    # Full-season roster value with the playoff-week weighting knob (1.0 = neutral: the
+    # plain regular+playoff points total; >1.0 amplifies playoff-week starter production).
+    weighted_value = (pf_sum + config.playoff_week_weight * playoff_pf_sum) * inv
     reg_obs = config.n_seasons * n_reg  # opponents faced per team over all seasons
     opp_mean = opp_sum / reg_obs
     opp_var = np.clip(opp_sq / reg_obs - opp_mean**2, 0.0, None)
@@ -318,6 +324,7 @@ def simulate_league(
             "p_champion": champ_ct * inv,
             "avg_wins": wins_sum * inv,
             "avg_points": pf_sum * inv,
+            "weighted_value": weighted_value,
         }
     ).sort_values("p_champion", ascending=False, ignore_index=True)
 

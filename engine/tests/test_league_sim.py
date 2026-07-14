@@ -175,6 +175,44 @@ def test_bye_week_zeroes_starter_and_cuts_points() -> None:
     assert h_pts < b_pts  # lost a full week of starters
 
 
+# ── playoff-week value weighting (default-neutral knob) ──────────────────────────
+def test_playoff_week_weight_amplifies_playoff_value_and_composes_with_bye() -> None:
+    marg, players, rosters, sched = make_league()  # team11 = strongest -> peaks in playoffs
+    n_reg = len(sched)  # regular weeks; playoff weeks are indices n_reg..n_reg+n_rounds-1
+    neutral = simulate_league(
+        marg, players, rosters, sched,
+        config=LeagueConfig(n_seasons=2_000, playoff_week_weight=1.0),
+    )
+    heavy = simulate_league(
+        marg, players, rosters, sched,
+        config=LeagueConfig(n_seasons=2_000, playoff_week_weight=3.0),
+    )
+    nv = neutral.standings.set_index("roster_id")["weighted_value"]
+    hv = heavy.standings.set_index("roster_id")["weighted_value"]
+    # weighting playoff weeks (>1.0) strictly lifts value — positive playoff-week scoring
+    assert (hv > nv + 1e-6).all()
+    # and amplifies the strong roster's playoff-week edge over the weak one
+    assert (hv["team11"] - hv["team0"]) > (nv["team11"] - nv["team0"]) + 1e-6
+
+    # compose with a bye landing in a playoff week: the starter zeroes that week, then the
+    # weight applies to the remaining (non-bye) playoff-week production -> a larger drop
+    # under the heavier weight.
+    byes = {pid: n_reg for pid in rosters[11].starters}  # first playoff week
+    heavy_bye = simulate_league(
+        marg, players, rosters, sched,
+        config=LeagueConfig(n_seasons=2_000, playoff_week_weight=3.0), byes=byes,
+    )
+    neutral_bye = simulate_league(
+        marg, players, rosters, sched,
+        config=LeagueConfig(n_seasons=2_000, playoff_week_weight=1.0), byes=byes,
+    )
+    hb = heavy_bye.standings.set_index("roster_id")["weighted_value"]
+    nb = neutral_bye.standings.set_index("roster_id")["weighted_value"]
+    drop_heavy = hv["team11"] - hb["team11"]
+    drop_neutral = nv["team11"] - nb["team11"]
+    assert drop_heavy > drop_neutral + 1e-6  # weight scales the zeroed playoff-week loss
+
+
 # ── E7 calibration on the shared correlated sampler ──────────────────────────────
 def test_league_sampler_calibrated() -> None:
     # The league sim draws player-weeks through mc-core's `sample_correlated`; a realised
