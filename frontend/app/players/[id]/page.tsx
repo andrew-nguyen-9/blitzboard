@@ -12,6 +12,8 @@ import Sparkline from "@/components/Sparkline";
 import Tooltip from "@/components/Tooltip";
 import { StatTable } from "@/components/StatTable";
 import PlayerAnalytics from "@/components/PlayerAnalytics";
+import UncertaintyStrip from "@/components/uncertainty/UncertaintyStrip";
+import { playerUncertainty } from "@/components/uncertainty/fromValue";
 import { getPlayerDetail } from "@/lib/queries";
 import { careerColumns, careerRows, careerSummary } from "@/lib/playerStats";
 import { gaussianSamples } from "@/lib/viz";
@@ -111,6 +113,11 @@ export default async function PlayerDetailPage({
   const hasBand = value?.boom != null && value?.bust != null;
   const mcSpread = hasBand ? (value!.boom! - value!.bust!) / 2.5631 : 0; // P90−P10 ≈ 2.563σ
   const mcSamples = showRidge ? gaussianSamples(vor, mcSpread, 240) : [];
+
+  // Uncertainty everywhere (E8): floor–median–ceiling range + mini-distribution +
+  // probability badges from the snapshot quantiles/mc_probs. Built from the stored
+  // projection + value row; degrades to an empty note when there's nothing to show.
+  const uncertainty = playerUncertainty(value, projection, " pts");
 
   return (
     <div className="py-12">
@@ -228,6 +235,13 @@ export default async function PlayerDetailPage({
               <div className="mt-3 font-mono text-display-md">{projection.mean?.toFixed(1)}</div>
               <p className="mb-5 text-label text-ink-muted">projected fantasy points (σ {projection.stdev?.toFixed(1)})</p>
               <DistributionBar floor={projection.floor} mean={projection.mean} ceiling={projection.ceiling} />
+
+              {/* uncertainty everywhere (E8): P10–P90 range + mini-distribution +
+                  Monte-Carlo probability badges, reduced-motion-safe. */}
+              <div className="mt-6">
+                <p className="mb-2 text-label uppercase text-ink-2">Outcome uncertainty</p>
+                <UncertaintyStrip data={uncertainty} decimals={0} />
+              </div>
               {projection.by_stat?.inputs && (
                 <div className="mt-5 flex flex-wrap gap-4 text-label text-ink-muted">
                   {Object.entries(projection.by_stat.inputs).map(([src, v]: [string, any]) => (
