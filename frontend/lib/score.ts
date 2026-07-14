@@ -4,8 +4,12 @@
 //     99 ≈ the best player on the board, <50 = bench/depth. No scary negatives.
 import type { PlayerWithValue } from "./types";
 
+// A free agent (no NFL team) plays no games, so scores no fantasy points — its
+// projected points are 0 regardless of any stale value row. Keeps the board's Pts
+// column honest and sinks FAs to the bottom naturally. (Draft-order handling of FAs
+// also lives in draftAI's faPenalty; this is the display/points source of truth.)
 export const projPoints = (p: PlayerWithValue) =>
-  (p.value?.vor ?? 0) + (p.value?.replacement ?? 0);
+  p.nfl_team == null ? 0 : (p.value?.vor ?? 0) + (p.value?.replacement ?? 0);
 
 const shaped = (p: PlayerWithValue) => p.value?.value ?? 0;
 
