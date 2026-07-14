@@ -26,6 +26,7 @@ import { useEspnSync } from "@/lib/useEspnSync";
 import { saveSnapshot } from "@/lib/draftStore";
 import { projPoints } from "@/lib/score";
 import AllTeamsBoard from "@/components/AllTeamsBoard";
+import DraftPickLog from "./DraftPickLog";
 import DraftAnalysis from "@/components/DraftAnalysis";
 import DraftEndCard from "@/components/DraftEndCard";
 import { rosterHealth, equityImpact } from "./rosterHealth";
@@ -37,7 +38,7 @@ import RosterHealthPanel from "./RosterHealthPanel";
 import PreDraftPlan from "./PreDraftPlan";
 
 type Mode = "manual" | "sleeper" | "espn";
-type View = "board" | "teams" | "analysis";
+type View = "board" | "teams" | "log" | "analysis";
 const POSITIONS = ["ALL", "QB", "RB", "WR", "TE", "K", "DST"] as const;
 
 export interface SavedLeague {
@@ -209,7 +210,9 @@ export default function DraftWarRoom({
     }
     return totalSpots + 1;
   }
-  function simToMyPick() {
+  // AI-driven auto-pick. `stopAtMe` powers "Sim to my pick"; false runs the whole draft
+  // ("Auto-draft all"). Both drive every rival team off the shared v2 policy (pickForTeam).
+  function runSim(stopAtMe: boolean) {
     setManualPicks((cur) => {
       const next = [...cur];
       const taken = new Set(next.map((p) => p.player.id));
@@ -218,7 +221,7 @@ export default function DraftWarRoom({
         const pickNo = next.length + 1;
         if (pickNo > totalSpots) break;
         const team = teamOnClock(pickNo, numTeams);
-        if (team === mySlot) break;
+        if (stopAtMe && team === mySlot) break;
         const pool = candidatePool(players.filter((p) => !taken.has(p.id)));
         if (!pool.length) break;
         const player =
@@ -339,10 +342,10 @@ export default function DraftWarRoom({
 
       {/* view tabs */}
       <div className="mb-4 inline-flex rounded-full border border-hairline p-1 text-label">
-        {(["board", "teams", "analysis"] as View[]).map((v) => (
+        {(["board", "teams", "log", "analysis"] as View[]).map((v) => (
           <button key={v} onClick={() => setView(v)}
             className={`rounded-full px-4 py-1 capitalize transition ${view === v ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}>
-            {v === "teams" ? "All teams" : v}
+            {v === "teams" ? "All teams" : v === "log" ? "Pick log" : v}
           </button>
         ))}
       </div>
@@ -352,6 +355,7 @@ export default function DraftWarRoom({
       )}
 
       {view === "teams" && <AllTeamsBoard config={config} picks={picks} mySlot={mySlot} onRename={renameTeam} />}
+      {view === "log" && <DraftPickLog picks={picks} config={config} mySlot={mySlot} />}
       {view === "analysis" && <DraftAnalysis picks={picks} config={config} mySlot={mySlot} />}
 
       {view === "board" && (
@@ -368,7 +372,8 @@ export default function DraftWarRoom({
               {picksUntilMe != null && !isMyPick && !complete && <div className="text-label text-ink-muted">your pick in {picksUntilMe}</div>}
               {mode === "manual" && (
                 <div className="ml-auto flex items-center gap-2">
-                  <button onClick={simToMyPick} disabled={complete} className="rounded-full border border-hairline px-3 py-1.5 text-label transition hover:bg-surface-elevated disabled:opacity-40">Sim to my pick</button>
+                  <button onClick={() => runSim(true)} disabled={complete} className="rounded-full border border-hairline px-3 py-1.5 text-label transition hover:bg-surface-elevated disabled:opacity-40">Sim to my pick</button>
+                  <button onClick={() => runSim(false)} disabled={complete} className="rounded-full border border-hairline px-3 py-1.5 text-label transition hover:bg-surface-elevated disabled:opacity-40">Auto-draft all</button>
                   <button onClick={undo} disabled={!manualPicks.length} className="rounded-full border border-hairline px-3 py-1.5 text-label transition hover:bg-surface-elevated disabled:opacity-40">Undo</button>
                   <button onClick={reset} disabled={!manualPicks.length} className="rounded-full border border-hairline px-3 py-1.5 text-label transition hover:bg-surface-elevated disabled:opacity-40">Reset</button>
                 </div>
