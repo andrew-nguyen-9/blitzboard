@@ -54,6 +54,28 @@ RSS+Reddit ──► sentiment_scorer ─► ValueEngine ───────�
   vs. authenticated reads/writes (your leagues, your saved credentials). The gated tabs
   (League, your Waivers, your Trades) live on the auth plane; generic versions live public.
 
+## v4: the engine tier (`engine/` → `blitz_engine`)
+
+New heavy **local** quant tier, physically separate from the free cron `pipeline/` (which
+must never import JAX/torch). Full design: `docs/design/v4-engine-architecture.md`. The
+engine reimplements the four spine abstractions above with deep models and hands results
+to the rest of the system as a **versioned snapshot**. Foundation skeleton = E0-scaffold.
+
+- **`blitz_engine.config`** — `EngineConfig` / `load_config()`: the single source of truth
+  for the M1/16 GB budget (float32, mmap, `chunk_size`, `mc_batch`, `n_draws`, `seed`,
+  `cloud_burst`). Every unit reads its knobs here; overridable via `BLITZ_ENGINE_*` env.
+- **`blitz_engine.store`** — `ParquetStore`: DuckDB + memory-mapped Parquet data-access
+  seam (`open/write_parquet/table/query/read_chunks`). Never loads full history into RAM;
+  E0-ingest fills it, every model reads through it.
+- **`blitz_engine.snapshot`** — `Snapshot` + `SCHEMA_VERSION`: the versioned hand-off
+  bundle `{values, quantiles, corr_matrix, mc_probs, strategy_tree, policy}`. Full local
+  Parquet; **compact export (quantiles + corr only)** for Supabase/CDN. Additive versioning.
+- **`blitz_engine.registry`** — `ModelRegistry` / `RunRecord`: records
+  `{params, data_hash, git_sha, seed}` per run so any result reproduces from its version.
+- **`blitz_engine.cli`** — `blitz-engine fit | sim | draft | publish` (stubs in W1).
+- **Shared adapters seam** — the engine REUSES `pipeline/adapters/` by import
+  (`blitz_engine.pipeline_bridge.load_adapters`), not by moving them (W1 no-move rule).
+
 ## Conventions (unchanged + v2)
 
 - Server Components default; `"use client"` only for interactivity/animation.
