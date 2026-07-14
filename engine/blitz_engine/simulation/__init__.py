@@ -23,6 +23,12 @@ from blitz_engine.simulation.correlation import (
     cholesky_factor,
     nearest_psd_correlation,
 )
+from blitz_engine.simulation.league import (
+    LeagueConfig,
+    LeagueResult,
+    Roster,
+    simulate_league,
+)
 from blitz_engine.simulation.mc import (
     FINISH_RANKS,
     INTERACTIVE_RUNS,
@@ -34,19 +40,26 @@ from blitz_engine.simulation.mc import (
     simulate_projection,
     to_snapshot,
 )
+from blitz_engine.simulation.playoffs import Bracket, build_bracket
 
 __all__ = [
     "FINISH_RANKS",
     "INTERACTIVE_RUNS",
     "PUBLISH_RUNS",
+    "Bracket",
     "CorrelationSpec",
+    "LeagueConfig",
+    "LeagueResult",
+    "Roster",
     "SimConfig",
     "SimResult",
+    "build_bracket",
     "build_correlation",
     "cholesky_factor",
     "nearest_psd_correlation",
     "sample_correlated",
     "simulate",
+    "simulate_league",
     "simulate_projection",
     "to_snapshot",
 ]
