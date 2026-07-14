@@ -40,6 +40,7 @@ class BenchmarkEntry:
     fantasypros_mae: float | None = None
     prior_version: str | None = None
     prior_mae: float | None = None
+    model_spearman: float | None = None
     created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     @property
@@ -119,5 +120,6 @@ class BenchmarkBoard:
                 fantasypros_mae=fp_mae,
                 prior_version=prior_version,
                 prior_mae=prior_mae,
+                model_spearman=model_rep.spearman,
             )
         )

@@ -42,6 +42,13 @@ from blitz_engine.backtest.harness import (
     walk_forward,
     walk_forward_splits,
 )
+from blitz_engine.backtest.metrics import (
+    crps_ensemble,
+    crps_gaussian,
+    log_loss,
+    spearman,
+    top_n_hit_rate,
+)
 from blitz_engine.backtest.predictors import (
     baseline_predictor,
     engine_predictor,
@@ -73,9 +80,12 @@ __all__ = [
     "ablation",
     "all_injury_week",
     "baseline_predictor",
+    "crps_ensemble",
+    "crps_gaussian",
     "detect_leakage",
     "engine_predictor",
     "fantasypros_predictor",
+    "log_loss",
     "no_regression",
     "outlier_season",
     "paired_permutation_p",
@@ -83,6 +93,8 @@ __all__ = [
     "population_stability_index",
     "run_stress",
     "scan_drift",
+    "spearman",
+    "top_n_hit_rate",
     "walk_forward",
     "walk_forward_splits",
     "weather_disaster",

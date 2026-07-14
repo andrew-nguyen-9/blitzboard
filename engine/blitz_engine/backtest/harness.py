@@ -110,13 +110,17 @@ class WalkForwardReport:
     """Aggregate + per-fold error of one predictor over a walk-forward run.
 
     `errors` is the concatenation of per-observation absolute errors across folds, in fold
-    order — the paired vector ablation/significance compares between two runs.
+    order — the paired vector ablation/significance compares between two runs. `predictions`
+    and `actuals` are the same aligned vectors, kept so ranking metrics (Spearman / top-N) can
+    be read off a completed run alongside MAE/RMSE without re-running the folds.
     """
 
     per_split: dict[int, float]
     errors: np.ndarray
     n_obs: int
     keys: list[tuple[int, str]] = field(default_factory=list)
+    predictions: np.ndarray = field(default_factory=lambda: np.asarray([], dtype=float))
+    actuals: np.ndarray = field(default_factory=lambda: np.asarray([], dtype=float))
 
     @property
     def mae(self) -> float:
@@ -125,6 +129,19 @@ class WalkForwardReport:
     @property
     def rmse(self) -> float:
         return float(np.sqrt((self.errors**2).mean())) if self.errors.size else float("nan")
+
+    @property
+    def spearman(self) -> float:
+        """Spearman rank-correlation of predicted vs realised points (`nan` if <2 obs)."""
+        from blitz_engine.backtest.metrics import spearman
+
+        return spearman(self.predictions, self.actuals)
+
+    def top_n_hit_rate(self, n: int) -> float:
+        """Fraction of the realised top-`n` players this run also ranks in its top-`n`."""
+        from blitz_engine.backtest.metrics import top_n_hit_rate
+
+        return top_n_hit_rate(self.predictions, self.actuals, n)
 
 
 def walk_forward(
@@ -151,6 +168,8 @@ def walk_forward(
     )
     per_split: dict[int, float] = {}
     chunks: list[np.ndarray] = []
+    pred_chunks: list[np.ndarray] = []
+    actual_chunks: list[np.ndarray] = []
     keys: list[tuple[int, str]] = []
     for sp in folds:
         actual = points_of(sp.test, weights)
@@ -162,8 +181,13 @@ def walk_forward(
         err = np.abs(pred - actual)
         per_split[sp.time] = float(err.mean()) if err.size else float("nan")
         chunks.append(err)
+        pred_chunks.append(pred)
+        actual_chunks.append(actual)
         keys.extend((sp.time, str(p)) for p in sp.test["player_id"].astype(str))
     errors = np.concatenate(chunks) if chunks else np.asarray([], dtype=float)
+    predictions = np.concatenate(pred_chunks) if pred_chunks else np.asarray([], dtype=float)
+    actuals = np.concatenate(actual_chunks) if actual_chunks else np.asarray([], dtype=float)
     return WalkForwardReport(
-        per_split=per_split, errors=errors, n_obs=int(errors.size), keys=keys
+        per_split=per_split, errors=errors, n_obs=int(errors.size), keys=keys,
+        predictions=predictions, actuals=actuals,
     )
