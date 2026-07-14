@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blitz-engine"
+version = "0.1.0"
+description = "BlitzBoard heavy local quant engine (JAX/NumPyro/DuckDB) — versioned draft snapshots."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "jax[cpu]>=0.10",
+  "numpyro>=0.21",
+  "torch>=2.1",
+  "duckdb>=1.1",
+  "pyarrow>=17",
+  "ortools>=9.10",
+  "pandas>=2.2",
+  "scipy>=1.12",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11"]
+
+[project.scripts]
+blitz-engine = "blitz_engine.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["blitz_engine*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_return_any = false

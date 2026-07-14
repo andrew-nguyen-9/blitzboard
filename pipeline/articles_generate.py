@@ -24,6 +24,10 @@ from pathlib import Path
 from common import console, upsert
 
 _ARTIFACT = Path(__file__).resolve().parent / "artifacts" / "context_report.json"
+# E6: the projection-why artifact the engine's `blitz_engine.explain.why_report` writes.
+# Its `brief` (summary/body) is already-rendered, deterministic prose — this generator only
+# stamps it with a slug/category, so the war-room wording lives entirely in the engine.
+_PROJECTION_ARTIFACT = Path(__file__).resolve().parent / "artifacts" / "projection_why.json"
 
 # Wind (mph) at/above which passing/kicking gets a real haircut in the weather
 # factors — the threshold that makes a game "notable" for the weather article.
@@ -204,27 +208,65 @@ def venue_article(report: dict) -> dict:
     }
 
 
-# ── assembly ────────────────────────────────────────────────────────────────
-def build_articles(report: dict) -> list[dict]:
-    """The full, deterministic set of article rows for one context report.
+def war_room_article(projection: dict) -> dict:
+    """The auto war-room brief — top projections decomposed into their drivers.
 
-    Every row is stamped with the report's provenance so the feed is dated and
-    the source is self-describing. The slug set is fixed per season/week, so a
-    re-run is a pure in-place overwrite (idempotent)."""
-    if not report:
+    E6 (no AI-in-loop): the engine's `why_report` already rendered the deterministic
+    `brief` (summary + body) from the projection numbers; this builder lifts that prose
+    verbatim and stamps a stable slug/category/provenance, so re-running is a pure in-place
+    overwrite and the wording never diverges from the engine. Missing/empty artifact →
+    honest degraded row (the PK set stays stable), mirroring the E3 article builders.
+    """
+    period = _period(projection)
+    brief = (projection or {}).get("brief") or {}
+    summary = brief.get("summary")
+    body = brief.get("body")
+    if not (isinstance(summary, str) and summary.strip() and isinstance(body, str) and body.strip()):
+        summary = "Projection briefs not yet generated — the war room is dark."
+        body = (
+            f"For {period}, the engine has not published a projection-why artifact, so "
+            "there is no war-room breakdown to show. This brief refreshes automatically "
+            "once projections land (numbers in, prose out — no AI in the loop)."
+        )
+    return {
+        "slug": _slug(projection, "war-room-brief"),
+        "title": f"War room brief — {period}",
+        "summary": summary,
+        "body": body,
+        "category": "war_room",
+    }
+
+
+# ── assembly ────────────────────────────────────────────────────────────────
+def build_articles(report: dict, projection: dict | None = None) -> list[dict]:
+    """The full, deterministic set of article rows for the context (+ optional projection).
+
+    Every row is stamped with its source artifact's provenance so the feed is dated and
+    self-describing. The slug set is fixed per season/week, so a re-run is a pure in-place
+    overwrite (idempotent). The war-room brief (E6) is appended only when a projection-why
+    artifact is supplied — it carries its OWN provenance, keeping the E3 context rows
+    byte-identical whether or not projections exist."""
+    if not report and not projection:
         return []
-    published_at = (report or {}).get("generated_at")
-    source = (report or {}).get("source")
-    rows = [
-        weather_article(report),
-        pace_article(report),
-        passing_article(report),
-        venue_article(report),
-    ]
-    for r in rows:
-        if published_at:
-            r["published_at"] = published_at
-        r["source"] = source
+
+    def _stamp(rows: list[dict], src: dict) -> list[dict]:
+        published_at = (src or {}).get("generated_at")
+        source = (src or {}).get("source")
+        for r in rows:
+            if published_at:
+                r["published_at"] = published_at
+            r["source"] = source
+        return rows
+
+    rows: list[dict] = []
+    if report:
+        rows += _stamp(
+            [weather_article(report), pace_article(report),
+             passing_article(report), venue_article(report)],
+            report,
+        )
+    if projection:
+        rows += _stamp([war_room_article(projection)], projection)
     return rows
 
 
@@ -237,14 +279,24 @@ def load_report(path: Path = _ARTIFACT) -> dict:
         return {}
 
 
+def load_projection(path: Path = _PROJECTION_ARTIFACT) -> dict:
+    """Read the engine's projection-why artifact; empty dict if not yet generated (E6)."""
+    try:
+        return json.loads(path.read_text())
+    except Exception as e:  # missing/unwritten → no war-room brief this run (degrade-safe)
+        console.print(f"[yellow]⚠ projection-why artifact unavailable ({type(e).__name__}) — no war-room brief[/yellow]")
+        return {}
+
+
 def main() -> None:
     report = load_report()
-    rows = build_articles(report)
+    projection = load_projection()
+    rows = build_articles(report, projection)
     if not rows:
-        console.print("[dim]articles: nothing to publish (no context artifact)[/dim]")
+        console.print("[dim]articles: nothing to publish (no context/projection artifact)[/dim]")
         return
     upsert("articles", rows, on_conflict="slug")
-    console.print(f"[green]✓ generated {len(rows)} article(s) from context report[/green]")
+    console.print(f"[green]✓ generated {len(rows)} article(s) from context/projection reports[/green]")
 
 
 if __name__ == "__main__":

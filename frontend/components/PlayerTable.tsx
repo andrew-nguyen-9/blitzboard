@@ -14,6 +14,8 @@ import { useCursorTooltip } from "@/components/CursorTooltip";
 import Tooltip from "@/components/Tooltip";
 import { teamLogoUrl } from "@/lib/teams";
 import EmptyState from "@/components/EmptyState";
+import { RangeBar } from "@/components/uncertainty";
+import { rowUncertainty } from "@/lib/rowUncertainty";
 import type { Engine } from "@/lib/types";
 
 const POSITIONS = ["ALL", "QB", "RB", "WR", "TE", "K", "DST"] as const;
@@ -91,6 +93,7 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
     box: false,
     meta: true,
   });
+  const [showRange, setShowRange] = useState(true); // per-row floor–median–ceiling uncertainty
   const [box, setBox] = useState<Record<string, BoxStats>>({}); // latest-season box, lazily filled
   const fetchedBox = useRef<Set<string>>(new Set());
 
@@ -198,7 +201,7 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [status, activeCols.length, syncHeader]);
+  }, [status, activeCols.length, showRange, syncHeader]);
 
   function toggleSort(k: string) {
     if (sort === k) setAsc(!asc);
@@ -245,7 +248,7 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
   // # + Player + ρ are always shown; toggled groups append their columns.
   const grid = {
     display: "grid",
-    gridTemplateColumns: `2.5rem minmax(7rem,1fr) 3.5rem ${activeCols.map(() => "minmax(3.5rem,max-content)").join(" ")}`,
+    gridTemplateColumns: `2.5rem minmax(7rem,1fr) 3.5rem${showRange ? " minmax(8rem,12rem)" : ""} ${activeCols.map(() => "minmax(3.5rem,max-content)").join(" ")}`,
   } as const;
 
   return (
@@ -316,6 +319,13 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
             {g.label}
           </button>
         ))}
+        <button
+          onClick={() => setShowRange((s) => !s)}
+          aria-pressed={showRange}
+          className={`rounded-full px-3 py-1 text-label transition ${showRange ? "bg-accent text-bg" : "border border-hairline text-ink-muted hover:text-ink"}`}
+        >
+          Range
+        </button>
       </div>
 
       {/* virtualized table — window-scrolled; the header is pinned to the WINDOW and
@@ -334,6 +344,11 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
             <Th k="rank" tip="Overall rank by projected value under the active engine.">#</Th>
             <Th k="name">Player</Th>
             <Th k="rho" justify="end" tip="Predictability ρ — how repeatable this player's scoring is year to year; low ρ discounts value.">ρ</Th>
+            {showRange && (
+              <div role="columnheader" className="flex items-center px-1 text-label uppercase text-ink-2">
+                Range
+              </div>
+            )}
             {activeCols.map((c) =>
               c.sortable ? (
                 <Th key={c.key} k={c.key} justify={TEXT_COLS.has(c.key) ? undefined : "end"} tip={columnTips[c.key]}>{c.label}</Th>
@@ -352,6 +367,7 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
               const t = tiers[p.id];
               const ctx = ctxOf(p);
               const logo = teamLogoUrl(p.nfl_team);
+              const u = showRange ? rowUncertainty(p) : null;
               return (
                 <div
                   key={p.id}
@@ -378,6 +394,15 @@ export default function PlayerTable({ engine }: { engine: Engine }) {
                   <span role="cell" className="block text-right font-mono tabular-nums text-ink">
                     {p.predictability == null ? "—" : p.predictability.toFixed(2)}
                   </span>
+                  {showRange && (
+                    <div role="cell" className="min-w-0 px-1">
+                      {u ? (
+                        <RangeBar quantiles={u.quantiles} decimals={1} />
+                      ) : (
+                        <span className="text-label text-ink-muted">—</span>
+                      )}
+                    </div>
+                  )}
                   {activeCols.map((c) => <ColCell key={c.key} col={c} p={p} ctx={ctx} />)}
                 </div>
               );
