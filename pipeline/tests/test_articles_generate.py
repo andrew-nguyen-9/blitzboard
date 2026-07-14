@@ -101,7 +101,62 @@ def test_slugs_fixed_and_idempotent():
 
 def test_empty_report_no_rows():
     assert ag.build_articles({}) == []
+    assert ag.build_articles({}, {}) == []
     print("✓ empty/absent artifact → zero rows (degrade-safe)")
+
+
+# E6: projection-why artifact (engine's `why_report` shape) → deterministic war-room brief.
+_PROJECTION = {
+    "generated_at": "2025-09-11T09:00:00+00:00",
+    "season": 2025,
+    "week": 2,
+    "source": "blitz-engine projection",
+    "players": [
+        {"player_id": "star_eff", "week": 2, "projected": 24.5, "baseline": 9.1,
+         "contributions": {"volume": 1.2, "efficiency": 12.0, "scoring": 2.2},
+         "text": "Projects 24.5 pts (15.4 above a replacement touch): driven by huge yards per touch (+12.0)."},
+        {"player_id": "star_vol", "week": 2, "projected": 22.0, "baseline": 9.1,
+         "contributions": {"volume": 10.0, "efficiency": 0.5, "scoring": 2.4},
+         "text": "Projects 22.0 pts (12.9 above a replacement touch): driven by huge usage / volume (+10.0)."},
+    ],
+    "brief": {
+        "summary": "star_eff tops the board at 24.5 pts — 2 projections broken down to their drivers.",
+        "body": "The war room, decomposed.\n\n- star_eff: ...\n- star_vol: ...",
+    },
+}
+
+
+def test_war_room_only_when_projection_present():
+    # E3 context call is byte-identical (still exactly 4, no war_room) with no projection
+    assert len(ag.build_articles(_POPULATED)) == 4
+    rows = ag.build_articles(_POPULATED, _PROJECTION)
+    by_cat = {r["category"]: r for r in rows}
+    assert len(rows) == 5 and "war_room" in by_cat
+    wr = by_cat["war_room"]
+    assert _REQUIRED_COLS <= set(wr)
+    # lifts the engine's already-rendered brief verbatim (no re-templating / AI)
+    assert wr["summary"] == _PROJECTION["brief"]["summary"]
+    assert wr["body"] == _PROJECTION["brief"]["body"]
+    # war-room carries the PROJECTION's provenance, not the context report's
+    assert wr["published_at"] == _PROJECTION["generated_at"]
+    assert wr["source"] == _PROJECTION["source"]
+    print("✓ war-room brief appended from projection artifact, verbatim + own provenance")
+
+
+def test_war_room_deterministic_and_projection_only():
+    a = ag.build_articles({}, _PROJECTION)
+    b = ag.build_articles({}, _PROJECTION)
+    assert a == b, "same projection ⇒ same rows (deterministic, no AI)"
+    assert [r["category"] for r in a] == ["war_room"]  # projection with no context
+    print("✓ war-room brief is deterministic; generates with projection alone")
+
+
+def test_war_room_degrades_without_brief():
+    rows = ag.build_articles({}, {"season": 2025, "week": 3})  # projection present, no brief
+    wr = next(r for r in rows if r["category"] == "war_room")
+    assert "not yet generated" in wr["summary"].lower()
+    assert isinstance(wr["body"], str) and wr["body"].strip()
+    print("✓ projection without a brief degrades to an honest war-room row")
 
 
 if __name__ == "__main__":
@@ -109,4 +164,7 @@ if __name__ == "__main__":
     test_neutral_degrades_gracefully()
     test_slugs_fixed_and_idempotent()
     test_empty_report_no_rows()
+    test_war_room_only_when_projection_present()
+    test_war_room_deterministic_and_projection_only()
+    test_war_room_degrades_without_brief()
     print("\nall articles_generate tests passed")
