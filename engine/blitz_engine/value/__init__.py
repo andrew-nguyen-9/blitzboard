@@ -50,10 +50,34 @@ from blitz_engine.value.interim import (
     interim_surface,
     load_pipeline_value_engine,
 )
+from blitz_engine.value.mcts import (
+    SUPERFLEX_TEMPLATE,
+    DraftState,
+    MctsPlan,
+    NashCheck,
+    equity_evaluator,
+    mcts_plan,
+    nash_aware_check,
+    nash_check,
+    slot_positions,
+    starter_value,
+)
 from blitz_engine.value.opponent import (
     ARCHETYPES,
     OpponentField,
     OpponentModel,
+)
+from blitz_engine.value.policy import (
+    DEFAULT_WEIGHTS,
+    FEATURE_NAMES,
+    DistillSample,
+    FastDraftPolicy,
+    PolicyWeights,
+    distill_policy,
+    marginal_starter_value,
+    position_features,
+    shapley_efficiency_gap,
+    shapley_pick_attribution,
 )
 from blitz_engine.value.replacement import (
     demand_by_position,
@@ -100,6 +124,28 @@ __all__ = [
     "ARCHETYPES",
     "OpponentModel",
     "OpponentField",
+    # offline MCTS + Nash (E4-mcts-policy)
+    "SUPERFLEX_TEMPLATE",
+    "DraftState",
+    "MctsPlan",
+    "NashCheck",
+    "mcts_plan",
+    "equity_evaluator",
+    "starter_value",
+    "nash_check",
+    "nash_aware_check",
+    "slot_positions",
+    # distilled fast policy + Shapley (E4-mcts-policy)
+    "FastDraftPolicy",
+    "PolicyWeights",
+    "DistillSample",
+    "FEATURE_NAMES",
+    "DEFAULT_WEIGHTS",
+    "distill_policy",
+    "position_features",
+    "shapley_pick_attribution",
+    "shapley_efficiency_gap",
+    "marginal_starter_value",
     "FAStatus",
     "is_truly_free_agent",
     "apply_fa_penalty",
