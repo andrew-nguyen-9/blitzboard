@@ -1,5 +1,5 @@
 import EmptyState from "@/components/EmptyState";
-import DraftRoom, { type SavedLeague } from "@/components/DraftRoom";
+import DraftWarRoom, { type SavedLeague } from "@/components/draft/DraftWarRoom";
 import { getAllPlayersByValue } from "@/lib/queries";
 import { getMyLeaguesWithConfig } from "@/lib/queries.auth";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -58,7 +58,7 @@ export default async function DraftPage() {
           </span>
         )}
       </div>
-      <DraftRoom players={players} savedLeagues={authed ? savedLeagues : undefined} />
+      <DraftWarRoom players={players} savedLeagues={authed ? savedLeagues : undefined} />
     </div>
   );
 }
