@@ -4,7 +4,7 @@
 import { getSupabase } from "./supabase";
 import { careerRows, type SeasonRow } from "./playerStats";
 import type { BoxStats } from "./playerColumns";
-import type { Article, ArticleSummary, Engine, Player, PlayerWithValue } from "./types";
+import type { Article, ArticleSummary, Engine, Player, PlayerTrends, PlayerWithValue } from "./types";
 
 const PLAYER_COLS =
   "id,sleeper_id,espn_id,full_name,position,nfl_team,bye_week,age,years_exp,status,injury_status,metadata";
@@ -377,6 +377,25 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
     return null;
   }
   return (data as Article) ?? null;
+}
+
+// Per-player opportunity/role trends (v4 E1), keyed by player_id for a drop-in
+// `BenchCtx.trends`. Optional `ids` narrows the read to a roster. Null-safe → {}
+// when unconfigured/offline or on error, so the war-room Bench panel degrades to
+// neutral signals with no backend.
+export async function getPlayerTrends(ids?: string[]): Promise<Record<string, PlayerTrends>> {
+  const sb = getSupabase();
+  if (!sb || (ids && !ids.length)) return {};
+  let q = sb
+    .from("player_trends")
+    .select("player_id,opportunity_trend,target_share_trend,routes_run,routes_trend,starting_prob,job_security");
+  if (ids?.length) q = q.in("player_id", ids);
+  const { data, error } = await q;
+  if (error) {
+    console.error("[queries.getPlayerTrends]", error.message);
+    return {};
+  }
+  return Object.fromEntries((data ?? []).map((r: any) => [r.player_id as string, r as PlayerTrends]));
 }
 
 export async function getPlayerCount(): Promise<number> {

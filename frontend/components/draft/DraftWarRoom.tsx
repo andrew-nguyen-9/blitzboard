@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { PlayerWithValue } from "@/lib/types";
+import type { PlayerTrends, PlayerWithValue } from "@/lib/types";
 import { fillRoster, scarcity, teamOnClock, myPickNumbers } from "@/lib/draft";
 import {
   defaultConfig,
@@ -30,6 +30,8 @@ import DraftPickLog from "./DraftPickLog";
 import DraftAnalysis from "@/components/DraftAnalysis";
 import DraftEndCard from "@/components/DraftEndCard";
 import { rosterHealth, equityImpact } from "./rosterHealth";
+import { benchHealth, dropPriority, type BenchCtx } from "@/lib/benchScore";
+import BenchPanel from "./BenchPanel";
 import { buildPlan, valueFlag, neededPositions, type DraftPlan } from "./plan";
 import { reasonChips } from "./reasons";
 import { isConsequential } from "./consequential";
@@ -54,9 +56,13 @@ export interface SavedLeague {
 export default function DraftWarRoom({
   players,
   savedLeagues,
+  trends,
 }: {
   players: PlayerWithValue[];
   savedLeagues?: SavedLeague[];
+  // player_id → E1 trends (queries.getPlayerTrends). Absent → bench scores use
+  // neutral fills and the panel's checklist flags the degraded signals.
+  trends?: Record<string, PlayerTrends>;
 }) {
   const authed = !!savedLeagues?.length;
   const [config, setConfig] = useState<LeagueConfig>(() => savedLeagues?.[0]?.config ?? defaultConfig(12));
@@ -109,6 +115,17 @@ export default function DraftWarRoom({
   const runs = useMemo(() => detectRuns(picks, numTeams), [picks, numTeams]);
   const health = useMemo(() => rosterHealth(myTeamPicks, roster), [myTeamPicks, roster]);
   const needed = useMemo(() => neededPositions(myTeamPicks, roster), [myTeamPicks, roster]);
+
+  // Bench value: score every reserve body (E4), aggregate its health, and rank
+  // drop priority. ctx carries the FULL roster (handcuff/dup logic) + config
+  // (derives superflex) + E1 trends. superflex also drives the panel badge.
+  const superflex = useMemo(() => rulesFromConfig(config).superflex, [config]);
+  const benchCtx = useMemo<BenchCtx>(
+    () => ({ roster: myTeamPicks, config, trends }),
+    [myTeamPicks, config, trends],
+  );
+  const benchHp = useMemo(() => benchHealth(myRoster.bench, benchCtx), [myRoster.bench, benchCtx]);
+  const benchDrops = useMemo(() => dropPriority(myRoster.bench, benchCtx), [myRoster.bench, benchCtx]);
 
   // Equity the LAST pick of mine added (marginal starting-lineup points).
   const lastEquity = useMemo(() => {
@@ -434,6 +451,8 @@ export default function DraftWarRoom({
             {!complete && <LiveRecommendations recs={recs} isMyPick={isMyPick} picksUntilMe={picksUntilMe} onDraft={mode === "manual" ? draft : undefined} />}
 
             <RosterHealthPanel health={health} projectedPoints={myRoster.projectedPoints} lastEquity={lastEquity} />
+
+            <BenchPanel health={benchHp} drops={benchDrops} superflex={superflex} />
 
             {!complete && <PreDraftPlan plan={plan} replanCount={replanCount} lastTrigger={lastTrigger} />}
 
