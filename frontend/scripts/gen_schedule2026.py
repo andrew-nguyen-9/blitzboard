@@ -5,7 +5,7 @@ The xlsx lives outside the repo (uploaded artifact); this keeps regeneration
 reproducible while the committed output stays a static, dependency-free TS module.
 
 Usage:
-    python3 frontend/scripts/gen_schedule2026.py [path/to/schedule.xlsx]
+    python3 frontend/scripts/gen_schedule2026.py path/to/schedule.xlsx
 
 Requires openpyxl (dev-only, never bundled). Sheet "Schedule": col A = full team
 name, cols B..S = weeks 1..18, cell = opponent code ("@XXX" away, "XXX" home,
@@ -18,10 +18,6 @@ from pathlib import Path
 
 import openpyxl
 
-DEFAULT_XLSX = (
-    "/Users/andrew/.claude/uploads/0344d971-6de4-4a38-b9df-8d624c433311/"
-    "414b63d2-202627nflschedule.xlsx"
-)
 OUT = Path(__file__).resolve().parents[1] / "lib" / "schedule2026.ts"
 
 # Full team name (col A) -> our code. Codes are the 32 opponent codes used in the
@@ -241,7 +237,9 @@ export function byeWeekFor(team: string): number | null {
 
 
 def main() -> None:
-    xlsx = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_XLSX
+    if len(sys.argv) < 2:
+        sys.exit("usage: gen_schedule2026.py path/to/schedule.xlsx")
+    xlsx = sys.argv[1]
     if not Path(xlsx).exists():
         raise SystemExit(f"xlsx not found: {xlsx}")
     OUT.write_text(emit(parse(xlsx)))
