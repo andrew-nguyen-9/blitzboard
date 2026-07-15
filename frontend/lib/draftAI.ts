@@ -131,20 +131,30 @@ export const DEFAULT_POLICY: PolicyParams = {
 // Cap the board to a realistic candidate set before scoring. scoreBoard is O(pool²) — each
 // candidate walks the pool again in expectedReplacementAtNextTurn — so scoring the full ~4k
 // player universe per pick froze the live auto-draft (Epic 4 root cause; the empty-snapshot
-// theory was wrong — an empty pool no-ops). Top-N by projection is where every sane pick comes
-// from; we add a few K/DST so late-round defense/kicker picks stay reachable.
-// ponytail: N=80 matches the recommend path; raise only if a deeper board ever changes a pick.
+// theory was wrong — an empty pool no-ops).
+//
+// Top-N by projection ALONE is a trap: in real data a replacement kicker/defense outprojects
+// hundreds of backup skill players, so late-round top-80 fills with K/DST + superflex QBs and
+// the pool holds NO backup TE/RB. The scorer then can't fill an empty TE slot (no candidate
+// exists) and spends bench picks on the only bodies present — kickers. Root cause of the
+// "every team: empty TE, bench full of kickers" auto-draft. So we union the global top-N with
+// the top few AVAILABLE at every position: the scorer's K/DST-deferral + empty-starter logic
+// already produce clean rosters on the full pool; they only need the right candidates present.
+// ponytail: PER_POS=8 covers a starter + bench/bye/injury depth; raise only if a deeper board changes a pick.
+const PER_POS = 8;
 export function candidatePool(pool: PlayerWithValue[], n = 80): PlayerWithValue[] {
   if (pool.length <= n) return pool;
   const byProj = [...pool].sort((a, b) => proj(b) - proj(a));
   const top = byProj.slice(0, n);
   const have = new Set(top.map((p) => p.id));
-  for (const want of ["K", "DST"] as const) {
+  for (const want of POS_GROUPS) {
+    let kept = top.filter((q) => norm(q.position) === want).length;
     for (const p of byProj) {
+      if (kept >= PER_POS) break;
       if (norm(p.position) === want && !have.has(p.id)) {
         top.push(p);
         have.add(p.id);
-        if (top.filter((q) => norm(q.position) === want).length >= 2) break;
+        kept++;
       }
     }
   }
