@@ -58,3 +58,28 @@ export interface Article {
 
 // The card/list projection — the detail read adds `body`.
 export type ArticleSummary = Omit<Article, "body">;
+
+// A player_trends row (v4 E1): recent-window usage/role signals keyed to a
+// player. Each field is 0..1 with 0.5 == neutral/flat, except routes_run (a
+// route count). Feeds the bench scorer (lib/benchScore.ts) via
+// queries.getPlayerTrends; shaped so the map is a drop-in `BenchCtx.trends`.
+export interface PlayerTrends {
+  player_id: string;
+  opportunity_trend: number;
+  target_share_trend: number;
+  routes_run: number;
+  routes_trend: number;
+  starting_prob: number;
+  job_security: number;
+}
+
+// One bench player as surfaced in the war-room Bench panel (v4 E6): its 0-100
+// BenchScore and whether it's the first body to drop (lowest value). The health
+// band that colors the row is derived from `score` in the panel.
+export interface BenchPanelEntry {
+  id: string;
+  name: string;
+  position: string;
+  score: number;
+  dropFirst: boolean;
+}

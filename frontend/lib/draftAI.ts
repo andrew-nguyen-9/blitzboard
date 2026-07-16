@@ -9,6 +9,7 @@ import type { RosterSlot } from "./draft";
 import { fillRoster, SUPERFLEX_ROSTER } from "./draft";
 import { BYE_WEEKS_2026 } from "./byeWeeks";
 import type { MappedPick } from "./sleeperDraft";
+import { benchScore, type BenchCtx } from "./benchScore";
 
 const POS_GROUPS = ["QB", "RB", "WR", "TE", "K", "DST"] as const;
 export function norm(pos: string | null | undefined): string {
@@ -97,6 +98,8 @@ export interface PolicyParams {
   injuryDiscount: Record<string, number>; // injury_status (lower-cased) → availability multiplier
   byeStackPenalty: number;       // points shaved per current starter already on a candidate's bye week
   emptyOffensiveStarterBonus: number; // lift for a candidate that fills an EMPTY startable offensive slot
+  // ── E5 (v4) ────────────────────────────────────────────────────────────────
+  benchQualityWeight: number;    // strength of E4 benchScore's bench-composition tilt (0 = ablated ⇒ v3 bench)
 }
 
 export const DEFAULT_POLICY: PolicyParams = {
@@ -126,6 +129,7 @@ export const DEFAULT_POLICY: PolicyParams = {
   },
   byeStackPenalty: 12,           // e1: discourage piling starters onto one bye week (spec cat 4)
   emptyOffensiveStarterBonus: 140, // e1: never leave a startable offensive slot empty at draft end
+  benchQualityWeight: 1,         // E5: full E4 tilt — QB2/RB-lottery/WR-breakout up, dead K/DST/dup down
 };
 
 // Cap the board to a realistic candidate set before scoring. scoreBoard is O(pool²) — each
@@ -295,7 +299,22 @@ export function benchValue(
   const boom = cand.value?.boom ?? mean;
   const valuePerGame = ((1 - params.boomWeight) * mean + params.boomWeight * boom) / STARTABLE_WEEKS;
 
-  return eStarts * valuePerGame * availability(cand, params);
+  // E5: fold E4's bench-composition score (per-position superflex multipliers +
+  // Duplicate/DeadRosterSpot penalties) into the bench arm only. Neutral (score 50) ⇒
+  // ×1; a superflex QB2 lifts (mult 2.25 saturates the score), a backup K/DST or a
+  // stacked-position body is shaved — steering toward the ideal bench without touching
+  // the starter (marginalStarterValue) arm. weight 0 ⇒ ×1 (v3 bench, for ablation).
+  return eStarts * valuePerGame * availability(cand, params) * benchQuality(cand, ctx, params);
+}
+
+// E5: E4 benchScore → a bounded multiplier centered at 1 (score 50). The candidate is
+// appended to the roster so E4 sees its true positional depth; superflex is read off the
+// league's slots (any non-QB slot that also accepts a QB = an OP/SF slot).
+function benchQuality(cand: PlayerWithValue, ctx: AIContext, params: PolicyParams): number {
+  if (params.benchQualityWeight === 0) return 1;
+  const superflex = ctx.roster.some((s) => s.slot !== "QB" && s.eligible.includes("QB"));
+  const bctx: BenchCtx = { roster: [...ctx.teamPicks, cand], superflex };
+  return 1 + params.benchQualityWeight * (benchScore(cand, bctx).score / 100 - 0.5);
 }
 
 export interface ScoredPick {

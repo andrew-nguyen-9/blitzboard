@@ -336,6 +336,27 @@ describe("auto-draft end-state invariant (full 12-team sim)", () => {
     };
     expect(total(DEFAULT_POLICY)).toBeGreaterThanOrEqual(total(V3));
   });
+
+  // E5: folding E4's bench scoring into the bench arm builds the ideal superflex bench —
+  // ≥2 QB rostered (OP slot + a real backup), ≥1 RB lottery + ≥1 WR breakout benched, and
+  // no dead K/DST pileup. (The dedicated end-to-end sim is E7; this proves the integration.)
+  it.each([1, 7, 42, 100])("seed %s: ideal superflex bench (≥2 QB, RB+WR bench, no dead K/DST pileup)", (seed) => {
+    const players = realisticPool();
+    const byId = new Map(players.map((p) => [p.id, p]));
+    const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 });
+    for (let t = 1; t <= 12; t++) {
+      const roster = picks.filter((pk) => pk.team === t).map((pk) => byId.get(pk.player.id)!);
+      const qbCount = roster.filter((p) => norm(p.position) === "QB").length;
+      expect(qbCount).toBeGreaterThanOrEqual(2); // superflex: 2 startable QB slots + backup depth
+
+      const bench = fillRoster(roster, SUPERFLEX_ROSTER).bench;
+      const benchPos = (pos: string) => bench.filter((p) => norm(p.position) === pos).length;
+      expect(benchPos("RB")).toBeGreaterThanOrEqual(1); // RB lottery ticket
+      expect(benchPos("WR")).toBeGreaterThanOrEqual(1); // WR breakout
+      expect(benchPos("K")).toBeLessThanOrEqual(1);     // no dead kicker pileup
+      expect(benchPos("DST")).toBeLessThanOrEqual(1);   // no dead defense pileup
+    }
+  });
 });
 
 // ── Helper-unit coverage for the new terms ───────────────────────────────────
