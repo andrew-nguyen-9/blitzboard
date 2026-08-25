@@ -100,3 +100,52 @@ def test_plan_seasons_degrades_older_seasons() -> None:
 
     pbp = SOURCES_BY_TABLE["pbp"]  # first_season 2014 → nothing degraded in range
     assert plan_seasons(pbp, [2014, 2015]) == ([2014, 2015], [])
+
+
+# -- resumability (E9): a completed season is never re-fetched --------------------
+def test_season_present_detects_landed_seasons(tmp_path) -> None:
+    import pyarrow as pa
+
+    from blitz_engine.data.ingest import season_present
+
+    assert not season_present(tmp_path, "pbp", 2021)  # no file yet
+    frame = stamp(pa.Table.from_pandas(_fixture_pbp(2021), preserve_index=False), "nflverse")
+    upsert_parquet(tmp_path, "pbp", frame, ("game_id", "play_id"))
+    assert season_present(tmp_path, "pbp", 2021)
+    assert not season_present(tmp_path, "pbp", 2022)
+
+
+def test_ingest_season_skips_a_completed_season(tmp_path) -> None:
+    """The resumable backfill: re-running a landed season costs a probe, not a download."""
+    from blitz_engine.data.ingest import SourceSpec, ingest_season, nflverse
+    from blitz_engine.store import ParquetStore
+
+    calls: list[list[int]] = []
+
+    def fetch(seasons: list[int]) -> pd.DataFrame:
+        calls.append(list(seasons))
+        return _fixture_pbp(seasons[0])
+
+    spec = SourceSpec("pbp", ("game_id", "play_id"), 2014, fetch)
+    with ParquetStore.open(tmp_path / "store") as store:
+        original, nflverse.SOURCES_BY_TABLE["pbp"] = nflverse.SOURCES_BY_TABLE["pbp"], spec
+        try:
+            first = ingest_season(store, 2019, tables=["pbp"])
+            second = ingest_season(store, 2019, tables=["pbp"])
+            forced = ingest_season(store, 2019, tables=["pbp"], force=True)
+        finally:
+            nflverse.SOURCES_BY_TABLE["pbp"] = original
+
+    assert first[0].rows == 5 and first[0].seasons == [2019] and first[0].skipped == []
+    assert second[0].rows == 0 and second[0].skipped == [2019]  # no-op re-run
+    assert forced[0].rows == 5  # force re-fetches
+    assert calls == [[2019], [2019]]  # exactly two fetches: the first and the forced one
+
+
+def test_latest_complete_season_tracks_the_calendar() -> None:
+    from datetime import UTC, datetime
+
+    from blitz_engine.data.ingest import latest_complete_season
+
+    assert latest_complete_season(datetime(2026, 8, 25, tzinfo=UTC)) == 2025
+    assert latest_complete_season(datetime(2026, 1, 5, tzinfo=UTC)) == 2024  # season in progress
