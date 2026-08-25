@@ -147,3 +147,30 @@ def test_sink_guarantee_holds_across_params(factor: float, margin: float) -> Non
     fa = next(iv for iv in out if iv.player_id == "fa_hyped")
     non_fa_min = min(iv.value for iv in out if iv.player_id != "fa_hyped")
     assert fa.value < non_fa_min
+
+
+# ── e2a: the predicate is now a view of availability, not a second opinion ──────
+def test_availability_of_matches_the_legacy_two_signal_proxy() -> None:
+    from blitz_engine.value.fa_penalty import availability_of
+
+    assert availability_of(FAStatus(team=None, has_news=False)) == 0.0   # inferred FA
+    assert availability_of(FAStatus(team="KC", has_news=False)) == 1.0
+    assert availability_of(FAStatus(team=None, has_news=None)) == 1.0    # half a signal
+    assert availability_of(None) == 1.0
+
+
+def test_explicit_roster_status_decides_outright() -> None:
+    """A real feed beats the team/news proxy: retired/unsigned/camp sink, IR does not."""
+    for raw in ("RET", "UFA", "CAMP"):
+        assert is_truly_free_agent(FAStatus(team="KC", has_news=True, roster_status=raw)) is True
+    for raw in ("ACT", "RES/INJ", "RES/PUP", "SUSP", "PS", "garbage"):
+        assert is_truly_free_agent(FAStatus(team=None, has_news=False, roster_status=raw)) is False
+
+
+def test_retired_star_sinks_below_the_board() -> None:
+    board = _starter_board()
+    status = {"vet_rb": FAStatus(team="KC", has_news=True, roster_status="RES/RET")}
+    out = apply_fa_penalty(board, status)
+    vals = {iv.player_id: iv.value for iv in out}
+    assert vals["vet_rb"] < min(v for k, v in vals.items() if k != "vet_rb")
+    assert out[-1].player_id == "vet_rb"
