@@ -6,6 +6,8 @@ registry records + reproduces a run. Downstream units extend, never weaken, thes
 """
 from __future__ import annotations
 
+import json
+
 import pandas as pd
 import pytest
 
@@ -24,9 +26,19 @@ def test_cli_help_all_verbs(verb: str) -> None:
 
 
 @pytest.mark.parametrize("verb", ["fit", "sim", "draft", "publish"])
-def test_cli_runs_end_to_end(verb: str, tmp_path) -> None:
-    """Each verb wires config+store+registry and returns exit code 0."""
-    assert main([verb, "--data-root", str(tmp_path / "run")]) == 0
+def test_cli_degrades_cleanly_without_inputs(verb: str, tmp_path, capsys) -> None:
+    """Each verb wires config+store+registry and, with an EMPTY store, fails *cleanly*.
+
+    E0 asserted exit 0 here because the verbs were print-stubs. They now reach the real
+    modules (E9), so an empty data root is a missing-input failure: a nonzero exit code and
+    one machine-readable JSON error line — never a traceback. The end-to-end green path
+    lives in `tests/test_cli.py`.
+    """
+    assert main([verb, "--data-root", str(tmp_path / "run")]) == 1
+    line = capsys.readouterr().out.strip().splitlines()[-1]
+    payload = json.loads(line)
+    assert payload["verb"] == verb and payload["ok"] is False and payload["error"]
+    assert "stub" not in line.lower()
 
 
 # -- store ----------------------------------------------------------------

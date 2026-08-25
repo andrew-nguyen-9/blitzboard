@@ -17,8 +17,11 @@ from blitz_engine.data.ingest.nflverse import (
     IngestResult,
     SourceSpec,
     ingest_all,
+    ingest_season,
     ingest_source,
+    latest_complete_season,
     plan_seasons,
+    season_present,
 )
 from blitz_engine.data.ingest.provenance import (
     INGESTED_AT_COL,
@@ -41,8 +44,11 @@ __all__ = [
     "IngestResult",
     "SourceSpec",
     "ingest_all",
+    "ingest_season",
     "ingest_source",
+    "latest_complete_season",
     "plan_seasons",
+    "season_present",
     "stamp",
     "to_float32",
     "upsert_parquet",
