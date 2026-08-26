@@ -18,8 +18,8 @@ Degrade-safe: no event column / a degenerate (all-in or all-out) history / too f
 the model stays *unfitted* and every hazard prediction returns the neutral base rate, so the
 availability layer can never worsen the base projection (mirrors E1's seam guarantee).
 
-E3 builds the **fitted injury model** on top of this scaffold (second half of the module):
-an exposure panel from participation data, a hazard for *injury onset*, a negative-binomial
+E3 builds the **fitted injury model** on top of this scaffold (second half of the module): a
+weekly exposure panel off the NFL roster, a hazard for *injury onset*, a negative-binomial
 **duration** model for games missed, a fitted **return curve**, a decaying **re-injury**
 elevation, and the per-position season-fraction-missed that replaces the hand-typed
 `injuryRate` constant in `frontend/lib/draftAI.ts`. Entry point: `fit_injury_model`.
@@ -31,9 +31,14 @@ regenerates `fixtures/injury_rates.json` — **the artefact E10 reads** — and 
 the hold-out calibration gate blocks. Nothing in the fit draws a random number, so the same
 store and seed reproduce the file byte for byte.
 
-Read the fitted rates as **unavailability**, not clinical injury (departure 1 below): QB comes
-out highest because a benched starter is indistinguishable from an injured one in participation
-data. E10 should ship them as the availability discount they are.
+**Read the fitted rates as clinical injury, not unavailability.** The event is the club's own
+injury designation — `injuries.report_status` of Out/Doubtful, or a move to Reserve/Injured,
+PUP or NFI — never snap presence. That is what makes this model composable with e2a's
+availability model: e4 can multiply the two without double-counting a single shared signal. The
+first fit of this unit *had* to use snap presence (the injury feeds did not exist yet) and its
+rates were an unavailability superset, with QB highest because a benched starter looks exactly
+like an injured one in participation data. Those rates are superseded; QB is now the *lowest*
+non-kicker rate, which is the clinically correct ordering.
 
 ## Sources
 
@@ -54,25 +59,48 @@ Method survey behind each modelling choice (one per major decision):
 * L2-regularised hazard coefficients on sparse recurrent injury data — Groll et al. (2021),
   "Prediction of sports injuries in football: a recurrent time-to-event approach using
   regularized Cox models". https://link.springer.com/article/10.1007/s10182-021-00428-2
+* Right-censored count likelihood for injury burden (games missed), rather than dropping or
+  truncating season-ending spells — Hamilton et al. / consensus injury-burden reporting,
+  "Methods for epidemiological study of injuries to professional football players", *BJSM*
+  40(3):193–201. https://bjsm.bmj.com/content/40/3/193
 
 **Departures from the cited approach — our data is thinner:**
 
-1. *No injury report, no diagnosis.* The store (E9) holds participation, not medical status, so
-   the event is **games missed** derived from snap-count presence inside an exposure span, not
-   a clinician-defined injury. Healthy scratches and benchings therefore enter the event set;
-   the fitted rates are "unavailable", a superset of "injured". This is the direction fantasy
-   cares about, but it is not the literature's injury definition.
-2. *No birth dates.* Age — the strongest covariate in every cited paper — is absent from the
-   store, so `experience` (prior seasons observed) stands in for it. Documented, not silently
-   substituted; when a roster table lands, swap the covariate, do not re-derive the model.
-3. *Discrete time, not Cox.* We fit a discrete-time logistic hazard (weeks are the natural
-   grain of an NFL season and ties are pervasive) rather than the continuous-time Cox / A-G
-   models the sports-injury papers use. Singer & Willett show these coincide in discrete time.
+1. *Designation, not diagnosis.* The event is what the club **declared** — Out/Doubtful on the
+   weekly report, or a reserve-list move — not a clinician-coded injury. The `injuries` feed
+   does carry free-text body parts (`report_primary_injury`), but they are unmodelled here, so
+   there is no injury-type stratification of hazard or duration, which the cited literature has.
+   Validation of the designation is measured, not assumed: 0.1 % of `Out` and 0.8 % of
+   `Doubtful` player-weeks have a snap-count row, against 54.9 % of `Questionable`.
+2. *The roster is the exposure denominator*, so the published rate is the population rate for a
+   rostered fantasy-position player, not for a modelled "starter". Every starter-shaped cohort
+   available to us (median snap load, depth-chart rank) is depressed *by* injury and therefore
+   selects on the outcome — a depth-rank-1/2 cohort measures ~25 % lower rates, which is
+   survivorship, not durability. The cohort filter is peak-career snap load only (see
+   `MIN_GAMES`), which an injured season cannot retroactively erase.
+3. *Discrete time, not Cox.* We fit a discrete-time logistic hazard (weeks are the natural grain
+   of an NFL season and ties are pervasive) rather than the continuous-time Cox / A-G models the
+   sports-injury papers use. Singer & Willett show these coincide in discrete time.
 4. *Recurrence via covariates, not a frailty term.* Ullah et al. favour frailty / A-G; we carry
    the recurrence as time-varying covariates (`recent_injury`, `weeks_since_return`) and fit the
    post-return elevation separately, which keeps the whole fit one deterministic L-BFGS call.
+   The person-period unit is the player-**season**, not the career: an offseason heals, so the
+   recurrence window must not reach across it (see `PANEL_COLUMN_MAP`).
 5. *Return curve on snaps, not on performance.* Recovery is measured as snap share against the
    player's own pre-injury baseline — the only recovery signal our store carries.
+6. *Games missed is reported truncated at a season.* 38 % of spells are right-censored by the
+   season ending; the censored NB recovers the latent duration honestly, but the latent mean is
+   unbounded and a 17-game season cannot cost more than 17 games, so `DurationModel.mean` reports
+   E[min(D, 17)] (see `DurationModel.cap`).
+7. *Seasons before `FIRST_RELIABLE_SEASON` are excluded* — `weekly_rosters` under-reports reserve
+   moves in 2014–2015. Relatedly, `status_description_abbr` is **not** the injury-reserve signal
+   even though its codes look like one; it is 51 % NULL in 2016 and its R01 code vanishes
+   2016–2019. `status` is (see `NON_INJURY_RESERVE_CODES`).
+
+**Known residual gap:** week 1 absences are under-predicted (~8 predicted vs ~22 actual WRs),
+because players who are hurt in training camp enter the season already on IR and the store holds
+no preseason exposure. It survives the calibration gate, and it biases the published rate very
+slightly low.
 """
 from __future__ import annotations
 
@@ -269,7 +297,7 @@ class DiscreteTimeHazard:
 GAMES_PER_SEASON = 17
 #: Fantasy positions the model reports. DST is a team, not a player — it is never "injured".
 FANTASY_POSITIONS = ("QB", "RB", "WR", "TE", "K", "DST")
-#: `snap_counts.position` values folded into a fantasy position (everything else is dropped).
+#: `weekly_rosters.position` values folded into a fantasy position (everything else is dropped).
 _POSITION_MAP = {
     "QB": "QB", "RB": "RB", "HB": "RB", "FB": "RB",
     "WR": "WR", "TE": "TE", "K": "K", "PK": "K",
@@ -289,22 +317,62 @@ _REINJURY_POOL = 200.0
 DEFAULT_SEED = 7
 #: Columns of the panel `build_injury_panel` emits.
 PANEL_COLUMNS = (
-    "player_id", "position", "season", "week", "snaps", "out", "prev_out", "onset",
-    "workload", "weeks_since_return", "experience",
+    "player_id", "player_season", "position", "season", "week", "snaps", "out", "prev_out",
+    "onset", "workload", "weeks_since_return", "experience", "age",
 )
 #: Column mapping the injury panel feeds to `build_person_periods` / `DiscreteTimeHazard`.
+#: `age_col` is a **real age in years** since the refit — `weekly_rosters` carries `birth_date`,
+#: so the seasons-of-experience proxy the first fit had to use is gone.
 PANEL_COLUMN_MAP = {
     "out_col": "out",
     "workload_col": "workload",
-    "age_col": "experience",
+    "age_col": "age",
     "position_col": "position",
-    "player_col": "player_id",
+    # NOT `player_id`: the person-period key is the player-**season**, so the recurrence
+    # covariates (`recent_injury`, `injury_history`) reset every September. Grouping by career
+    # let a December IR stint set a high `recent_injury` for the following season's week 1 —
+    # measured as a 4.4-sigma over-prediction of week-1 absences and the single largest source
+    # of hold-out calibration error (cal_err 0.110 BLOCK -> 0.055 PASS once scoped by season).
+    "player_col": "player_season",
     "time_cols": ("season", "week"),
 }
 
+#: `weekly_rosters.status` values that ARE an injury-driven roster move: the reserve lists
+#: (Reserve/Injured and its return-designation variants), Physically-Unable-to-Perform and
+#: Non-Football-Injury. This is the **era-stable** injury-reserve signal — see
+#: `NON_INJURY_RESERVE_CODES` for why `status_description_abbr` cannot carry it alone.
+RESERVE_INJURY_STATUS = ("RES", "PUP", "NFI")
+#: `status_description_abbr` codes that land on a reserve list for a NON-injury reason and are
+#: subtracted back out when the column is populated: R02 retired, R03 did-not-report, R27
+#: future, R40 left-squad, R47/R49 exempt, R62 Reserve/COVID-19 (2020 only), W03 waived.
+#: The abbr column is **not** usable as the primary signal: it is 51 % NULL in 2016 and its
+#: R01 (Reserve/Injured) code all but vanishes 2016–2019 (0.05 % of rows vs 12–19 % either
+#: side) while `status = 'RES'` stays flat — fitting on the abbr produced a fake four-year
+#: injury drought and blew the calibration gate to cal_err 0.283.
+NON_INJURY_RESERVE_CODES = ("R02", "R03", "R27", "R40", "R47", "R49", "R62", "W03")
+#: `injuries.report_status` values that mean the player did **not** play. Measured on the store
+#: (2014–2025), not assumed: 0.1 % of `Out` and 0.8 % of `Doubtful` player-weeks have a snap-count
+#: row, against 54.9 % of `Questionable` and 80.2 % of `Probable` — so Out/Doubtful is the
+#: clinical absence designation and Questionable/Probable is "hurt but playing".
+OUT_REPORT_STATUS = ("Out", "Doubtful")
+#: `weekly_rosters.status` values that count as **exposed to injury** — on an NFL 53 or on a
+#: reserve list. Practice squad (DEV), cut, retired and pure transaction rows are not exposure.
+#: RES / PUP / NFI must stay in: that is precisely where injured players live.
+EXPOSED_STATUS = ("ACT", "INA", "RES", "PUP", "NFI")
+#: First season whose `weekly_rosters` reserve lists are fully populated. 2014 and 2015 carry a
+#: 7.0 % / 10.6 % reserve share against a 13–17 % steady state from 2016 on — the feed simply
+#: under-reports reserve moves in those two years, which reads as a fake era of durable players.
+#: Excluded by default (a caller can still ask for them explicitly via `seasons=`).
+FIRST_RELIABLE_SEASON = 2016
+
 __all__ += [
     "DEFAULT_SEED",
+    "EXPOSED_STATUS",
     "FANTASY_POSITIONS",
+    "FIRST_RELIABLE_SEASON",
+    "NON_INJURY_RESERVE_CODES",
+    "OUT_REPORT_STATUS",
+    "RESERVE_INJURY_STATUS",
     "DurationModel",
     "InjuryModel",
     "ReinjuryRisk",
@@ -325,15 +393,34 @@ def _empty_panel() -> pd.DataFrame:
     return pd.DataFrame({c: pd.Series(dtype="float64") for c in PANEL_COLUMNS})
 
 
-#: Cohort filter — a player-season only enters the panel with at least this many appearances
-#: and this median snap load, so the panel is the *fantasy-relevant* at-risk squad rather than
-#: every third-stringer who dressed once. Without it a backup QB's permanent bench duty reads
-#: as a nine-week injury and the fitted rates triple.
+#: Cohort filter — a player-season enters the panel with at least this many *roster* weeks and
+#: a peak weekly snap load of at least `min_snaps`, which keeps camp-body call-ups out without
+#: selecting on the outcome. The refit deliberately filters on **peak** load, never on median
+#: load or on depth-chart rank: both of those are depressed *by* being injured, so a
+#: median/depth cohort quietly drops the players the model exists to describe (measured: a
+#: depth-chart-rank-1/2 cohort reports ~25 % lower rates than the full roster — survivorship,
+#: not durability).
 MIN_GAMES = 4
 MIN_SNAPS = {"K": 3.0}
 MIN_SNAPS_DEFAULT = 12.0
-#: Median offensive snap share a player-season needs to count as a starter-grade role.
+#: Retained for API stability; the refit's cohort is peak-load based (see above), not share.
 MIN_SHARE = 0.5
+
+
+def _player_age(df: pd.DataFrame) -> pd.Series:
+    """Real age in years at the season's kickoff, from `birth_date`, falling back to `age`.
+
+    `weekly_rosters` carries both; `birth_date` is the more complete of the two (4.9 % null vs
+    7.5 %) and is exact, so it wins and the pre-computed `age` column is the fallback. Implausible
+    derived values (outside 18–50) are treated as bad joins and fall back too.
+    """
+    age = pd.to_numeric(df.get("age", np.nan), errors="coerce")
+    if "birth_date" not in df.columns:
+        return age
+    born = pd.to_datetime(df["birth_date"], errors="coerce")
+    kickoff = pd.to_datetime(df["season"].astype(int).astype(str) + "-09-01")
+    derived = (kickoff - born).dt.days / 365.25
+    return derived.where(derived.between(18.0, 50.0), age)
 
 
 def build_injury_panel_from_frame(
@@ -343,92 +430,106 @@ def build_injury_panel_from_frame(
     min_games: int = MIN_GAMES,
     min_snaps: float = MIN_SNAPS_DEFAULT,
 ) -> pd.DataFrame:
-    """Weekly *exposure* panel (one row per player-week at risk) from game appearances.
+    """Weekly **clinical-injury** exposure panel — one row per rostered player-week at risk.
 
-    There is no injury-report table in the store (see `## Sources` → departures), so the event
-    is derived from participation — the standard "games missed" observable: inside a player's
-    season **exposure span**, a week with no snap-count row is `out=1`. The span starts at his
-    first appearance; it ends at the season's last week when he also appears the *following*
-    season (evidence he was still an NFL player, so a trailing absence is a season-ending
-    injury rather than an exit), otherwise at his last appearance — which stops players who
-    were cut or retired from being scored as injured forever after.
+    `appearances` is the exposure frame `build_injury_panel` reads out of the store: one row per
+    (season, week, player) the player spent on an NFL 53 or a reserve list, carrying the two
+    independent *clinical* injury designations plus his snap load that week. Recognised columns
+    (only season / week / position / an id are required):
+
+    ``gsis_id`` (or ``player_id``), ``position``, ``season``, ``week``, ``report_out``
+    (`injuries.report_status` in `OUT_REPORT_STATUS`), ``reserve_injured``
+    (`weekly_rosters.status` in `RESERVE_INJURY_STATUS`), ``off_snaps``,
+    ``st_snaps``, ``birth_date``, ``age``.
+
+    **The event is clinical, not participation.** ``out = report_out OR reserve_injured`` — the
+    club either listed the player Out/Doubtful on the official injury report or moved him to an
+    injured reserve list. Snap presence is deliberately *not* part of it: that is e2a's
+    availability observable, and reusing it here is precisely the double-count e4 would inherit
+    when it multiplies availability by this hazard. Two immediate consequences: a bye week is no
+    longer an "injury" (the roster row exists, the snap row does not), and a healthy backup is no
+    longer indistinguishable from an injured starter.
 
     Derived per row from the past only (no leakage): `prev_out`, `onset` (a *new* spell — the
-    survival event proper), `workload` (4-week trailing mean snaps, lagged),
-    `weeks_since_return` (0 = not recently back) and `experience` (prior seasons, age proxy).
+    survival event proper), `workload` (4-week trailing mean snaps, lagged), `weeks_since_return`
+    (0 = not recently back), `experience` (prior seasons seen) and `age` (real years).
     """
     df = appearances.copy()
-    if df.empty:
+    if df.empty or "position" not in df.columns:
         return _empty_panel()
+
+    def _num(col: str) -> pd.Series:
+        return pd.to_numeric(df.get(col, 0.0), errors="coerce").fillna(0.0)
+
     df["position"] = df["position"].astype(str).str.upper().map(_POSITION_MAP)
     df = df[df["position"].notna()]
-    pid = df["pfr_player_id"] if "pfr_player_id" in df.columns else df["player"]
-    if "player" in df.columns:
-        pid = pid.fillna(df["player"])
-    df["player_id"] = pid.astype(str)
-    off = pd.to_numeric(df.get("off_snaps", 0.0), errors="coerce").fillna(0.0)
-    st = pd.to_numeric(df.get("st_snaps", 0.0), errors="coerce").fillna(0.0)
-    df["snaps"] = np.where(df["position"].to_numpy() == "K", st, off)
-    df["share"] = pd.to_numeric(df.get("off_pct", 0.0), errors="coerce").fillna(0.0)
+    for candidate in ("gsis_id", "player_id", "pfr_player_id", "player"):
+        if candidate in df.columns:
+            df["player_id"] = df[candidate].astype(str)
+            break
     df["season"] = pd.to_numeric(df["season"], errors="coerce")
     df["week"] = pd.to_numeric(df["week"], errors="coerce")
-    df = df.dropna(subset=["season", "week"])
+    df = df.dropna(subset=["season", "week", "player_id"])
+    if df.empty:
+        return _empty_panel()
     df["season"] = df["season"].astype(int)
     df["week"] = df["week"].astype(int)
     if seasons is not None:
         df = df[df["season"].isin(list(seasons))]  # type: ignore[arg-type]
-    df = df[["player_id", "position", "season", "week", "snaps", "share"]].drop_duplicates(
-        ["player_id", "season", "week"]
-    )
     if df.empty:
         return _empty_panel()
-
-    # cohort selection (see MIN_GAMES / MIN_SHARE): keep the player-seasons with a real role —
-    # a median snap share of a starter across at least `min_games` appearances. Kickers have
-    # no offensive share, so they qualify on special-teams snaps instead.
-    grp = df.groupby(["player_id", "season"])
-    is_k = df["position"].to_numpy() == "K"
-    enough = (
-        np.where(
-            is_k,
-            grp["snaps"].transform("median").to_numpy() >= MIN_SNAPS["K"],
-            grp["share"].transform("median").to_numpy() >= MIN_SHARE,
-        )
-        & (grp["snaps"].transform("size").to_numpy() >= min_games)
+    df["snaps"] = np.where(
+        df["position"].to_numpy() == "K", _num("st_snaps").to_numpy(), _num("off_snaps").to_numpy()
     )
-    df = df[enough]
+    # the clinical event: injury-report Out/Doubtful OR an injury-driven reserve designation
+    df["event"] = np.clip(
+        np.maximum(_num("report_out").to_numpy(), _num("reserve_injured").to_numpy()), 0.0, 1.0
+    )
+    df["age"] = _player_age(df)
+    # a player-week can carry several roster rows (status is IN the store key: ACT + TRC + TRD);
+    # sorting on the event and keeping the last collapses them without losing an injury row.
+    df = df.sort_values(
+        ["player_id", "season", "week", "event"], kind="stable"
+    ).drop_duplicates(["player_id", "season", "week"], keep="last")
+
+    # cohort (see MIN_GAMES / MIN_SNAPS): enough roster weeks in the season, and a *peak* snap
+    # load somewhere in the player's career that says he had a real role. Peak-and-career rather
+    # than median-and-season on purpose — a season-ending week-1 injury leaves a player with zero
+    # snaps that year, and a within-season load test would silently delete exactly that case.
+    floor = np.where(df["position"].to_numpy() == "K", MIN_SNAPS["K"], float(min_snaps))
+    peak = df.groupby("player_id")["snaps"].transform("max").to_numpy()
+    weeks = df.groupby(["player_id", "season"])["snaps"].transform("size").to_numpy()
+    df = df[(peak >= floor) & (weeks >= int(min_games))]
     if df.empty:
         return _empty_panel()
-
-    season_last_week = df.groupby("season")["week"].max().to_dict()
-    present = set(zip(df["player_id"], df["season"], strict=False))
 
     blocks: list[pd.DataFrame] = []
     for (player_id, season), grp in df.groupby(["player_id", "season"], sort=True):
-        weeks = grp.set_index("week")["snaps"].sort_index()
-        first, last = int(weeks.index[0]), int(weeks.index[-1])
-        end = int(season_last_week[season]) if (player_id, season + 1) in present else last
-        idx = np.arange(first, end + 1)
-        snaps = weeks.reindex(idx).to_numpy(dtype=float)
-        out = np.isnan(snaps).astype(float)
-        snaps = np.nan_to_num(snaps)
+        g = grp.sort_values("week")
+        idx = g["week"].to_numpy(dtype=int)
+        snaps = g["snaps"].to_numpy(dtype=float)
+        out = g["event"].to_numpy(dtype=float)
         prev_out = np.concatenate([[0.0], out[:-1]])
         onset = ((out == 1.0) & (prev_out == 0.0)).astype(float)
         lagged = pd.Series(np.concatenate([[np.nan], snaps[:-1]]))
         workload = lagged.rolling(4, min_periods=1).mean().fillna(0.0).to_numpy()
+        # weeks since the END of the last spell, counted at the START of this week, so a row
+        # can be both "k weeks back from injury" AND a re-injury. The first build counted only
+        # healthy weeks, which made `out == 1` impossible at every k > 0 and drove the whole
+        # re-injury fit to a structural zero. Defined only on at-risk rows (prev_out == 0);
+        # mid-spell rows carry 0.
         since = np.zeros(len(idx))
-        counter, seen_out = 0.0, False
+        last_out = -1
         for i in range(len(idx)):
+            k = i - last_out if last_out >= 0 else 0
+            since[i] = float(k) if (0 < k <= REINJURY_WEEKS and prev_out[i] == 0.0) else 0.0
             if out[i] == 1.0:
-                counter, seen_out = 0.0, True
-            elif seen_out:
-                counter += 1.0
-            since[i] = 0.0 if counter > REINJURY_WEEKS else counter
+                last_out = i
         blocks.append(
             pd.DataFrame(
                 {
                     "player_id": player_id,
-                    "position": grp["position"].iloc[0],
+                    "position": g["position"].iloc[0],
                     "season": season,
                     "week": idx,
                     "snaps": snaps,
@@ -437,25 +538,88 @@ def build_injury_panel_from_frame(
                     "onset": onset,
                     "workload": workload,
                     "weeks_since_return": since,
+                    "age": g["age"].to_numpy(dtype=float),
                 }
             )
         )
     panel = pd.concat(blocks, ignore_index=True)
     debut = panel.groupby("player_id")["season"].transform("min")
     panel["experience"] = (panel["season"] - debut).astype(float)
+    panel["player_season"] = panel["player_id"].astype(str) + ":" + panel["season"].astype(str)
     return panel[list(PANEL_COLUMNS)]
+
+
+def _sql_list(values: tuple[str, ...]) -> str:
+    """Render a literal SQL IN-list from a module constant (no user input ever reaches this)."""
+    return "(" + ", ".join(f"'{v}'" for v in values) + ")"
 
 
 def build_injury_panel(
     store: object, *, seasons: object = None, table: str = "snap_counts"
 ) -> pd.DataFrame:
-    """Read regular-season appearances out of a `ParquetStore` and build the exposure panel."""
-    sql = (
-        "SELECT season, week, pfr_player_id, player, position, "
-        "COALESCE(offense_snaps, 0) AS off_snaps, COALESCE(st_snaps, 0) AS st_snaps, "
-        "COALESCE(offense_pct, 0) AS off_pct "
-        f"FROM {table} WHERE game_type = 'REG'"  # noqa: S608 — `table` is a store table name
-    )
+    """Read the clinical exposure frame out of a `ParquetStore` and build the injury panel.
+
+    Three feeds, one row per rostered player-week:
+
+    * `weekly_rosters` — **the exposure denominator** and the injured-reserve designation, plus
+      `birth_date` for a real age covariate. Rows are collapsed over `status` (it is part of the
+      store key, so one player-week can carry ACT + TRC + TRD).
+    * `injuries` — the official weekly report; `report_status` in `OUT_REPORT_STATUS` is the
+      game-status half of the event. `season` lands as float64 in this feed and is cast.
+    * `snap_counts` — the `workload` covariate and the return curve's recovery observable only,
+      never the event.
+
+    **Join hazard.** The three status feeds key on `gsis_id`; `snap_counts` keys on
+    `pfr_player_id`. The bridge is `player_ids` (`pfr_id` <-> `gsis_id`, 80.8 % of snap_counts'
+    distinct ids); `weekly_rosters.pfr_id` reaches only 55 % and is *not* used. `player_ids` has
+    NULL `gsis_id` on non-NFL rows and a handful of duplicate `pfr_id`s, so the bridge filters
+    nulls and collapses to one gsis per pfr — otherwise the join multiplies snap rows. The ~19 %
+    of snap rows with no bridge simply contribute no workload; they never contribute a fake
+    healthy week, because the event does not come from snaps.
+
+    `depth_charts` is deliberately unused here: depth rank is e2a's availability signal, its 2025
+    half is a second schema inside the same table with no season/week, and a rank-based cohort
+    selects on the outcome (see MIN_GAMES).
+
+    Seasons default to `FIRST_RELIABLE_SEASON`+ because the reserve lists are under-reported
+    before then; pass `seasons=` explicitly to override.
+    """
+    if seasons is None:
+        seasons = range(FIRST_RELIABLE_SEASON, 2100)
+    sql = f"""
+        WITH bridge AS (
+            SELECT pfr_id, min(gsis_id) AS gsis_id FROM player_ids
+            WHERE gsis_id IS NOT NULL AND pfr_id IS NOT NULL GROUP BY pfr_id
+        ), snaps AS (
+            SELECT s.season, s.week, b.gsis_id,
+                   sum(COALESCE(s.offense_snaps, 0)) AS off_snaps,
+                   sum(COALESCE(s.st_snaps, 0)) AS st_snaps
+            FROM {table} s JOIN bridge b ON b.pfr_id = s.pfr_player_id
+            WHERE s.game_type = 'REG' GROUP BY 1, 2, 3
+        ), report AS (
+            SELECT CAST(season AS INTEGER) AS season, week, gsis_id,
+                   max(CASE WHEN report_status IN {_sql_list(OUT_REPORT_STATUS)} THEN 1 ELSE 0 END)
+                       AS report_out
+            FROM injuries WHERE game_type = 'REG' AND gsis_id IS NOT NULL GROUP BY 1, 2, 3
+        ), roster AS (
+            SELECT season, week, player_id AS gsis_id, any_value("position") AS position,
+                   max(CASE WHEN status IN {_sql_list(RESERVE_INJURY_STATUS)}
+                            AND COALESCE(status_description_abbr, '')
+                                NOT IN {_sql_list(NON_INJURY_RESERVE_CODES)}
+                            THEN 1 ELSE 0 END) AS reserve_injured,
+                   min(birth_date) AS birth_date, max(age) AS age
+            FROM weekly_rosters
+            WHERE game_type = 'REG' AND player_id IS NOT NULL
+              AND status IN {_sql_list(EXPOSED_STATUS)}
+            GROUP BY 1, 2, 3
+        )
+        SELECT r.season, r.week, r.gsis_id, r.position, r.birth_date, r.age,
+               COALESCE(p.report_out, 0) AS report_out, r.reserve_injured,
+               COALESCE(n.off_snaps, 0) AS off_snaps, COALESCE(n.st_snaps, 0) AS st_snaps
+        FROM roster r
+        LEFT JOIN report p ON p.season = r.season AND p.week = r.week AND p.gsis_id = r.gsis_id
+        LEFT JOIN snaps n ON n.season = r.season AND n.week = r.week AND n.gsis_id = r.gsis_id
+    """  # noqa: S608 — every interpolation is a module constant, never user input
     return build_injury_panel_from_frame(store.query(sql).df(), seasons=seasons)  # type: ignore[attr-defined]
 
 
@@ -556,17 +720,32 @@ class DurationModel:
     params: dict[str, tuple[float, float]] = field(default_factory=dict)
     pooled: tuple[float, float] = (1.0, 1.0)
     counts: dict[str, int] = field(default_factory=dict)
+    #: Reported moments are truncated at a season. 38 % of clinical spells are right-censored
+    #: (season-ending IR), and an unbounded NB fitted through that censoring extrapolates a
+    #: latent mean of 10–26 games — arithmetically true of the latent variable, useless as
+    #: "games missed", since a 17-game season cannot cost more than 17. `mean`/`var` therefore
+    #: report E[min(D, cap)] / Var[min(D, cap)] and `sample` clips to the same cap.
+    cap: int = GAMES_PER_SEASON
 
     def _params(self, position: str) -> tuple[float, float]:
         return self.params.get(position, self.pooled)
 
+    def _moments(self, position: str) -> tuple[float, float]:
+        """E[min(D, cap)] and Var[min(D, cap)] from the fitted PMF plus its surviving tail."""
+        k = np.arange(1, int(self.cap) + 1, dtype=float)
+        p = np.asarray(self.pmf(k, position), dtype=float)
+        tail = float(max(1.0 - p.sum(), 0.0))
+        m1 = float((k * p).sum() + self.cap * tail)
+        m2 = float((k * k * p).sum() + self.cap * self.cap * tail)
+        return m1, float(max(m2 - m1 * m1, 0.0))
+
     def mean(self, position: str) -> float:
-        """Expected games missed for one injury (≥ 1 by construction)."""
-        return 1.0 + self._params(position)[0]
+        """Expected games missed for one injury — in [1, `cap`] by construction."""
+        return self._moments(position)[0]
 
     def var(self, position: str) -> float:
-        m, r = self._params(position)
-        return float(m + m * m / max(r, 1e-9))
+        """Variance of games missed for one injury, on the same truncated scale as `mean`."""
+        return self._moments(position)[1]
 
     def pmf(self, k: object, position: str) -> np.ndarray:
         """P(games missed = k); zero below 1 game — a spell always costs at least one."""
@@ -579,7 +758,8 @@ class DurationModel:
     def sample(self, position: str, size: int, rng: np.random.Generator) -> np.ndarray:
         """Draw `size` games-missed values for one injury at `position`."""
         m, r = self._params(position)
-        return 1 + rng.negative_binomial(max(r, 1e-6), r / (r + m), size=size)
+        draws = 1 + rng.negative_binomial(max(r, 1e-6), r / (r + m), size=size)
+        return np.minimum(draws, self.cap)
 
     def pooled_positions(self) -> list[str]:
         """Positions that degraded to the pooled prior because their data was too sparse."""
@@ -788,10 +968,16 @@ class InjuryModel:
     """The fitted injury model: weekly hazard, duration, return curve, re-injury, rates.
 
     `position_rates` is the fitted stand-in for `frontend/lib/draftAI.ts`'s hand-typed
-    `injuryRate` — the long-run **fraction of a season missed**, derived from the fit as an
-    alternating-renewal duty cycle ``λ·E[D] / (1 + λ·E[D])`` where λ is the mean fitted onset
-    hazard for the position and E[D] its expected games missed. E10 reads it from the JSON
-    `write_injury_rates` emits; this unit never edits the frontend.
+    `injuryRate` — the long-run **fraction of a season missed to injury**, and since the refit
+    that means *clinical* injury (club designation), not unavailability. E10 reads it from the
+    JSON `write_injury_rates` emits; this unit never edits the frontend.
+
+    The mechanism behind the number is an alternating-renewal duty cycle
+    ``λ·E[D] / (1 + λ·E[D])`` — λ the mean fitted onset hazard among at-risk weeks, E[D] the
+    expected games missed — but the *published* rate is the fitted weekly P(out) averaged over
+    the position's exposure, so the number e10 ships is the one the calibration gate cleared.
+    The two agree when E[D] is read on the observed (season-truncated) scale; `E_GAMES_MISSED`
+    in the JSON is the season-capped **latent** duration, which is the larger of the two.
     """
 
     hazard: DiscreteTimeHazard
@@ -825,6 +1011,12 @@ class InjuryModel:
         """JSON-ready summary — everything e10 or a doc needs, nothing unserialisable."""
         return {
             "entry_point": "blitz_engine.survival.hazard.fit_injury_model",
+            # e10 bakes injuryRate into DEFAULT_POLICY and must know what it measures.
+            "event": (
+                "clinical injury — the club's own designation (injuries.report_status in "
+                "('Out', 'Doubtful'), or weekly_rosters.status in ('RES', 'PUP', 'NFI')). "
+                "NOT snap-presence unavailability: multiply safely by e2a's availability."
+            ),
             "seed": self.seed,
             "seasons": list(self.seasons),
             "holdout_seasons": list(self.holdout),
