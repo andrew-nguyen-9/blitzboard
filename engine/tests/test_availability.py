@@ -24,10 +24,15 @@ from blitz_engine.survival.availability import (
     ZERO_AVAILABILITY_EPS,
     AvailabilityModel,
     RosterState,
+    collapse_roster_weeks,
     depth_rank_p,
+    fit_depth_rank_priors,
+    fit_roster_state_priors,
     fit_usage_priors,
+    gsis_to_pfr,
     is_effectively_unavailable,
     is_season_long_zero,
+    normalize_depth_charts,
     resolve_roster_state,
     roster_state_p,
     snap_share_p,
@@ -244,3 +249,115 @@ def test_fit_usage_priors_degrades_on_a_useless_frame(caplog: pytest.LogCaptureF
     assert out["depth_rank_p"] == dict(DEPTH_RANK_P)   # baked priors kept
     assert out["n"] == 0
     assert caplog.records
+
+
+# ── the refit: constants are FITTED on e9b's feeds, and the estimators reproduce ──
+def _snaps(rows: list[tuple[int, int, str, str, float]]) -> pd.DataFrame:
+    return pd.DataFrame(rows, columns=["season", "week", "team", "pfr_player_id", "offense_pct"]
+                        ).assign(game_type="REG")
+
+
+def _crosswalk(pairs: dict[str, str | None]) -> pd.DataFrame:
+    return pd.DataFrame({"gsis_id": list(pairs), "pfr_id": list(pairs.values())})
+
+
+def test_status_description_abbr_refines_only_the_transaction_verbs() -> None:
+    """The measured rules: A01 promotes off reserve but NOT off a game-day INA."""
+    assert resolve_roster_state("ACT", "A01") is RosterState.ROSTERED
+    assert resolve_roster_state("ACT", "I01") is RosterState.INACTIVE   # abbr demotes
+    assert resolve_roster_state("RES", "A01") is RosterState.ROSTERED   # activation
+    assert resolve_roster_state("RES", "R01") is RosterState.IR
+    assert resolve_roster_state("INA", "A01") is RosterState.INACTIVE   # game-day fact sticks
+    assert resolve_roster_state("RET", "R02") is RosterState.RETIRED    # season-long wins
+    assert resolve_roster_state("CUT", "A01") is RosterState.CAMP_BODY
+    assert resolve_roster_state(None, "P01") is RosterState.PRACTICE_SQUAD
+    assert resolve_roster_state("garbage", "zzz") is None               # still "no signal"
+
+
+def test_collapse_keeps_one_row_per_player_week_most_active_wins() -> None:
+    """`status` is IN weekly_rosters' key, so a traded player has several rows (e9b)."""
+    df = pd.DataFrame({
+        "season": [2024] * 3, "week": [5] * 3, "team": ["KC"] * 3, "player_id": ["g1"] * 3,
+        "state": [RosterState.IR, RosterState.ROSTERED, RosterState.CAMP_BODY],
+    })
+    out = collapse_roster_weeks(df)
+    assert len(out) == 1
+    assert out["state"].iloc[0] == RosterState.ROSTERED  # pandas stores the StrEnum as str
+
+
+def test_normalize_depth_charts_handles_both_schemas_in_one_table() -> None:
+    """2025 rows are a SECOND schema (ESPN snapshots) stacked in the same table (e9b)."""
+    raw = pd.DataFrame({
+        "season": [2024.0, None], "week": [3.0, None], "game_type": ["REG", None],
+        "club_code": ["SF", None], "depth_position": ["RB", None], "depth_team": ["2", None],
+        "dt": [None, "2025-08-01T00:00:00"], "team": [None, "SF"],
+        "pos_abb": [None, "RB"], "pos_rank": [None, 3], "gsis_id": ["g1", "g2"],
+    })
+    out = normalize_depth_charts(raw)
+    assert list(out["depth_rank"]) == [2.0, 3.0]
+    assert list(out["position"]) == ["RB", "RB"]
+    assert list(out["team"]) == ["SF", "SF"]
+    assert out["week"].isna().sum() == 1          # the ESPN half has no joinable game week
+    assert normalize_depth_charts(pd.DataFrame()).empty
+
+
+def test_bridge_is_player_ids_and_drops_null_gsis() -> None:
+    """80.8% via `player_ids`; `weekly_rosters.pfr_id` (55.0%) is deliberately not a bridge."""
+    cw = _crosswalk({"g1": "PfrA00", "g2": None})
+    cw = pd.concat([cw, pd.DataFrame({"gsis_id": [None], "pfr_id": ["PfrC00"]})])
+    assert gsis_to_pfr(cw) == {"g1": "PfrA00"}
+    assert gsis_to_pfr(pd.DataFrame({"a": [1]})) == {}
+
+
+def test_fit_roster_state_priors_recovers_a_planted_ceiling() -> None:
+    rosters = pd.DataFrame({
+        "season": [2024] * 4, "week": [1] * 4, "team": ["KC"] * 4, "game_type": ["REG"] * 4,
+        "position": ["WR"] * 4, "player_id": ["g1", "g2", "g3", "g4"],
+        "status": ["ACT", "ACT", "DEV", "RET"],
+        "status_description_abbr": ["A01", "A01", "P01", "R02"],
+    })
+    snaps = _snaps([(2024, 1, "KC", "p1", 0.9), (2024, 1, "KC", "p2", 0.0),
+                    (2024, 1, "KC", "p3", 0.0), (2024, 1, "KC", "p4", 0.0)])
+    cw = _crosswalk({"g1": "p1", "g2": "p2", "g3": "p3", "g4": "p4"})
+    out = fit_roster_state_priors(rosters, snaps, cw, min_n=1)
+    assert out["raw"]["ROSTERED"] == pytest.approx(0.5)      # 1 of 2 cleared 10%
+    assert out["roster_state_p"][RosterState.ROSTERED] == 1.0
+    assert out["roster_state_p"][RosterState.PRACTICE_SQUAD] == 0.0
+    assert out["n"]["RETIRED"] == 1
+    # NFI/HOLDOUT have no feed code: they keep the stated prior, never a fitted 0.
+    assert out["roster_state_p"][RosterState.HOLDOUT] == ROSTER_STATE_P[RosterState.HOLDOUT]
+
+
+def test_fit_depth_rank_extends_past_the_published_rank_3_monotonically() -> None:
+    depth = pd.DataFrame({
+        "season": [2024] * 3, "week": [1.0] * 3, "game_type": ["REG"] * 3,
+        "club_code": ["KC"] * 3, "depth_position": ["WR"] * 3, "depth_team": ["1", "2", "3"],
+        "gsis_id": ["g1", "g2", "g3"], "dt": [None] * 3,
+    })
+    snaps = _snaps([(2024, 1, "KC", "p1", 0.9), (2024, 1, "KC", "p2", 0.5),
+                    (2024, 1, "KC", "p3", 0.0)])
+    out = fit_depth_rank_priors(depth, snaps, _crosswalk({"g1": "p1", "g2": "p2", "g3": "p3"}),
+                                min_n=1)
+    ladder = out["depth_rank_p"]
+    assert [ladder[r] for r in (1, 2, 3)] == [1.0, 1.0, 0.0]
+    assert sorted(ladder) == [1, 2, 3, 4, 5, 6]              # extended past the feed's rank 3
+    assert all(ladder[r] >= ladder[r + 1] for r in range(1, 6))
+    assert out["tail_p"] <= ladder[6]
+
+
+def test_fits_degrade_on_unusable_frames_instead_of_zeroing() -> None:
+    empty = pd.DataFrame()
+    assert fit_roster_state_priors(empty, empty, empty)["roster_state_p"] == ROSTER_STATE_P
+    assert fit_depth_rank_priors(empty, empty, empty)["depth_rank_p"] == DEPTH_RANK_P
+    junk = pd.DataFrame({"season": [2024], "week": [1], "team": ["KC"], "player_id": ["g1"],
+                         "status": ["ACT"]})
+    out = fit_roster_state_priors(junk, _snaps([(2024, 1, "KC", "p9", 0.9)]), _crosswalk({}))
+    assert out["roster_state_p"] == ROSTER_STATE_P           # no bridge → no fit, no zeros
+
+
+def test_practice_squad_is_now_below_the_undraftable_threshold() -> None:
+    """The refit's biggest number move: the 0.06 prior was 14x the measured rate."""
+    assert ROSTER_STATE_P[RosterState.PRACTICE_SQUAD] < ZERO_AVAILABILITY_EPS
+    p = AvailabilityModel().p_startable(pd.DataFrame(
+        {"player_id": ["ps"], "roster_status": ["PS"], "depth_rank": [1]}))
+    assert is_effectively_unavailable(p["ps"])
