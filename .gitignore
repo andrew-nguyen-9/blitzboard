@@ -47,3 +47,6 @@ pipeline/.news_cache.json
 pipeline/artifacts/
 .gstack/
 .orchestrator/
+
+# local receipts / scratch outputs (raw benchmark HTML etc.) — derived artifacts are committed under .orchestrator-v6/
+artifacts/

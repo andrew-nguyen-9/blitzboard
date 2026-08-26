@@ -73,6 +73,8 @@ __all__ = [
     "evaluate_season",
     "full_sweep_enabled",
     "hindsight_points",
+    "paired_ci",
+    "paired_effect",
     "policy_names",
     "round_robin",
 ]
@@ -314,13 +316,27 @@ def round_robin(teams: int, weeks: int) -> list[list[tuple[int, int]]]:
 
 @dataclass(frozen=True)
 class EvalConfig:
-    """Knobs for one evaluation. `n_seasons` is the only accuracy/cost dial."""
+    """Knobs for one evaluation. `n_seasons` is the only accuracy/cost dial.
+
+    C02 realism knobs: `proactive_moves_per_week` bounds point-in-time UPSIDE claims (a
+    believed-projection upgrade over a team's worst same-position body — K/DST streaming
+    falls out of the same rule); `upgrade_margin` is the edge such a claim must clear;
+    `waiver_cost` is a per-claim started-points friction charged at season aggregation
+    (H2H weeks are decided on the field, so weekly scores are not touched);
+    `season_moves_cap` hard-bounds total claims per team-season; `playoff_slots` sizes
+    the playoff proxy (top seats by wins, season points as tiebreak).
+    """
 
     n_seasons: int = 8
     seed: int = SEASON_EVAL_SEED
     shrink_kappa: float = 4.0  # pseudo-games of pre-season projection in the weekly forecast
     waiver_moves_per_week: int = 1
     waivers: bool = True
+    proactive_moves_per_week: int = 1
+    upgrade_margin: float = 0.15
+    waiver_cost: float = 0.0
+    season_moves_cap: int = 25
+    playoff_slots: int = 4
     injury: InjuryDynamics | None = None  # default: e3's published fixture
 
 
@@ -328,20 +344,37 @@ class EvalConfig:
 DEFAULT_EVAL_CONFIG = EvalConfig()
 
 
+_EMPTY = lambda: np.empty((0, 0), dtype=np.float64)  # noqa: E731 - dataclass default factory
+
+
 @dataclass(frozen=True)
 class SeasonEvalResult:
-    """Per-seat outcome of one evaluation. `started_points` IS the metric."""
+    """Per-seat outcome of one evaluation. `started_points` IS the metric.
+
+    C02 adds paired per-season samples for every outcome family: `per_season` (points,
+    net of transaction cost), `per_season_h2h` (weekly win rate), `per_season_playoff`
+    and `per_season_champ` (0/1 proxy outcomes — seeding by wins with season points as
+    tiebreak; the champion proxy is the highest-scoring playoff team, because the corpus
+    has no bracket weeks to play). `waiver_adds = emergency_adds + upside_adds`.
+    """
 
     started_points: np.ndarray  # (teams,) mean points the LOCKED lineup actually scored
     h2h_win_rate: np.ndarray  # (teams,) fraction of head-to-head weeks won
     seat_policy: list[str]
     starts_lost: np.ndarray  # (teams,) mean starting slots left empty/zeroed by a surprise
-    waiver_adds: np.ndarray  # (teams,) mean successful waiver claims
+    waiver_adds: np.ndarray  # (teams,) mean successful waiver claims (all kinds)
     n_seasons: int
     weeks: int
     per_season: np.ndarray = field(  # (n_seasons, teams) — the paired vector for ablation
-        default_factory=lambda: np.empty((0, 0), dtype=np.float64)
+        default_factory=_EMPTY
     )
+    emergency_adds: np.ndarray = field(default_factory=lambda: np.empty(0))  # (teams,) mean
+    upside_adds: np.ndarray = field(default_factory=lambda: np.empty(0))  # (teams,) mean
+    playoff_rate: np.ndarray = field(default_factory=lambda: np.empty(0))  # (teams,) mean
+    champ_rate: np.ndarray = field(default_factory=lambda: np.empty(0))  # (teams,) mean
+    per_season_h2h: np.ndarray = field(default_factory=_EMPTY)  # (n_seasons, teams)
+    per_season_playoff: np.ndarray = field(default_factory=_EMPTY)  # (n_seasons, teams) 0/1
+    per_season_champ: np.ndarray = field(default_factory=_EMPTY)  # (n_seasons, teams) 0/1
 
     @property
     def metric(self) -> float:
@@ -357,6 +390,10 @@ class SeasonEvalResult:
                 "h2h_win_rate": self.h2h_win_rate,
                 "starts_lost": self.starts_lost,
                 "waiver_adds": self.waiver_adds,
+                "emergency_adds": self.emergency_adds,
+                "upside_adds": self.upside_adds,
+                "playoff_rate": self.playoff_rate,
+                "champ_rate": self.champ_rate,
             }
         )
         return df.groupby("policy", as_index=False).mean(numeric_only=True)
@@ -441,9 +478,13 @@ def evaluate_rosters(
     free_pool = [i for i, p in enumerate(players) if p.player_id not in drafted]
 
     per_season = np.zeros((config.n_seasons, teams), dtype=np.float64)
+    per_season_h2h = np.zeros((config.n_seasons, teams), dtype=np.float64)
+    per_season_playoff = np.zeros((config.n_seasons, teams), dtype=np.float64)
+    per_season_champ = np.zeros((config.n_seasons, teams), dtype=np.float64)
     wins = np.zeros(teams, dtype=np.float64)
     lost = np.zeros(teams, dtype=np.float64)
-    adds = np.zeros(teams, dtype=np.float64)
+    emerg = np.zeros(teams, dtype=np.float64)
+    upside = np.zeros(teams, dtype=np.float64)
 
     for s in range(config.n_seasons):
         inj_rng = np.random.default_rng(config.seed + _INJURY_STREAM + s)
@@ -460,6 +501,9 @@ def evaluate_rosters(
         obs_n = np.zeros(len(players))
         season_wins = np.zeros(teams)
         season_pts = np.zeros(teams)
+        season_emerg = np.zeros(teams)
+        season_upside = np.zeros(teams)
+        moves_left = np.full(teams, config.season_moves_cap, dtype=np.int64)
 
         for w in range(weeks):
             # ── the decision frame: weeks strictly before w, checked, not trusted ──
@@ -495,14 +539,30 @@ def evaluate_rosters(
             obs_n[observed] += 1.0
 
             if config.waivers and w + 1 < weeks:
-                adds += _run_waivers(
+                e, u = _run_waivers(
                     squads, free, season_wins, slots, positions, proj,
                     known_out=(on_bye[:, w + 1] | dead | (mult[:, w] == 0.0)),
                     limit=config.waiver_moves_per_week, cap=bench_cap,
+                    proactive_limit=config.proactive_moves_per_week,
+                    upgrade_margin=config.upgrade_margin, moves_left=moves_left,
                 )
+                season_emerg += e
+                season_upside += u
 
-        per_season[s] = season_pts
+        # Transaction friction: each claim costs `waiver_cost` started points at season
+        # aggregation. Weekly H2H is decided on the field, so weekly scores are untouched.
+        per_season[s] = season_pts - config.waiver_cost * (season_emerg + season_upside)
+        per_season_h2h[s] = season_wins / weeks
+        # Playoff proxy: top `playoff_slots` seats by (wins, season points); the champion
+        # proxy is the highest-scoring playoff seat (the corpus has no bracket weeks).
+        n_po = min(config.playoff_slots, teams)
+        seeding = np.lexsort((-season_pts, -season_wins))
+        po = seeding[:n_po]
+        per_season_playoff[s, po] = 1.0
+        per_season_champ[s, po[np.argmax(season_pts[po])]] = 1.0
         wins += season_wins
+        emerg += season_emerg
+        upside += season_upside
 
     inv = 1.0 / config.n_seasons
     return SeasonEvalResult(
@@ -510,10 +570,17 @@ def evaluate_rosters(
         h2h_win_rate=wins * inv / weeks,
         seat_policy=list(seat_policy or ["?"] * teams),
         starts_lost=lost * inv,
-        waiver_adds=adds * inv,
+        waiver_adds=(emerg + upside) * inv,
         n_seasons=config.n_seasons,
         weeks=weeks,
         per_season=per_season,
+        emergency_adds=emerg * inv,
+        upside_adds=upside * inv,
+        playoff_rate=per_season_playoff.mean(axis=0),
+        champ_rate=per_season_champ.mean(axis=0),
+        per_season_h2h=per_season_h2h,
+        per_season_playoff=per_season_playoff,
+        per_season_champ=per_season_champ,
     )
 
 
@@ -538,21 +605,38 @@ def _run_waivers(
     known_out: np.ndarray,
     limit: int,
     cap: int,
-) -> np.ndarray:
+    proactive_limit: int = 0,
+    upgrade_margin: float = 0.15,
+    moves_left: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
     """Contested waivers: worst record claims first from ONE shared pool. Bounded fidelity.
 
-    Modelled: a team whose believed-usable roster can no longer fill its starting slots claims the
-    best free agent at the position it cannot fill, dropping its lowest-projected surplus body;
-    priority is reverse standings and the pool is shared, so two teams needing the same player is a
-    real contest. Deliberately OMITTED: FAAB budgets, trades, multi-week speculative stashes,
-    hoarding a handcuff, and any claim not driven by an unfillable slot. That is enough for a bench
-    slot to carry an opportunity cost (its alternative is a contested waiver add) without
-    pretending to model a manager's whole in-season game.
+    Two claim kinds, both point-in-time (they read only the believed projection built from
+    weeks already observed) and both charged against `moves_left` (the season cap):
+
+    - EMERGENCY (up to `limit`): a team whose believed-usable roster can no longer fill its
+      starting slots claims the best free agent at the position it cannot fill.
+    - UPSIDE (up to `proactive_limit`): a team claims the free agent with the largest
+      believed edge over its own worst same-position body, when that edge clears
+      `upgrade_margin`; the worst body is dropped. A K/DST with a better free alternative
+      streams through this same rule — no special case.
+
+    Priority is reverse standings and the pool is shared, so two teams wanting the same
+    player is a real contest. Deliberately OMITTED: FAAB budgets, trades, multi-week
+    speculative stashes, and hoarding a handcuff. That is enough for a bench slot to carry
+    a real opportunity cost without pretending to model a manager's whole in-season game.
+
+    Returns `(emergency_adds, upside_adds)` per team for this week.
     """
-    adds = np.zeros(len(squads), dtype=np.float64)
+    emerg = np.zeros(len(squads), dtype=np.float64)
+    upside = np.zeros(len(squads), dtype=np.float64)
+    if moves_left is None:
+        moves_left = np.full(len(squads), np.iinfo(np.int64).max, dtype=np.int64)
     order = sorted(range(len(squads)), key=lambda t: (season_wins[t], t))
     for t in order:
         for _ in range(limit):
+            if moves_left[t] <= 0:
+                break
             usable = ~known_out
             filled = _fill(squads[t], slots, positions, proj, usable)
             hole = _first_hole(squads[t], slots, positions, proj, usable, filled)
@@ -573,8 +657,58 @@ def _run_waivers(
                 free.append(drop)
             squads[t].append(best)
             free.remove(best)
-            adds[t] += 1.0
-    return adds
+            emerg[t] += 1.0
+            moves_left[t] -= 1
+    for t in order:
+        for _ in range(proactive_limit):
+            if moves_left[t] <= 0:
+                break
+            swap = _best_upgrade(squads[t], free, positions, proj, known_out, upgrade_margin)
+            if swap is None:
+                break
+            drop, best = swap
+            squads[t].remove(drop)
+            free.append(drop)
+            squads[t].append(best)
+            free.remove(best)
+            upside[t] += 1.0
+            moves_left[t] -= 1
+    return emerg, upside
+
+
+def _best_upgrade(
+    squad: Sequence[int],
+    free: Sequence[int],
+    positions: Sequence[str],
+    proj: np.ndarray,
+    known_out: np.ndarray,
+    margin: float,
+) -> tuple[int, int] | None:
+    """The (drop, add) swap with the largest believed edge clearing `margin`, else None.
+
+    For every free agent not known out, the drop candidate is the squad's worst-believed
+    body at the same position; the claim must clear `proj[add] > proj[drop] × (1+margin)`.
+    A started body may be replaced (its higher-projected replacement starts instead) —
+    that is exactly K/DST streaming when the position carries one body.
+    """
+    worst_at: dict[str, int] = {}
+    for i in squad:
+        pos = positions[i]
+        if pos not in worst_at or proj[i] < proj[worst_at[pos]]:
+            worst_at[pos] = i
+    best: tuple[int, int] | None = None
+    best_edge = 0.0
+    for f in free:
+        if known_out[f]:
+            continue
+        drop = worst_at.get(positions[f])
+        if drop is None:
+            continue
+        edge = float(proj[f] - proj[drop] * (1.0 + margin))
+        if edge > best_edge:
+            best_edge = edge
+            best = (drop, f)
+    return best
 
 
 def _first_hole(
@@ -714,3 +848,25 @@ def paired_effect(a: SeasonEvalResult, b: SeasonEvalResult, seats: Iterable[int]
     """Mean per-season started-points gap between two arms on the same seats (a − b)."""
     s = list(seats)
     return float((a.per_season[:, s] - b.per_season[:, s]).mean())
+
+
+def paired_ci(
+    a: SeasonEvalResult,
+    b: SeasonEvalResult,
+    seats: Iterable[int],
+    field: str = "per_season",
+) -> dict[str, float]:
+    """Paired per-season delta (a − b) on `seats` with a normal-approx CI95 and sample count.
+
+    `field` names any (n_seasons, teams) sample array on the result: `per_season`
+    (points), `per_season_h2h`, `per_season_playoff`, `per_season_champ`. The paired
+    sample is the per-season seat-mean delta, so `n` = n_seasons and the two arms must
+    share seeds/seats for the pairing to mean anything. Returns {mean, lo, hi, n}.
+    """
+    s = list(seats)
+    da, db = getattr(a, field), getattr(b, field)
+    d = (da[:, s] - db[:, s]).mean(axis=1)
+    n = len(d)
+    mean = float(d.mean())
+    half = 1.96 * float(d.std(ddof=1)) / np.sqrt(n) if n > 1 else float("inf")
+    return {"mean": mean, "lo": mean - half, "hi": mean + half, "n": float(n)}

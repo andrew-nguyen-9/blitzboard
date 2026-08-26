@@ -7,9 +7,9 @@
 - green base SHA: `01f01d3c5f9c00a046edd43707db75ce1426c0e8` (immutable baseline)
 - review counterpart: `.worktrees/v6-review` on `v6/bench-portfolio-review` (reviewer-owned; never edited from here)
 - current attempt: 1
-- blockers: none known; C01 accepted (C01A-codex PASS at review commit 2be8a22); green C01 head b81541c
+- blockers: none known; C02 implemented (realism + calibration) — awaiting independent C02 verdict
 - verification: C00 receipts frozen in `.orchestrator-v6/receipts/`; DoD run recorded in `checkpoints/C00-claude.md`
-- next action: build C02 per wishlist + player-calibration-v1.json (frozen, reviewer-owned); stop at C02-claude.md for independent review; no merge, no push, no release
+- next action: stop at C02-claude.md; no integration, no C03 until independent PASS; promotion-v3 collision reported (C05 prep owns first v3 at 82b7705)
 - external authority: no push, merge, PR, release, protected-branch edit, or branch deletion
 
 Ownership (from wishlist-v6-bench-portfolio.md):
