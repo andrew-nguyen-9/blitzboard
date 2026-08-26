@@ -73,6 +73,60 @@ def _fetch_ftn(seasons: list[int]) -> pd.DataFrame:
     return nfl.import_ftn_data(seasons)
 
 
+def _by_year(fetch_one: Callable[[list[int]], pd.DataFrame]) -> Callable[[list[int]], pd.DataFrame]:
+    """Fetch one season at a time and concat. `nfl_data_py` 0.3.2's
+    `import_weekly_rosters` raises "cannot reindex on an axis with duplicate labels" when
+    handed >1 year, and depth charts change schema mid-corpus (2025), so the per-year loop
+    is the only multi-season-safe call. `ponytail:` one helper, two specs."""
+
+    def fetch(seasons: list[int]) -> pd.DataFrame:
+        import pandas as pd
+
+        return pd.concat([fetch_one([s]) for s in seasons], ignore_index=True)
+
+    return fetch
+
+
+def _fetch_injuries(seasons: list[int]) -> pd.DataFrame:
+    import nfl_data_py as nfl
+
+    return nfl.import_injuries(seasons)
+
+
+def _fetch_weekly_rosters_one(seasons: list[int]) -> pd.DataFrame:
+    import nfl_data_py as nfl
+
+    return nfl.import_weekly_rosters(seasons)
+
+
+#: Union of the two depth-chart schemas' key columns (see the spec below). Every batch
+#: must carry all of them — `upsert_parquet` binds the key by name, so a column that is
+#: missing from EITHER the incoming batch or the existing Parquet is a binder error.
+DEPTH_CHART_KEYS: tuple[str, ...] = (
+    "season", "game_type", "week", "club_code", "gsis_id",
+    "depth_position", "formation", "depth_team",
+    "dt", "team", "espn_id", "pos_grp_id", "pos_id", "pos_slot",
+)
+
+
+def _fetch_depth_charts_one(seasons: list[int]) -> pd.DataFrame:
+    import nfl_data_py as nfl
+
+    df = nfl.import_depth_charts(seasons)
+    for col in DEPTH_CHART_KEYS:  # pad the other schema's key columns with NULLs
+        if col not in df.columns:
+            df[col] = None
+    return df
+
+
+def _fetch_player_ids(seasons: list[int]) -> pd.DataFrame:  # noqa: ARG001 — static map
+    """The ffverse id map: `gsis_id` <-> `pfr_id` (+ espn/sleeper/…). Not season-scoped —
+    the whole map is refetched and upserted on `mfl_id`."""
+    import nfl_data_py as nfl
+
+    return nfl.import_ids()
+
+
 # -- source registry -----------------------------------------------------------
 @dataclass(frozen=True)
 class SourceSpec:
@@ -97,6 +151,33 @@ SOURCES: tuple[SourceSpec, ...] = (
     SourceSpec("pfr_rec", ("season", "week", "pfr_player_id"), 2018, _fetch_weekly_pfr("rec")),
     SourceSpec("snap_counts", ("game_id", "pfr_player_id"), 2014, _fetch_snap_counts),
     SourceSpec("ftn_charting", ("nflverse_game_id", "nflverse_play_id"), 2022, _fetch_ftn),
+    # -- per-player status feeds (availability / survival inputs). Keys are MEASURED, not
+    # guessed: each is the smallest tuple where rows == distinct(keys) on real data,
+    # widened with a non-null discriminator wherever the id column can be null (null key
+    # columns collapse every such row into ONE under DuckDB's PARTITION BY).
+    SourceSpec(
+        "injuries",
+        ("season", "game_type", "week", "team", "gsis_id", "full_name"),
+        2009,
+        _fetch_injuries,
+    ),
+    # `status` is in the key: a player can have several rows in one week (roster
+    # transactions, e.g. ACT + TRC + TRD). `player_name` guards the null `player_id` rows.
+    SourceSpec(
+        "weekly_rosters",
+        ("season", "game_type", "week", "team", "player_id", "player_name", "status"),
+        2002,
+        _by_year(_fetch_weekly_rosters_one),
+    ),
+    # Union key over TWO schemas: nflverse rebuilt depth charts for 2025+ (snapshot feed —
+    # dt/team/pos_id/pos_slot, no season/week). Old-schema rows have the new key columns
+    # null and vice versa, so each half keys on its own tuple and the halves cannot
+    # collide (`season` is non-null only on the old half).
+    SourceSpec("depth_charts", DEPTH_CHART_KEYS, 2001, _by_year(_fetch_depth_charts_one)),
+    # gsis_id <-> pfr_player_id crosswalk: `weekly_rosters.pfr_id` reaches only ~46% of
+    # snap_counts' pfr ids, this map reaches ~81%. Keyed on `mfl_id` (unique, never null);
+    # `gsis_id` is null on 4,480 of 12,480 rows, so it cannot be the key.
+    SourceSpec("player_ids", ("mfl_id",), 2002, _fetch_player_ids),
 )
 SOURCES_BY_TABLE = {s.table: s for s in SOURCES}
 
