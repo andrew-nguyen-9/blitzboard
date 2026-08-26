@@ -1,8 +1,8 @@
 # C04 independent acceptance contract
 
 Status: preparation only. This document does not define production implementation and is not a
-checkpoint verdict. C02 and C03 interfaces are unfinished; names below are semantic requirements,
-not proposed TypeScript field names.
+checkpoint verdict. C02 is provisional at `edbcc4d743b447ebcbbfe84a0e1210380c6250d1`; C03 is
+unfinished. Names below are semantic requirements, not proposed TypeScript field names.
 
 ## Scoring components
 
@@ -15,7 +15,7 @@ Every candidate trace must expose six separately attributable numeric results. A
 | bye/absence coverage | Marginal expected starts created by the candidate | week, slot, starter id; candidate availability; maximum-matching result | same-position count, same-bye credit, or ineligible-slot credit |
 | contingent role | Expected inherited role from explicit succession evidence | starter id, evidence kind/source, inheritance probability, expected value or degraded state | teammate/position proximity or ambiguous depth |
 | breakout option value | Value of a plausible ceiling outcome over the current lineup/replacement bar | upside basis and units, projection/evidence id | mixed raw/VOR units or unsupported narrative labels |
-| waiver replacement/churn | Cost/value relative to C02's bounded point-in-time replacement and churn output | C02 output id, value, transaction/churn basis | a browser simulation or a constant silently presented as measured |
+| waiver replacement/churn | Cost/value relative to C02's bounded point-in-time replacement and churn output | C02 evidence id, candidate/transaction value, transaction/churn basis | aggregate adds presented as candidate value, a browser simulation, or a constant silently presented as measured |
 | redundancy cost | Soft marginal cost of already-covered roles/positions | roster assignment and shared-shape evidence/fallback status | a hard positional cap derived from the C03 soft shape |
 
 The scoring total must be reproducible from structured components plus any separately named legacy
@@ -54,6 +54,34 @@ browser-safe generated artifact. It must prove:
 Exact filenames, serialization order, and field names remain deliberately unspecified until C03
 publishes its accepted interface.
 
+## Provisional C02 interface reconciliation
+
+Read-only inspection of provisional C02 commit
+`edbcc4d743b447ebcbbfe84a0e1210380c6250d1` found these result surfaces:
+
+- aggregate per-seat means: `emergency_adds`, `upside_adds`, and backward-compatible
+  `waiver_adds = emergency_adds + upside_adds`;
+- configuration inputs relevant to churn: `proactive_moves_per_week`, `upgrade_margin`,
+  `waiver_cost`, and `season_moves_cap`;
+- paired sample families: `per_season`, `per_season_h2h`, `per_season_playoff`, and
+  `per_season_champ`;
+- `paired_ci(a, b, seats, field)` returning `{mean, lo, hi, n}`.
+
+These interfaces are explicitly provisional. They do **not** currently publish transaction-level
+add/drop records, candidate-level replacement or churn value, a browser-safe result, or a stable
+producer-issued evidence/outcome identifier. Therefore C04 must not convert aggregate waiver-add
+counts into candidate explanation value.
+
+Until C02 publishes an identifier, acceptance fixtures may use a reviewer-local composite reference
+of `(producer_commit, seed, seats, field, n_seasons)` to prevent outcome-family collisions. This is
+test bookkeeping only, not a production identifier contract. A production explanation must consume
+a stable producer-issued reference or visibly degrade with
+`aggregate_only_no_candidate_transactions`.
+
+The paired field identifiers above distinguish points, H2H, playoff proxy, and championship proxy.
+The latter two remain explicitly proxies; C04 explanations must not describe them as observed
+playoff qualification or championships.
+
 ## Runtime budget
 
 The live browser scorer may perform one deterministic board evaluation per pick. It may walk the
@@ -64,4 +92,3 @@ The executable guard currently proves one score result and, when jitter is enabl
 per candidate. C04 production should preserve the stronger budget:
 
 `rng_calls <= candidate_count`, `simulation_trials = 0`, `season_rollouts = 0`.
-
