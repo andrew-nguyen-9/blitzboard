@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "status": "preregistered_not_executed",
+  "baseline_sha": "01f01d3c5f9c00a046edd43707db75ce1426c0e8",
+  "production_c00_sha": "b8ce3e76c0ae4dea8d655db09c9b36bd7d912c49",
+  "hypotheses": [
+    "Explicit raw-projection and VOR units remove deterministic player-order errors.",
+    "Format-correct replacement improves superflex QB ordering without harming 1QB ordering.",
+    "Removing redraft future-age and search-popularity adjustments reduces cohort bias.",
+    "Any promoted coefficient candidate improves held-out season outcomes as well as current benchmark agreement."
+  ],
+  "arms": ["v5_shipped_rating", "v6_candidate_rating"],
+  "formats": ["12-team-half-ppr-1qb", "12-team-half-ppr-superflex", "14-team-half-ppr-2qb"],
+  "benchmark_sources": [
+    {
+      "id": "fantasypros-half-ppr-ecr",
+      "url": "https://www.fantasypros.com/nfl/cheatsheets/top-half-ppr-players.php?week=draft",
+      "fields": ["overall_rank", "player", "position"],
+      "freeze_requirement": "record retrieval UTC, expert count, content hash, and match report before execution"
+    },
+    {
+      "id": "fantasypros-half-ppr-adp",
+      "url": "https://www.fantasypros.com/nfl/adp/half-point-ppr-overall.php/",
+      "fields": ["overall_adp", "player", "position", "source_count"],
+      "freeze_requirement": "record retrieval UTC, included platforms, content hash, and match report before execution"
+    },
+    {
+      "id": "fantasypros-superflex-ecr",
+      "url": "https://www.fantasypros.com/nfl/fantasy-football-rankings/superflex.php?print=true",
+      "fields": ["overall_rank", "player", "position"],
+      "freeze_requirement": "record retrieval UTC, expert count, content hash, and match report before execution"
+    }
+  ],
+  "cohorts": ["all", "QB", "RB", "WR", "TE", "rookie", "veteran_age_30_plus", "injury_designation", "team_change", "missing_adp", "missing_depth", "low_availability"],
+  "metrics": ["spearman_rho", "weighted_absolute_rank_error", "top_12_recall", "top_24_recall", "top_50_recall", "median_rank_bias", "largest_absolute_outliers", "unmatched_player_rate"],
+  "component_fields": ["projection_mean", "projection_ceiling", "replacement", "vor", "ceiling_vor", "elite", "cliff", "upside", "predictability", "age", "market", "availability", "policy_adjustment", "final_value", "final_rank"],
+  "thresholds": {
+    "deterministic_unit_failures": 0,
+    "unmatched_top_100_rate_max": 0.02,
+    "spearman_delta_min": 0.0,
+    "weighted_rank_error_delta_max": 0.0,
+    "position_or_cohort_material_regression": 0,
+    "season_evaluator_no_regression_tolerance": 0.0
+  },
+  "historical_fit_seasons": [2021, 2024],
+  "held_out_seasons": [2018],
+  "failure_interpretation": {
+    "deterministic": "BLOCK_C01",
+    "benchmark_only_improvement": "DO_NOT_PROMOTE",
+    "historical_or_season_regression": "DO_NOT_PROMOTE",
+    "inconclusive": "PRESERVE_SHIPPED_VALUE"
+  }
+}
