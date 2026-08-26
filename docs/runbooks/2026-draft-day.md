@@ -22,6 +22,7 @@ Stop if `git status` shows unexpected overlapping edits; do not switch or clean 
 
 ```bash
 BLITZ_MAIN="$HOME/Documents/GitHub/blitzboard"
+BLITZ_RELEASE="$HOME/Documents/GitHub/blitzboard/.worktrees/v7-integration"
 cd "$BLITZ_MAIN"
 git status --short --branch
 git rev-parse --short HEAD
@@ -32,7 +33,10 @@ cd "$BLITZ_MAIN/pipeline"
 "$BLITZ_MAIN/pipeline/.venv/bin/python" value_engine_run.py --engine vorp --season 2026
 "$BLITZ_MAIN/pipeline/.venv/bin/python" value_engine_run.py --engine monte_carlo --season 2026
 "$BLITZ_MAIN/pipeline/.venv/bin/python" publish_snapshot.py --engines vorp monte_carlo
-"$BLITZ_MAIN/pipeline/.venv/bin/python" draft_freshness.py --value-max-hours 36 --news-max-hours 12
+set -a
+source "$BLITZ_MAIN/pipeline/.env"
+set +a
+"$BLITZ_MAIN/pipeline/.venv/bin/python" "$BLITZ_RELEASE/pipeline/draft_freshness.py" --value-max-hours 36 --news-max-hours 12
 ```
 
 The final command must print `PASS`. If news fails but values succeed, rerun `news_sentiment.py`
@@ -44,10 +48,11 @@ on June rankings.
 
 Use the release checkout containing approved U2 and U4. Its `frontend/.env.local` must contain only
 the normal public frontend variables; the service-role key stays in `pipeline/.env` and must never
-enter the Next.js environment.
+enter the Next.js environment. The expected frozen lane is shown below; adjust `BLITZ_RELEASE` if
+the release lane path differs at freeze.
 
 ```bash
-BLITZ_RELEASE="$HOME/Documents/GitHub/blitzboard"
+BLITZ_RELEASE="$HOME/Documents/GitHub/blitzboard/.worktrees/v7-integration"
 cd "$BLITZ_RELEASE/frontend"
 npm run build
 npx next start -p 3100
@@ -56,7 +61,7 @@ npx next start -p 3100
 Leave that terminal running. In a second terminal:
 
 ```bash
-BLITZ_RELEASE="$HOME/Documents/GitHub/blitzboard"
+BLITZ_RELEASE="$HOME/Documents/GitHub/blitzboard/.worktrees/v7-integration"
 "$BLITZ_RELEASE/scripts/prod-route-smoke.sh" http://127.0.0.1:3100
 ```
 
