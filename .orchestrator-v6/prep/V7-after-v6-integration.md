@@ -46,4 +46,6 @@ not on v6. Preserve these branches and the uncommitted runbook work as-is until 
 
 Do not integrate v7 if C05 is failed/inconclusive without an adjudicated shipped v6 policy, C06
 is not `PASS`, the v7 runbook worktree is dirty without an owned commit, or the fresh v7
-integration tree cannot preserve both v6 and v7 tests.
+integration tree cannot preserve both v6 and v7 tests. C05 preparation commit `82b7705...` and
+its synthetic receipts are not a C05 verdict; v7 remains parked until the authoritative result
+and C06 audit exist.

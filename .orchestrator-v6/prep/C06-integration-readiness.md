@@ -11,8 +11,10 @@ PR, release, delete a branch, or rewrite another session's worktree.
 - production integration/open-C02 commit: `13ec3c2672010a81f8e72944bd891f855d1413b7`
 - C03 preparation: `5741cd6ad2fcc0d9523f0a2034ca17123b670011`
 - C04 preparation: `3f074134a59ab85164e40fc4799e418aa036d603`
-- C05 preparation: active and uncommitted at time of this record; SHA must be added only
-  after its owner reports a clean committed worktree.
+- C05 preparation: `82b7705038a6fd420517bfadb77dea5357660927`; manifest
+  `promotion-v3.json` SHA-256
+  `bbb241603a33697bff376b21a2e57e7e066c3c85186eaaab120485ec6bd941ab`;
+  worktree reported and independently observed clean.
 
 ## Remaining useful parallel work
 
@@ -36,8 +38,9 @@ cherry-pick or rebase without author rewriting.
    review.
 3. After C03 `PASS`, cherry-pick C04 preparation commit `3f07413...`. Implement C04 from
    the accepted C03 head; use a separate reviewer for its checkpoint verdict.
-4. Integrate the committed C05 infrastructure only after inspecting its manifest version,
-   immutable-file behavior, synthetic-only receipts, and file ownership. Run the
+4. Integrate C05 preparation commit `82b7705...` only after inspecting the combined tree
+   for its three orchestration-path collisions (below). Its promotion package and tests are
+   otherwise new paths. Run the
    authoritative C05 experiment only against the frozen, combined C02-C04 candidate SHA.
 5. A failed or inconclusive C05 numerical candidate does not promote. Preserve the shipped
    behavior and document the result under a new immutable result path.
@@ -71,8 +74,17 @@ from scope.
   converge on bench shape, draft scoring, explanations, and `DraftWarRoom.tsx`; retain strict
   C03-before-C04 sequencing.
 - C05 manifests must never overwrite promotion v1/v2 or reviewer calibration preregistration.
+- C05 adds `promotion-v3.json`, while C02 was previously assigned that name. If C02 commits a
+  different v3 first, preserve it byte-for-byte and renumber the C05 manifest to v4 with all
+  internal version/supersession/hash references updated in one explicit integration commit.
+  Never resolve this by choosing one silently or overwriting either file.
+- C05 also carries byte-identical copies of reviewer-owned
+  `player-calibration-v1.json` and `player-calibration-v1.md`. If the combined branch already
+  contains those exact hashes, retain the existing files and omit the duplicate additions. If
+  hashes differ, stop: that is an immutable-preregistration conflict requiring adjudication.
+- C05's reported synthetic dry runs are infrastructure proofs only. They cannot satisfy C05,
+  clear the blocked 14-team slice, or justify a promotion verdict.
 - Active worktrees contain legitimate uncommitted work. Never clean, reset, or switch them from
   another session.
 - The main checkout currently contains unrelated user-owned changes/artifacts. Do not use it as
   an integration scratch tree or include those paths in v6 commits.
-
