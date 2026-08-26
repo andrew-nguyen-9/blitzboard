@@ -387,6 +387,15 @@ describe("1.2 — free-agent penalty (NEW term)", () => {
     const pool = [mk("rb1", "RB", 200, { nfl_team: "KC" })];
     expect(scoreBoard(ctx(pool))[0].score).toBeGreaterThan(0);
   });
+  // e2b: a published near-zero availability (e2a's ZERO_AVAILABILITY_EPS territory — e.g. IR/
+  // retired) sinks even a much higher raw projection. Asserts the property (never selected),
+  // not a magnitude — e2a's roster-ceiling priors are stated, not fitted, and will move.
+  it("a published zero-availability player is never selected over a healthy one", () => {
+    const zeroAvail = mk("zero", "WR", 400, { nfl_team: "KC" });
+    const healthy = mk("healthy", "WR", 90, { nfl_team: "PHI" });
+    const c = { ...ctx([zeroAvail, healthy]), availability: { zero: 0.005 } };
+    expect(scoreBoard(c)[0].player.id).toBe("healthy");
+  });
 });
 
 describe("1.3 — more dynamic to rival drafting", () => {
