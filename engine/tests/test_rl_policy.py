@@ -169,3 +169,97 @@ def test_no_regression_distilled_baseline_untouched() -> None:
     # the RL policy is a distinct, additive surface (its own pick path).
     lb, pos_of = _live_board(3)
     assert RLDraftPolicy(net=warm_start_net(seed=0)).pick(lb, list(_TEMPLATE), pos_of) is not None
+
+
+# ======================================================================================
+# E11 — real corpus data + the E5 metric (`SeasonEvalResult.started_points`)
+# ======================================================================================
+def _matrix_row(row_id: str = "t8-1qb-std-te0.0-b4-ir0") -> dict:
+    """One e7a matrix row (the population E5 evaluates over)."""
+    import json
+    from pathlib import Path as _P
+
+    doc = json.loads(
+        (_P(__file__).resolve().parents[2] / "fixtures" / "league_matrix.json").read_text()
+    )
+    return next(r for r in doc["rows"] if r["id"] == row_id)
+
+
+def test_real_universe_is_a_valid_board_and_template_covers_the_bench() -> None:
+    """The real-data path builds a legal universe/template from the e7b corpus, not synthetics."""
+    from blitz_engine.value.rl import real_env as R
+
+    row = _matrix_row()
+    uni, pool = R.real_universe(2024, str(row["id"]), top_n=60)
+    assert len(uni) == 60 and len(pool) == 60
+    assert all(pos in {"QB", "RB", "WR", "TE", "K", "DST"} for pos, _ in uni.values())
+    assert all(v > 0 for _, v in uni.values())  # points-per-week, never a season total
+    template = R.row_template(row)
+    starters = sum(int(n) for n in row["starting_slots"].values())
+    assert len(template) == starters + int(row["bench_slots"])
+    assert template.count("BN") == int(row["bench_slots"])
+    assert len(R.slots_after(template, ["K", "K"])) == len(template) - 2  # bench takes anybody
+
+
+def test_e5_reward_scores_a_rollout_and_is_seed_reproducible() -> None:
+    """The rollout reward IS `SeasonEvalResult.started_points`, and the seed reproduces it."""
+    from blitz_engine.value.rl import real_env as R
+    from blitz_engine.value.rl.policy_net import DraftPolicyNet
+
+    row = _matrix_row()
+    uni, pool = R.real_universe(2024, str(row["id"]), top_n=70)
+    env = DraftEnv(
+        n_teams=int(row["teams"]),
+        template=R.row_template(row),
+        universe_fn=lambda _s, _u=uni: dict(_u),
+        league_reward_fn=R.e5_league_reward(pool, row, n_seasons=1),
+    )
+    net = DraftPolicyNet(hidden=8)
+    torch.manual_seed(3)
+    _, r1 = env.rollout(net, seed=11, greedy=True)
+    torch.manual_seed(3)
+    _, r2 = env.rollout(net, seed=11, greedy=True)
+    assert r1 == r2  # same seed => same trajectory and the same E5 return
+    assert len(r1) == int(row["teams"])
+    assert all(400.0 < v < 3000.0 for v in r1)  # a season of started points, not one week
+
+
+def test_season_metric_edge_is_paired_and_zero_against_itself() -> None:
+    """A policy seated against a copy of itself must score EXACTLY 0 — proof the A/B is paired."""
+    from blitz_engine.value.rl import real_env as R
+
+    row = _matrix_row()
+    edge = R.season_metric_edge(
+        FastDraftPolicy(), FastDraftPolicy(), [(2024, row)], n_seasons=2
+    )
+    assert len(edge) == 2
+    assert edge == [0.0, 0.0]
+
+
+def test_e5_gate_refuses_to_promote_a_policy_whose_ci_straddles_zero() -> None:
+    """The promotion bar is unchanged: the bootstrap CI must clear 0 on the E5 metric."""
+    from blitz_engine.value.rl.policy_net import DraftPolicyNet
+
+    distilled = FastDraftPolicy()
+    rl = RLDraftPolicy(net=DraftPolicyNet(hidden=4))
+    straddle = select_live_policy(rl, distilled, [-8.0, 9.0, -3.0, 4.0, 1.0], seed=1)
+    assert not straddle.beat_baseline and straddle.policy is distilled
+    assert straddle.ci[0] < 0.0 < straddle.ci[1]
+    clears = select_live_policy(rl, distilled, [11.0, 9.5, 12.0, 10.5, 9.0], seed=1)
+    assert clears.beat_baseline and clears.policy is rl and clears.ci[0] > 0.0
+
+
+def test_e11_recorded_verdicts_match_their_own_ci_evidence() -> None:
+    """The shipped experiment records must agree with their own CI — no unproven promotion."""
+    import json
+    from pathlib import Path as _P
+
+    results = _P(__file__).resolve().parents[1] / "experiments" / "dynamic" / "results"
+    for name in ("gate_distilled.json", "gate_ppo.json"):
+        doc = json.loads((results / name).read_text())
+        lo, hi = doc["ci95"]
+        assert doc["promoted"] is (lo > 0.0 and doc["mean_edge"] > 0.0)
+        assert doc["verdict"] == ("helps" if doc["promoted"] else "no-help")
+        assert doc["metric"].startswith("SeasonEvalResult.started_points")
+        assert doc["n_eval_points"] >= 10 and "seed" in doc
+        assert lo <= doc["mean_edge"] <= hi

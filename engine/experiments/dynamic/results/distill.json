@@ -1,0 +1,27 @@
+{
+  "agreement_cold": 0.35714285714285715,
+  "agreement_fitted": 0.6428571428571429,
+  "cold_weights": {
+    "equity": 1.0,
+    "need": 2.0,
+    "run_prob": 0.5,
+    "vona": 1.0
+  },
+  "feature_names": [
+    "equity",
+    "vona",
+    "run_prob",
+    "need"
+  ],
+  "fitted_weights": {
+    "equity": -0.007675721862063657,
+    "need": -1.3322660398246116,
+    "run_prob": 0.9200028875523549,
+    "vona": -0.007675721862063657
+  },
+  "mcts_iter": 500,
+  "n_drafts": 9,
+  "n_samples": 84,
+  "seconds": 57.3,
+  "seed": 20260825
+}
