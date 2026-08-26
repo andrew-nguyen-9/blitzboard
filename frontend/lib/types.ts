@@ -73,6 +73,18 @@ export interface PlayerTrends {
   job_security: number;
 }
 
+// A player_availability row (v5 E2b): the engine's `AvailabilityModel.p_startable`,
+// published per (player_id, season, week). Read via queries.getAvailabilityMap into a
+// flat `player_id -> p_startable` map for lib/availability.ts / draftAI.ts.
+export interface PlayerAvailability {
+  player_id: string;
+  season: number;
+  week: number;
+  p_startable: number;
+  roster_status: string | null;
+  source: string;
+}
+
 // One bench player as surfaced in the war-room Bench panel (v4 E6): its 0-100
 // BenchScore and whether it's the first body to drop (lowest value). The health
 // band that colors the row is derived from `score` in the panel.

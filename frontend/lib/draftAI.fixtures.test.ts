@@ -10,13 +10,13 @@ import {
   pickForTeam,
   scoreBoard,
   norm,
-  injuryAvailability,
   byeStackPenalty,
   fillsEmptyOffensiveStarter,
   DEFAULT_POLICY,
   type PolicyParams,
 } from "./draftAI";
 import type { AIContext } from "./draftAI";
+import { availabilityOf } from "./availability";
 import { SUPERFLEX_ROSTER, fillRoster } from "./draft";
 import { runSnakeDraft, mulberry32 } from "./snakeDraft";
 import type { PlayerWithValue } from "./types";
@@ -204,9 +204,9 @@ describe("cat5: an injured body's value drops below a healthy comparable", () =>
     ];
     expect(pickForTeam(ctx(pool, team, 5))!.id).toBe(want);
   });
-  it("injuryAvailability is identity when no status is present (degrade-safe)", () => {
-    expect(injuryAvailability(mk("x", "WR", 200), DEFAULT_POLICY)).toBe(1);
-    expect(injuryAvailability(mk("x", "WR", 200, { injury_status: "Questionable" }), DEFAULT_POLICY)).toBeLessThan(1);
+  it("availabilityOf is identity when no status is present (degrade-safe)", () => {
+    expect(availabilityOf(mk("x", "WR", 200, { nfl_team: "KC" }))).toBe(1);
+    expect(availabilityOf(mk("x", "WR", 200, { nfl_team: "KC", injury_status: "Questionable" }))).toBeLessThan(1);
   });
 });
 
@@ -320,7 +320,6 @@ describe("auto-draft end-state invariant (full 12-team sim)", () => {
       ...DEFAULT_POLICY,
       emptyOffensiveStarterBonus: 0,
       byeStackPenalty: 0,
-      injuryDiscount: {},
     };
     const total = (params: PolicyParams) => {
       const picks = runSnakeDraft(players, {

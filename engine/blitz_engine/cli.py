@@ -25,6 +25,7 @@ import argparse
 import hashlib
 import json
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -377,6 +378,10 @@ def _cmd_publish(args: argparse.Namespace) -> int:
     import pandas as pd
 
     from blitz_engine.snapshot import SCHEMA_VERSION, Snapshot
+    from blitz_engine.snapshot.publish_availability import (
+        build_availability_rows,
+        publish_availability,
+    )
 
     cfg, store, registry = _wire(args)
     empty = pd.DataFrame()
@@ -384,6 +389,15 @@ def _cmd_publish(args: argparse.Namespace) -> int:
     values = _read_table(store, args.values, required=False) if args.values else None
     corr = _read_table(store, CORR, required=False)
     mc_probs = _read_table(store, MC_PROBS, required=False)
+
+    # e2b: publish the availability surface alongside the snapshot (docs/design/v5-architecture.md
+    # §4). Degrade-safe on both ends — an absent `players` table skips availability entirely
+    # (still exit 0), and `publish_availability` no-ops without SUPABASE_SERVICE_ROLE_KEY.
+    players = _read_table(store, PLAYERS, required=False)
+    availability = None
+    if players is not None and not args.skip_availability:
+        avail_rows = build_availability_rows(players, args.season, args.week)
+        availability = publish_availability(avail_rows)
 
     def _json_file(name: str) -> dict:
         path = store.root / name
@@ -409,7 +423,7 @@ def _cmd_publish(args: argparse.Namespace) -> int:
     _emit("publish", version=rec.version, schema_version=SCHEMA_VERSION, seed=cfg.seed,
           rows={"values": len(snap.values), "quantiles": len(snap.quantiles),
                 "corr_matrix": len(snap.corr_matrix), "mc_probs": len(snap.mc_probs)},
-          full=full, compact=compact)
+          full=full, compact=compact, availability=availability)
     return 0
 
 
@@ -457,6 +471,12 @@ def _add_verb_options(verb: str, p: argparse.ArgumentParser) -> None:
                        help="Full snapshot dir (default: <data_root>/snapshots/<version>).")
         p.add_argument("--compact-out", default=None,
                        help="Compact export dir (default: <out>/compact).")
+        p.add_argument("--season", type=int, default=datetime.now(UTC).year,
+                       help="Season the availability rows are published for (default: this year).")
+        p.add_argument("--week", type=int, default=1,
+                       help="Week the availability rows are published for (default: 1).")
+        p.add_argument("--skip-availability", action="store_true",
+                       help="Skip the availability publish step entirely (snapshot only).")
 
 
 def build_parser() -> argparse.ArgumentParser:
