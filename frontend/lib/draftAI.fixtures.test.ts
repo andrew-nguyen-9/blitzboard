@@ -18,7 +18,7 @@ import {
 import type { AIContext } from "./draftAI";
 import { availabilityOf } from "./availability";
 import { SUPERFLEX_ROSTER, fillRoster } from "./draft";
-import { runSnakeDraft, mulberry32 } from "./snakeDraft";
+import { runSnakeDraftAsync, mulberry32 } from "./snakeDraft";
 import type { PlayerWithValue } from "./types";
 
 function mk(
@@ -280,10 +280,10 @@ describe("auto-draft end-state invariant (full 12-team sim)", () => {
   }
   const OFFENSIVE = new Set(["QB", "RB", "WR", "TE", "FLEX", "OP"]);
 
-  it.each([1, 7, 42, 100])("seed %s: no team ends with an empty startable offensive slot", (seed) => {
+  it.each([1, 7, 42, 100])("seed %s: no team ends with an empty startable offensive slot", async (seed) => {
     const players = realisticPool();
     const byId = new Map(players.map((p) => [p.id, p]));
-    const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 });
+    const picks = await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 });
     for (let t = 1; t <= 12; t++) {
       const roster = picks.filter((pk) => pk.team === t).map((pk) => byId.get(pk.player.id)!);
       const needs = fillRoster(roster, SUPERFLEX_ROSTER).needs;
@@ -292,9 +292,9 @@ describe("auto-draft end-state invariant (full 12-team sim)", () => {
     }
   });
 
-  it.each([1, 7, 42])("seed %s: no team holds 2+ K or 2+ DST before the final 2 rounds", (seed) => {
+  it.each([1, 7, 42])("seed %s: no team holds 2+ K or 2+ DST before the final 2 rounds", async (seed) => {
     const players = realisticPool();
-    const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 });
+    const picks = await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 });
     const totalRounds = picks.length / 12;
     const early: Record<number, { K: number; DST: number }> = {};
     for (const p of picks) {
@@ -313,7 +313,7 @@ describe("auto-draft end-state invariant (full 12-team sim)", () => {
 
   // Backtest: v4 (tuned, with the new draft-awareness terms) ≥ v3 (terms neutralized) on
   // total starting-lineup points-for across the league — the "v4 ≥ v3" regression gate.
-  it.each([1, 7, 42])("seed %s: v4 lineup points-for ≥ v3", (seed) => {
+  it.each([1, 7, 42])("seed %s: v4 lineup points-for ≥ v3", async (seed) => {
     const players = realisticPool();
     const byId = new Map(players.map((p) => [p.id, p]));
     const V3: PolicyParams = {
@@ -321,8 +321,8 @@ describe("auto-draft end-state invariant (full 12-team sim)", () => {
       emptyOffensiveStarterBonus: 0,
       byeStackPenalty: 0,
     };
-    const total = (params: PolicyParams) => {
-      const picks = runSnakeDraft(players, {
+    const total = async (params: PolicyParams) => {
+      const picks = await runSnakeDraftAsync(players, {
         numTeams: 12, rng: mulberry32(seed), randomness: 0,
         chooser: (c) => pickForTeam(c, params),
       });
@@ -333,16 +333,16 @@ describe("auto-draft end-state invariant (full 12-team sim)", () => {
       }
       return sum;
     };
-    expect(total(DEFAULT_POLICY)).toBeGreaterThanOrEqual(total(V3));
+    expect(await total(DEFAULT_POLICY)).toBeGreaterThanOrEqual(await total(V3));
   });
 
   // E5: folding E4's bench scoring into the bench arm builds the ideal superflex bench —
   // ≥2 QB rostered (OP slot + a real backup), ≥1 RB lottery + ≥1 WR breakout benched, and
   // no dead K/DST pileup. (The dedicated end-to-end sim is E7; this proves the integration.)
-  it.each([1, 7, 42, 100])("seed %s: ideal superflex bench (≥2 QB, RB+WR bench, no dead K/DST pileup)", (seed) => {
+  it.each([1, 7, 42, 100])("seed %s: ideal superflex bench (≥2 QB, RB+WR bench, no dead K/DST pileup)", async (seed) => {
     const players = realisticPool();
     const byId = new Map(players.map((p) => [p.id, p]));
-    const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 });
+    const picks = await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 });
     for (let t = 1; t <= 12; t++) {
       const roster = picks.filter((pk) => pk.team === t).map((pk) => byId.get(pk.player.id)!);
       const qbCount = roster.filter((p) => norm(p.position) === "QB").length;

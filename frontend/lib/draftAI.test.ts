@@ -21,7 +21,7 @@ import {
   candidatePool,
 } from "./draftAI";
 import { SUPERFLEX_ROSTER } from "./draft";
-import { runSnakeDraft, mulberry32 } from "./snakeDraft";
+import { runSnakeDraft, runSnakeDraftAsync, mulberry32 } from "./snakeDraft";
 import type { PlayerWithValue } from "./types";
 
 // Minimal player factory — only the fields the policy reads. Value-fields (boom, vor,
@@ -208,7 +208,7 @@ describe("scoreBoard assembly", () => {
 });
 
 describe("full-draft regression", () => {
-  it("no team holds 2+ K or 2+ DST before the final 2 rounds (the anti-hoarding cap)", () => {
+  it("no team holds 2+ K or 2+ DST before the final 2 rounds (the anti-hoarding cap)", async () => {
     // Realistic pool: offense is plentiful and high-value; K/DST are few and low-value
     // (~110-140 pts, as in real leagues). The policy defers K/DST on value, and the hard
     // cap prevents a 2nd before the final rounds. [pos, count, topProj, bottomProj]
@@ -229,7 +229,7 @@ describe("full-draft regression", () => {
         n++;
       }
     }
-    const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(42), randomness: 0 });
+    const picks = await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(42), randomness: 0 });
     const totalRounds = picks.length / 12;
     const earlyByTeam: Record<number, { K: number; DST: number }> = {};
     for (const p of picks) {
@@ -447,21 +447,21 @@ describe("1.3 — more dynamic to rival drafting", () => {
     const pre = marginalStarterValue(rbs[0], c, PRE_TUNE);
     expect(tuned).toBeGreaterThan(pre); // the run is worth more under the tuned coefficients
   });
-  it("backtest still beats both naive baselines (no regression)", () => {
+  it("backtest still beats both naive baselines (no regression)", async () => {
     const players = realisticPool();
     const seed = 7;
-    const v2 = teamLineupTotal(players, runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 }));
-    const raw = teamLineupTotal(players, runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0, chooser: pickRawVorp }));
-    const adp = teamLineupTotal(players, runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0, chooser: pickAdp }));
+    const v2 = teamLineupTotal(players, await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 }));
+    const raw = teamLineupTotal(players, await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0, chooser: pickRawVorp }));
+    const adp = teamLineupTotal(players, await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0, chooser: pickAdp }));
     expect(v2).toBeGreaterThan(raw);
     expect(v2).toBeGreaterThan(adp);
   });
 });
 
 describe("1.4 — prioritize QB/RB/TE/WR over K/DST", () => {
-  it("K/DST appear only in the final rounds of a full sim", () => {
+  it("K/DST appear only in the final rounds of a full sim", async () => {
     const players = realisticPool();
-    const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(11), randomness: 0 });
+    const picks = await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(11), randomness: 0 });
     const totalRounds = picks.length / 12;
     const kdstRounds = picks
       .filter((p) => { const pos = norm(p.player.position); return pos === "K" || pos === "DST"; })

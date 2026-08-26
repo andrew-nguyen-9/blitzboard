@@ -1,0 +1,101 @@
+
+> blitzboard-frontend@0.1.0 test
+> vitest run
+
+
+ RUN  v3.2.6 /Users/andrew/Documents/GitHub/blitzboard/.worktrees/v6-prod/frontend
+
+ ✓ lib/draftAI.candidatePool.test.ts (6 tests) 32283ms
+   ✓ UI candidatePool auto-draft path: end-state invariants > seed 1: no empty offensive starter  3931ms
+   ✓ UI candidatePool auto-draft path: end-state invariants > seed 7: no empty offensive starter  4166ms
+   ✓ UI candidatePool auto-draft path: end-state invariants > seed 42: no empty offensive starter  8157ms
+   ✓ UI candidatePool auto-draft path: end-state invariants > seed 1: no team holds 2+ K or 2+ DST before final 2 rounds  6320ms
+   ✓ UI candidatePool auto-draft path: end-state invariants > seed 7: no team holds 2+ K or 2+ DST before final 2 rounds  5563ms
+   ✓ UI candidatePool auto-draft path: end-state invariants > seed 42: no team holds 2+ K or 2+ DST before final 2 rounds  4127ms
+ ✓ lib/trade.test.ts (11 tests) 4387ms
+   ✓ bestTradesForRoster > finds mutually-beneficial trades across every opponent  709ms
+   ✓ bestTradesForRoster > ranks by my gain (descending)  666ms
+   ✓ bestTradesForRoster > never leaks players from outside the passed opponent rosters (RLS scope)  1072ms
+   ✓ bestTradesForRoster > tags each trade with the correct partner  782ms
+   ✓ bestTradesForRoster > matches a direct findTrades run for a single partner  1137ms
+ ✓ lib/supabase/server.test.ts (2 tests) 178ms
+ ✓ lib/schedule2026.test.ts (44 tests) 558ms
+   ✓ SCHEDULE_2026 shape > every non-bye opponent is a valid team code and never self  404ms
+ ✓ lib/articles.test.ts (5 tests) 95ms
+ ✓ lib/viz.test.ts (29 tests) 164ms
+ ✓ lib/draftAI.test.ts (35 tests) 47004ms
+   ✓ full-draft regression > no team holds 2+ K or 2+ DST before the final 2 rounds (the anti-hoarding cap)  16953ms
+   ✓ 1.3 — more dynamic to rival drafting > backtest still beats both naive baselines (no regression)  16094ms
+   ✓ 1.4 — prioritize QB/RB/TE/WR over K/DST > K/DST appear only in the final rounds of a full sim  13798ms
+ ✓ lib/testing/leagueMatrix.test.ts (8 tests) 69ms
+ ✓ lib/playerSort.test.ts (3 tests) 166ms
+ ✓ lib/snapshot.test.ts (4 tests) 82ms
+ ✓ lib/auth/botDefense.test.ts (13 tests) 38ms
+ ✓ lib/validation.test.ts (8 tests) 26ms
+ ✓ lib/playerStats.test.ts (11 tests) 35ms
+ ✓ lib/leak-boundary.test.ts (4 tests) 9ms
+ ✓ lib/tradeSearch.test.ts (7 tests) 16ms
+ ✓ components/uncertainty/quantiles.test.ts (18 tests) 55ms
+ ✓ lib/crypto/vault.test.ts (10 tests) 13ms
+ ✓ app/actions/prefs.test.ts (3 tests) 15ms
+ ✓ lib/benchScore.test.ts (10 tests) 15ms
+ ✓ app/betting/aggregate.test.ts (9 tests) 14ms
+ ✓ app/sitemap.test.ts (2 tests) 33ms
+ ✓ components/lab/whatif.test.ts (3 tests) 52ms
+ ✓ components/lab/diagnostics.test.ts (6 tests) 13ms
+ ✓ components/draft/plan.test.ts (3 tests) 91ms
+ ✓ lib/search.test.ts (8 tests) 11ms
+ ✓ lib/security-headers.test.ts (3 tests) 5ms
+ ✓ components/draft/rosterHealth.test.ts (5 tests) 7ms
+ ✓ lib/playerColumns.test.ts (9 tests) 25ms
+ ✓ lib/leagueRules.test.ts (4 tests) 8ms
+ ✓ lib/playerTooltip.test.ts (5 tests) 8ms
+ ✓ components/CursorTooltip.test.ts (3 tests) 5ms
+ ✓ lib/auth/prefs.test.ts (4 tests) 12ms
+ ✓ app/lab/engine.test.ts (5 tests) 8ms
+ ✓ lib/byeWeeks.test.ts (3 tests) 14ms
+ ✓ lib/faab.test.ts (5 tests) 6ms
+ ✓ lib/auth/redirect.test.ts (10 tests) 7ms
+ ✓ components/draft/BenchPanel.test.ts (5 tests) 8ms
+ ✓ lib/auth/sms.test.ts (3 tests) 6ms
+ ✓ components/draft/reasons.test.ts (3 tests) 7ms
+ ✓ lib/reducedMotion.test.ts (5 tests) 6ms
+ ✓ lib/score.test.ts (2 tests) 4ms
+ ✓ lib/draftAI.byeStack.test.ts (3 tests) 5ms
+ ✓ lib/waiverScope.test.ts (3 tests) 12ms
+ ✓ lib/queries.boxstats.test.ts (2 tests) 5ms
+ ✓ lib/auth/gate.test.ts (7 tests) 7ms
+ ✓ lib/auth/mfa.test.ts (8 tests) 7ms
+ ✓ lib/rowUncertainty.test.ts (2 tests) 4ms
+ ✓ components/draft/consequential.test.ts (5 tests) 5ms
+ ✓ app/lab/lab-flags.test.ts (3 tests) 4ms
+ ✓ lib/auth/cookies.test.ts (1 test) 3ms
+ ✓ lib/draftAI.sim.test.ts (6 tests) 79907ms
+   ✓ E7: full 12-team superflex auto-draft → ideal bench composition end-to-end > seed 1: every team ≥2 QB, ≥1 RB + ≥1 WR benched, no team benches 2+ K or 2+ DST  17483ms
+   ✓ E7: full 12-team superflex auto-draft → ideal bench composition end-to-end > seed 7: every team ≥2 QB, ≥1 RB + ≥1 WR benched, no team benches 2+ K or 2+ DST  15846ms
+   ✓ E7: full 12-team superflex auto-draft → ideal bench composition end-to-end > seed 42: every team ≥2 QB, ≥1 RB + ≥1 WR benched, no team benches 2+ K or 2+ DST  13746ms
+   ✓ E7: full 12-team superflex auto-draft → ideal bench composition end-to-end > seed 100: every team ≥2 QB, ≥1 RB + ≥1 WR benched, no team benches 2+ K or 2+ DST  15894ms
+   ✓ E7: full 12-team superflex auto-draft → ideal bench composition end-to-end > seed 314: every team ≥2 QB, ≥1 RB + ≥1 WR benched, no team benches 2+ K or 2+ DST  11290ms
+   ✓ E7: full 12-team superflex auto-draft → ideal bench composition end-to-end > seed 2718: every team ≥2 QB, ≥1 RB + ≥1 WR benched, no team benches 2+ K or 2+ DST  5632ms
+ ✓ lib/draftAI.fixtures.test.ts (65 tests) 149537ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 1: no team ends with an empty startable offensive slot  16471ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 7: no team ends with an empty startable offensive slot  15733ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 42: no team ends with an empty startable offensive slot  13627ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 100: no team ends with an empty startable offensive slot  14478ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 1: no team holds 2+ K or 2+ DST before the final 2 rounds  12846ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 7: no team holds 2+ K or 2+ DST before the final 2 rounds  6172ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 42: no team holds 2+ K or 2+ DST before the final 2 rounds  4991ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 1: v4 lineup points-for ≥ v3  11978ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 7: v4 lineup points-for ≥ v3  12616ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 42: v4 lineup points-for ≥ v3  15302ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 1: ideal superflex bench (≥2 QB, RB+WR bench, no dead K/DST pileup)  8291ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 7: ideal superflex bench (≥2 QB, RB+WR bench, no dead K/DST pileup)  5539ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 42: ideal superflex bench (≥2 QB, RB+WR bench, no dead K/DST pileup)  5474ms
+   ✓ auto-draft end-state invariant (full 12-team sim) > seed 100: ideal superflex bench (≥2 QB, RB+WR bench, no dead K/DST pileup)  5941ms
+
+ Test Files  52 passed (52)
+      Tests  441 passed (441)
+   Start at  12:28:47
+   Duration  151.39s (transform 1.53s, setup 0ms, collect 5.36s, tests 315.05s, environment 18ms, prepare 14.93s)
+
+NPM TEST EXIT:0

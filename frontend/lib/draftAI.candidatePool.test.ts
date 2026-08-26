@@ -37,7 +37,9 @@ function realisticPool(): PlayerWithValue[] {
 }
 
 // Exact copy of DraftRoom.runSim's inner loop (candidatePool path).
-function runViaCandidatePool(players: PlayerWithValue[], numTeams: number, rng: () => number): MappedPick[] {
+// Async for the same reason as runSnakeDraftAsync: yield per pick so a loaded vitest
+// worker never blocks its RPC channel for a whole draft.
+async function runViaCandidatePool(players: PlayerWithValue[], numTeams: number, rng: () => number): Promise<MappedPick[]> {
   const ROSTER_SPOTS = SUPERFLEX_ROSTER.length + BENCH_SIZE;
   const totalSpots = numTeams * ROSTER_SPOTS;
   const picks: MappedPick[] = [];
@@ -48,6 +50,7 @@ function runViaCandidatePool(players: PlayerWithValue[], numTeams: number, rng: 
     return totalSpots + 1;
   };
   while (picks.length < totalSpots) {
+    await new Promise((res) => setImmediate(res));
     const pickNo = picks.length + 1;
     const team = teamOnClock(pickNo, numTeams);
     const pool = candidatePool(players.filter((p) => !taken.has(p.id)));
@@ -67,19 +70,19 @@ function runViaCandidatePool(players: PlayerWithValue[], numTeams: number, rng: 
 const OFFENSIVE = new Set(["QB", "RB", "WR", "TE", "FLEX", "OP"]);
 
 describe("UI candidatePool auto-draft path: end-state invariants", () => {
-  it.each([1, 7, 42])("seed %s: no empty offensive starter", (seed) => {
+  it.each([1, 7, 42])("seed %s: no empty offensive starter", async (seed) => {
     const players = realisticPool();
     const byId = new Map(players.map((p) => [p.id, p]));
-    const picks = runViaCandidatePool(players, 12, mulberry32(seed));
+    const picks = await runViaCandidatePool(players, 12, mulberry32(seed));
     for (let t = 1; t <= 12; t++) {
       const roster = picks.filter((pk) => pk.team === t).map((pk) => byId.get(pk.player.id)!);
       const empty = fillRoster(roster, SUPERFLEX_ROSTER).needs.filter((s) => OFFENSIVE.has(s));
       expect(empty).toEqual([]);
     }
   });
-  it.each([1, 7, 42])("seed %s: no team holds 2+ K or 2+ DST before final 2 rounds", (seed) => {
+  it.each([1, 7, 42])("seed %s: no team holds 2+ K or 2+ DST before final 2 rounds", async (seed) => {
     const players = realisticPool();
-    const picks = runViaCandidatePool(players, 12, mulberry32(seed));
+    const picks = await runViaCandidatePool(players, 12, mulberry32(seed));
     const totalRounds = picks.length / 12;
     const early: Record<number, { K: number; DST: number }> = {};
     for (const p of picks) {

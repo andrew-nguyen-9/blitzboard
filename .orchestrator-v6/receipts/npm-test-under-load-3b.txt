@@ -1,0 +1,5 @@
+      Tests  441 passed (441)
+   Start at  12:28:39
+   Duration  153.09s (transform 2.00s, setup 0ms, collect 6.41s, tests 302.08s, environment 99ms, prepare 17.68s)
+
+EXIT:0
