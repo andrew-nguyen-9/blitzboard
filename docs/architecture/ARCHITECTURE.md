@@ -42,6 +42,16 @@ RSS+Reddit ──► sentiment_scorer ─► ValueEngine ───────�
    replacement) and `MonteCarloEngine` (vectorized, shipped in v1 P7). Both batch-precomputed.
 4. **`SentimentScorer`** — article → NFL-aware sentiment; VADER now, FinBERT later. Unchanged.
 
+### `league_rules` compatibility shape
+
+`league_rules` temporarily carries two additive shapes. Its original columns
+(`league_id`, `scoring`, `roster_slots`, `league_size`, and `waiver_type`) remain the
+pipeline contract used by `pipeline/models/league_rules.py`. The multi-league auth layer
+adds `owner_user_id`, `name`, `config`, and `created_at`; authenticated frontend flows read
+the normalized rules document from `config` and use ownership metadata for RLS. Both shapes
+coexist without copying or rewriting existing rows. Consolidating them is intentionally
+deferred until after live-draft readiness work.
+
 ## What v2 adds to the architecture
 
 - **Data-delivery layer** — the pipeline publishes compact, versioned, CDN-cached snapshots
