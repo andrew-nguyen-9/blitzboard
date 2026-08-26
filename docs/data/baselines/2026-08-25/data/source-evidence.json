@@ -1,0 +1,46 @@
+{
+  "as_of_utc": "2026-08-26T00:00:00+00:00",
+  "policy": "public no-key read-only retrieval; absent or failed sources are gaps",
+  "schema_version": 1,
+  "sources": [
+    {
+      "reason": "source asset unavailable (HTTP 404)",
+      "rows_in_window": null,
+      "source": "nflverse/injuries",
+      "status": "gap",
+      "table": "status_injury_reports",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/injuries/injuries_2026.parquet"
+    },
+    {
+      "rows_in_window": 2930,
+      "source": "nflverse/weekly_rosters",
+      "status": "available",
+      "table": "status_roster_events",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/weekly_rosters/roster_weekly_2026.parquet"
+    },
+    {
+      "rows_in_window": 469064,
+      "source": "nflverse/depth_charts",
+      "status": "available",
+      "table": "status_roster_events",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/depth_charts/depth_charts_2026.parquet"
+    },
+    {
+      "reason": "HTTPError: HTTP Error 403: Forbidden",
+      "rows_in_window": null,
+      "source": "ESPN/news",
+      "status": "gap",
+      "table": "status_news",
+      "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/news"
+    },
+    {
+      "reason": "no stable documented no-key public adapter is available",
+      "rows_in_window": null,
+      "source": "official/gameday-inactives",
+      "status": "gap",
+      "table": "status_inactives",
+      "url": null
+    }
+  ],
+  "window_start_utc": "2026-01-01T00:00:00+00:00"
+}

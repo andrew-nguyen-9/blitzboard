@@ -1,0 +1,21 @@
+{
+  "as_of_utc": "2026-08-26T00:00:00+00:00",
+  "availability_is_separate_from_conditional_points": true,
+  "budgets": {
+    "daily": {
+      "max_memory_gb": 8,
+      "max_runtime_minutes": 10,
+      "max_trials": 12
+    },
+    "deep": {
+      "max_memory_gb": 12,
+      "max_runtime_minutes": 480,
+      "max_trials": 200
+    }
+  },
+  "forecast_rows": 0,
+  "promoted_model": null,
+  "promotion_evaluated": false,
+  "reason": "No completed 2026 regular-season outcomes exist at this cutoff; model promotion requires walk-forward actuals and is intentionally disabled.",
+  "schema_version": 1
+}
