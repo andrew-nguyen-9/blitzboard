@@ -11,6 +11,10 @@ alter table public.league_rules
 
 alter table public.league_rules enable row level security;
 
+-- v1 left a world-readable SELECT policy; with owned rows arriving via v2.5.4 it must go.
+-- Safe: only queries.auth.ts (authenticated) and the service-role pipeline read this table.
+drop policy if exists "public read league_rules" on public.league_rules;
+
 drop policy if exists "rules read public or own" on public.league_rules;
 create policy "rules read public or own" on public.league_rules
   for select to authenticated using (owner_user_id is null or owner_user_id = auth.uid());
