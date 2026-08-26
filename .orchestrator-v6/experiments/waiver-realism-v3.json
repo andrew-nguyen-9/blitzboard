@@ -1,0 +1,26 @@
+{
+  "schema_version": 3,
+  "name": "waiver-realism-v3",
+  "status": "preregistered",
+  "frozen_utc": "2026-08-27T01:30:00Z",
+  "responds_to": "C02A-codex BLOCK at review commit e5cd566 (C02B requirements 1-2); laptop-2 suite test_v6_c02_remote_adversarial.py",
+  "supersedes": "waiver-realism-v2 (append-only: v1 and v2 are preserved byte-for-byte; every rule not restated here carries forward verbatim - v2's shared weekly move budget and cost/proxy reconciliation included)",
+  "changes": {
+    "roster_wide_drop_feasibility": {
+      "rule": "The drop candidate for an upside claim is the lowest forward-looking NONSTARTER on the roster, roster-wide - it does NOT need to share the added player's nominal position or role space. A dead or configuration-ineligible bench body is therefore droppable for any legal add. The add must itself be legal (eligible for at least one actual lineup slot) and the post-swap roster/lineup must remain feasible: the number of fillable starting slots may not decrease.",
+      "nonstarter_feasibility_note": "removing a nonstarter can never reduce lineup coverage (the lineup did not use it) and adding a body can never reduce it either, so every nonstarter drop is feasible by construction; the explicit feasibility check binds on started-body drops",
+      "started_body_rule": "a STARTED body is replaceable only when no feasible nonstarter drop exists (an empty bench), and only when the post-swap lineup still fills at least as many slots - this is exactly K/DST streaming and it forbids dropping the only body a slot can use",
+      "determinism": "candidates ordered by (believed projection, index); strict inequalities on both gates; ties never transact",
+      "replaces": "v1/v2's role-space restriction on drop candidates (the C02A rule), which the C02A review found narrower than the required roster-wide opportunity cost"
+    }
+  },
+  "unchanged": "margin gate, cost gate and units, remaining-horizon conversion, emergency semantics, shared weekly budget (v2), season cap, counters, seeds, accounting, cost/proxy reconciliation (v2), failure interpretation",
+  "acceptance_tests": [
+    "a dead/configuration-ineligible bench WR is dropped for a legal RB upgrade in an RB-only lineup (laptop-2 case, production equivalent added)",
+    "one combined weekly allowance: an emergency claim consumes it and prevents a same-week proactive claim (laptop-2 case, production equivalent added)",
+    "started-body replacement still requires an empty feasible-nonstarter set (K/DST streaming preserved; dropping a slot's only possible filler stays forbidden)",
+    "the full laptop-2 suite test_v6_c02_remote_adversarial.py passes UNCHANGED against production code",
+    "all v1/v2 acceptance tests, both prior reviewer probes, and the accepted C02A cost/breakout behavior remain green"
+  ],
+  "failure_interpretation": "unchanged from v1: deterministic failure blocks; ambiguity preserves C02-accepted behavior; calibration out of scope for this manifest (threshold disposition completion is recorded in the calibration addendum, not here)"
+}
