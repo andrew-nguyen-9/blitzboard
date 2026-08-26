@@ -1,16 +1,30 @@
 # v5 "Perfect the Draft" — architecture & shared decisions
 
 The design contract every v5 unit builds against. Written before implementation (Session B),
-referenced by every unit brief so no brief re-derives a shared decision. Companion docs:
+**annotated at cycle close (2026-08-25, E14)** with what the cycle confirmed and what it overturned
+— `OUTCOME:` callouts below are retrospective; everything else is the original contract.
+Referenced by every unit brief so no brief re-derives a shared decision. Companion docs:
 `docs/design/v4-engine-architecture.md` (engine layout), `docs/design/v4-bench-scoring.md`
 (the hand-authored bench tables this cycle finally backtests),
-`docs/modeling/BENCH_MODEL.md` (the theory doc E1 writes — the yardstick for E6/E8/E10).
+`docs/modeling/BENCH_MODEL.md` (the theory doc E1 writes — the yardstick for E6/E8/E10; **see its
+§6 for which predictions survived**). Cycle outputs: `docs/modeling/draft-eval.md` (the metric),
+`docs/modeling/experiments.md` (every fit, seed and command),
+`docs/decisions/2026-08-25-v5-perfect-the-draft.md` (the harvest),
+`docs/design/v5-static-dynamic.md` (E12's reconciliation).
 
 ## 1. The problem in one line
 
 The autodraft builds bad benches, we never wrote down what a good bench is, and the metric we
 would tune against (`docs/modeling/backtest-report.md`'s perfect-hindsight weekly-optimal lineup)
 is structurally blind to bench insurance. Fixing the metric precedes fitting anything.
+
+> **OUTCOME — the premise was right and the metric is fixed.** `started_points`
+> (`docs/modeling/draft-eval.md`) replaced it. Proof it mattered: a bench-insurance ablation moves
+> the new metric **+19.5 pts/season p=0.0055** while the retired one scores the same two rosters at
+> **+43.9 p=0.2295 — blind**. The autodraft, however, was **not** measurably improved: both fit
+> units gated their candidates and shipped **zero** weight changes. What the cycle actually bought
+> is a metric you can trust a negative result from, plus a measured diagnosis of where the headroom
+> is (the leaf evaluator — see §5).
 
 ## 2. The layering — what depends on what, and why
 
@@ -35,6 +49,12 @@ E9 CLI wired + 2014+ store populated ───┤                │
                                         v
                                   E14 docs + decisions
 ```
+
+> **OUTCOME — the graph held, with one insertion.** E9's ingest shipped **without** injuries,
+> rosters or depth_charts, which E3 and E2a both depended on; a scoped **E9b** was inserted at wave
+> 3 and **E3 and E2a were re-fitted** (wave 3b) before E4 could multiply them together. That
+> ordering was load-bearing: pre-refit, E2a's availability and E3's hazard were **the same
+> snap-presence signal**, so building E4 first would have baked in a double-count. E13 stayed out.
 
 Rationale for the two non-obvious edges:
 
@@ -87,6 +107,16 @@ exists and is the seam to extend — this is brownfield, not a new subsystem. It
 `frontend/lib/draftAI.ts` currently fakes with `faPenalty: 1000` and the `injuryDiscount` lookup,
 and what `engine/blitz_engine/value/fa_penalty.py` approximates.
 
+> **OUTCOME — done, and the fakes are GONE.** `faPenalty`, `injuryDiscount` and
+> `injuryAvailability()` were **deleted** from `PolicyParams`/`DEFAULT_POLICY` (E2b); `scoreBoard`
+> now multiplies by `availabilityOf(p, ctx.availability)`, read from `public.player_availability`
+> (RLS: anon/auth read-only, service-role writes) with a local estimate and then neutral (1) as
+> fallbacks. The engine-side producer is `snapshot/publish_availability.py` wired into the `publish`
+> verb; absent a service-role key it no-ops rather than raising. **Any doc or brief still describing
+> `faPenalty`/`injuryDiscount` as live knobs is stale.** Availability values also *moved materially*
+> in the refit — PRACTICE_SQUAD 0.06 → 0.0043 now crosses `ZERO_AVAILABILITY_EPS`, a semantic state
+> change; read `p_startable` at publish time, never bake numbers.
+
 **Publish path decision.** The availability surface reaches Supabase through the **engine's own
 `publish` CLI verb** (wired in E9), run locally — *not* through `pipeline/`. This is deliberate:
 `pipeline/` must never import jax/torch (it keeps the GitHub-Actions cron on the free tier), and
@@ -111,6 +141,22 @@ Rejected: porting `DEFAULT_POLICY` + `benchScore` into Python. It removes the sp
 introduces two copies of the scoring formula that silently drift — exactly the failure mode this
 cycle exists to end.
 
+> **OUTCOME — the bridge was built and used; the split stays (E12, Outcome B).** E10 drove the
+> unmodified TS policy over `draft-eval.mjs` (one process per *batch* of drafts, ~0.5 s/draft) and
+> `static_proxy` was **not** used in the static fit. E12 then measured both tiers in ONE league,
+> same board, same seed: the **shipped dynamic policy is −23.7 pts/season BEHIND the static closed
+> form**, CI95 [−65.9, +19.0] — indistinguishable from zero and pointing the wrong way. So **no
+> 4-feature → 20-knob bridge was built**; building one would import a policy weaker than the one it
+> replaces. **But the headroom is real:** E5's own per-pick picker beats the static form by
+> **+82.7 [+43.1, +122.5]** on the identical grid, so the shipped policy forfeits ~106 pts/season.
+> The binding constraint is the **leaf evaluator**, not capacity, search depth or feature
+> vocabulary — E11 and E12 reached that from opposite directions. **Flip condition to Outcome A,
+> stated in advance:** a *learned* policy clearing `static_proxy` with a CI95 lower bound strictly
+> above 0 on E11's 3×3 grid at seed 20260825. Detail: `docs/design/v5-static-dynamic.md`.
+>
+> Residual: `static_proxy` ≠ `draftAI.ts` is **bounded, not closed** (~1.1 %, in the static tier's
+> favour). Closing it exactly needs TS seated per-*pick*, which this section forbids on cost.
+
 ## 6. Gates — nothing ships unproven
 
 Inherited v4 model-unit DoD, binding on every model/weight unit:
@@ -121,6 +167,16 @@ Inherited v4 model-unit DoD, binding on every model/weight unit:
 **Block-release, no exceptions.** A unit that cannot meet its DoD blocks and does not ship
 degraded. A shipped-but-unproven weight is worse than no change: it launders a guess as evidence.
 Every fit is reproducible and **seeded**; every shipped weight carries its ablation receipt.
+
+> **OUTCOME — block-release held under exactly the pressure it exists for.** Wave 7 put both fit
+> units on the line and **both returned measured negatives and shipped nothing**: E10 gated six
+> candidates (zero cleared `helps` + a clean `no_regression` on **both** slices) and E11 promoted
+> neither arm (both CI95s entirely below zero). Nothing was tuned into a pass and no threshold was
+> widened — E10 ran `no_regression` at `tolerance=0.0`, *tighter* than the 0.02 default, and E3's
+> calibration gate blocked twice on real defects that were fixed rather than tuned around.
+> **Held-out validation is what caught the only apparent win** (`trade_value_zero`: +5.34 helps on
+> the 2024 fit slice, −1.08 neutral on held-out 2021). Receipts:
+> `engine/experiments/{static,dynamic}/`, reproduced in `docs/modeling/experiments.md`.
 
 ## 7. Per-unit DoD narrowing (monorepo rule)
 
@@ -141,9 +197,33 @@ does not pay for a Next.js build:
 **Python env:** one venv serves both tiers — `pipeline/.venv` (3.12, jax/torch/numpyro +
 `blitz_engine` editable). Homebrew `python3` is 3.14 and will not work.
 
+> **OUTCOME — the per-unit DoD narrowing worked, but a WORKTREE HAZARD degraded it all cycle.**
+> The venv's **editable** `blitz_engine` resolves to the **MAIN checkout**, so `cd engine && pytest`
+> inside a linked worktree collects the *worktree's* tests while importing *main's* code — a unit
+> can silently green-light code that is not its own. Treat per-unit engine `verified:` claims from
+> this cycle as **corroborating, not authoritative**; the per-wave integration DoD on the main
+> checkout (green every wave, counts rising monotonically 328 → 4079) is the authoritative record.
+> **Fix, now on the `CLAUDE.md` `DoD-note:` line:** run
+> `(cd engine && PYTHONPATH="$PWD" /abs/path/to/blitzboard/pipeline/.venv/bin/python -m pytest)`;
+> `../pipeline/.venv` does not exist in a linked worktree (gitignored) and `frontend/node_modules`
+> is not shared either (`npm ci` first). See `docs/modeling/experiments.md` §0.
+>
+> The per-wave integration gate also earned its keep directly: it caught a circular import between
+> `lineup.feasibility` and `simulation` that existed **only once E4 and E5 were both merged** —
+> each was green alone. That is the exact class of failure a per-unit DoD cannot see.
+
 ## 8. Out of scope
 
 Visual redesign, marketing surface, auth work, **E13 war-room explainability UI** (deferred to a
 later UI pass; the existing `explain` / `shapley_pick_attribution` surfaces are left intact for it),
 and the standing "Pending activation" backlog (factor hydrator, `/betting` + `/articles` nav links,
 sitemap, college enrich). A unit that genuinely blocks on one flags it rather than absorbing it.
+
+> **OUTCOME — scope held. E13 was deferred with no work started**; the `explain` /
+> `shapley_pick_attribution` surfaces are untouched and intact for it. Nothing shipped this cycle
+> depends on it. Open work carried forward is listed in
+> `docs/decisions/2026-08-25-v5-perfect-the-draft.md` §8 — headline items: swap the MCTS leaf to a
+> sim-priced evaluator, variance-reduce the RL reward, and the ~14 `DEFAULT_POLICY` knobs plus the
+> whole `GENERAL_WEIGHTS` / `GENERAL_PENALTIES` / `SF_QB_WEIGHTS` surface that were **never
+> backtested**. `matrix.all()` (432 rows) was never simulated by anything — every fit ran
+> `smoke()`'s 16 rows.

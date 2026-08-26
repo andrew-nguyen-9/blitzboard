@@ -7,6 +7,12 @@ config matrix), `docs/design/v4-bench-scoring.md` (the hand-authored tables this
 Every number here is either **cited**, **derived** from a cited number (arithmetic shown), or
 explicitly labelled **guess — test in E6/E10**. Nothing else is asserted.
 
+> **v5 SCORECARD (2026-08-25).** The cycle is over and the predictions were tested. **Jump to §6 —
+> "What the data said"** before acting on §3's audit column or §4's predictions: P1 and P4 came back
+> *partly wrong*, P11 came back *confirmed*, and most of P2/P3/P5/P7/P8/P9/P12 were **never
+> tested**. §3's rows for `faPenalty` and `injuryDiscount` describe knobs that **no longer exist** —
+> both were deleted from `PolicyParams` by E2b.
+
 ---
 
 ## 0. The frame
@@ -215,7 +221,8 @@ is most likely wrong. → prediction P1.
 - **value.** With `IR=1`, a known-injured high-upside player costs draft capital but ~0 roster
   capital after week 1. Effective budget becomes `B_eff = B + IR·P(you hold an eligible player)`,
   worth ≈ one extra R3 stash ≈ 25 points × that probability.
-- **count-vs-config.** `b_ir = IR`. And critically: **`injuryDiscount` must be a function of
+- **count-vs-config.** `b_ir = IR`. **[v5: `injuryDiscount` was DELETED, not conditioned — §6.2.]**
+  And critically: **`injuryDiscount` must be a function of
   `ir_slots`.** Current values (`ir: 0.35`, `pup/nfi: 0.40`) price the full roster cost of the
   absence; at `ir_slots = 1` that cost largely vanishes and the discount should be far shallower.
   → prediction P5.
@@ -286,6 +293,7 @@ Worked rows (all derived from the formula above; **E6 must reproduce these or di
   is a *league-design* argument, not a *drafting* argument — it constrains what `B` values are worth
   optimising for, not how to spend a given `B`.
 - **`ir_slots`.** `B_eff = B + IR·P(eligible player held)`. Changes `injuryDiscount`, not counts.
+  **[v5: `injuryDiscount` no longer exists — §6.2.]**
 
 Formal framing note: roster selection under slot + budget constraints is a mixed-integer program,
 and published treatments of the fantasy analogue solve exactly that shape
@@ -318,8 +326,8 @@ Hypotheses only. **No code changes in this unit.** "Plausible?" is our prior for
 | `overfillPenaltyPerExtra` | 25 | R8 = R3 stash EV = `0.36 × 70 ≈ 25` pts/season | **lands on the theory value** ✓ |
 | `byeStackPenalty` | 12 | `max(0, starters_on_bye − coverable(B, σ))`; clustering may be *positive* | **most suspect constant in the file** |
 | `injuryRate` | `{QB .08 RB .18 WR .12 TE .12 K .03 DST 0}` | hazard × duration, §R2: QB .078 RB .20 WR .144 TE .127 DST 0 | QB/TE/DST ✓; RB low; **WR ~20% low**; should be ADP-tier conditional |
-| `injuryDiscount` | flat status→multiplier | `f(expected weeks missed, ir_slots, B)` | **mis-specified**: `ir/pup/nfi` far too steep when `ir_slots=1` |
-| `faPenalty` | 1000 | a true FA's σ-adjusted value ≈ 0 — this is a sort sentinel, not a value | works, but hides the quantity; E2's `AvailabilityModel` should replace it |
+| `injuryDiscount` **[v5: DELETED — §6.2]** | flat status→multiplier | `f(expected weeks missed, ir_slots, B)` | **mis-specified**: `ir/pup/nfi` far too steep when `ir_slots=1` |
+| `faPenalty` **[v5: DELETED — §6.2]** | 1000 | a true FA's σ-adjusted value ≈ 0 — this is a sort sentinel, not a value | works, but hides the quantity; E2's `AvailabilityModel` should replace it |
 | `kdstCapRoundsFromEnd` | 2 | `S(K)+S(DST) = 2`, both at replacement level; K1−K12 = 1.7 pts/g | plausible, **directly supported** |
 | `kdstSoftPenalty` | 20 | ≈ K/DST season VOR (~30) − stash EV (~25) ⇒ a 5–30 band | plausible, inside the band |
 | `handcuffAmplify` | 1.6 | committee `29.3/10.5 = 2.8`; clean backup `6.5/10.5 = 0.62` | **a single scalar cannot express it** |
@@ -347,7 +355,7 @@ Each is stated so E5's imperfect-information simulator can disprove it. Tagged w
   the fitted `HandcuffValue` weight lands **below 15 and below `Upside`**.
 - **P4 — SF RB/WR multipliers (E6, E10).** Fitting `SF_MULTIPLIER` freely pushes RB and WR to
   **≤ 1.0**, not 1.2/1.1. A free fit that keeps them above 1.1 disproves the σ argument in §2.
-- **P5 — IR interaction (E5, E10).** `injuryDiscount` for `ir`/`pup`/`nfi` conditioned on
+- **P5 — IR interaction (E5, E10).** **[v5: MOOT — the knob was deleted; §6.1.]** `injuryDiscount` for `ir`/`pup`/`nfi` conditioned on
   `ir_slots` will exceed **0.6** in `ir_slots = 1` rows while staying **≤ 0.45** in `ir_slots = 0`
   rows. A fit that finds no `ir_slots` interaction disproves R9.
 - **P6 — K/DST count bound (E6).** **No row** of the 432-row matrix has an optimal roster holding
@@ -412,3 +420,89 @@ All accessed **2026-08-25**; every URL was fetched and confirmed to contain the 
 18. <https://www.footballnationusa.com/post/what-does-ir-mean-in-fantasy-football-injured-reserve-rules-explained> — IR eligibility by platform (ESPN O/IR; Yahoo IR/NFI-R/NFI-A/O/PUP; NFL.com adds suspended, exempt); an IR player frees the active-roster spot.
 19. <https://www.cheatsheetwarroom.com/blog/fantasy-football/leagues/best-settings> — 15–16 roster spots at 12 teams, ~⅓ bench (6–7); deeper benches enable handcuff hoarding, shallower over-punish byes.
 20. <https://arxiv.org/abs/2505.02170> — MILP for fantasy squad selection under budget/formation/quota constraints; the formal shape of the roster problem §2 parameterises.
+
+---
+
+## 6. What the data said (v5 verdicts, 2026-08-25)
+
+Written by E14 at cycle close. Every verdict traces to a committed receipt; reproduce via
+`docs/modeling/experiments.md`. The grading metric is `started_points`
+(`docs/modeling/draft-eval.md`) — **not** the hindsight metric §1 was written against.
+
+### 6.1 The falsifiable predictions
+
+| # | prediction | verdict | evidence |
+|---|---|---|---|
+| **P1** | `byeStackPenalty = 0` will not hurt at `bench_slots ≥ 6`, will hurt at 4 | **REFUTED as a flat constant, but the fix also lost** | E6 (shape): sign is conditional on bench depth — 8-slot benches, clustering **beats** spreading (+18.9 p=.002, +16.0 p=.0005, +12.4 p=.0035; spread −29.1/−18.6/−5.0); 6-slot benches it **reverses** (−23.6, −15.3, both p<.001). Grid means cluster +4.0 vs spread −0.7. E10 (lever): implementing exactly that conditional rule inside `scoreBoard` scored **−10.4** (no_regression FAIL) and dropping the penalty scored **−9.0** (FAIL). **Resolved as shape vs lever** — see §6.3. `byeStackPenalty` stays **flat 12**; the seam ships inert. |
+| **P2** | SF QB2 > 3rd RB/WR below ADP `3T` | **NOT TESTED** | no candidate gated `SF_MULTIPLIER.QB` |
+| **P3** | handcuff (<35 % early-down) < highest-`opportunity_trend` WR; fitted `HandcuffValue` < 15 and < `Upside` | **NOT TESTED** | `GENERAL_WEIGHTS` was never backtested |
+| **P4** | free-fitting `SF_MULTIPLIER` pushes RB **and** WR to ≤ 1.0 | **HALF CONFIRMED, HALF REFUTED** | E6 mean derived bench ceiling, 1qb → superflex/2qb: **RB 3.75 → 2.50 (−1.25)** — SF *drains* RB depth, so 1.2 is backwards ✅; **WR 1.50 → 2.25 (+0.75)** — SF *raises* WR depth, so 1.1 has the **right sign** ❌; QB 0.25 → 1.88 (+1.62). A blanket "fix the SF multipliers" would have broken WR. E10 proposed the RB correction (1.2 → 0.67) only: **+1.20, p=0.545, neutral, not shipped.** |
+| **P5** | `injuryDiscount` conditioned on `ir_slots` exceeds 0.6 / stays ≤ 0.45 | **MOOT — the knob was deleted** | E2b removed `injuryDiscount` (and `faPenalty`) from `PolicyParams` entirely; availability is now a published `p_startable` multiplier. Nothing left to condition. |
+| **P6** | no matrix row's optimal roster holds >1 K or >1 DST | **SUBSUMED** | E6's derived per-row bench **ceilings** replace the flat `overfillDepth {K:1, DST:1}` claim, and E8b asserts them across all 432 rows via `BenchBounds.contains` as a hard CP-SAT constraint |
+| **P7** | merging `PositionalScarcity` + `ReplacementDifficulty` does not regress | **NOT TESTED** | `GENERAL_WEIGHTS` was never backtested |
+| **P8** | raising `injuryRate.WR` 0.12 → 0.145 improves or is flat | **REFUTED — and for an instructive reason** | E10's `injury_rate_clinical` (the whole `injuryRate` table ← E3's fitted rates, WR 0.12 → 0.162) is the one candidate the metric **actively rejects**: **−13.97, HURTS, p=0.0015**. The mechanism is a **semantic mismatch, not a bad number** — see §6.2. WR alone was not tested in isolation, so the *directional* claim is untested; the *substitution* is falsified. |
+| **P9** | `b(RB)` monotone in `teams` and in PPR-ness | **NOT TESTED** as a monotonicity property | E6 derived the bounds but ran only 16 measured rows; the other 416 are interpolated and are not evidence |
+| **P10** | no optimal roster holds a 2nd K, 2nd DST, or 3rd QB at `1qb` | **SUPERSEDED by a stronger, real test** | E8a's grid-wide coverage invariant turned out **FALSE** (E6's bounds give ceiling 0 for a position in 234/432 rows). E8b removed it and shipped `test_bench_positional_mix_within_e6_bounds_across_grid`, which asserts for real across **all 432 rows**. Engine xfail 432 → 0. |
+| **P11** | `TradeValue` is unfittable; a free fit drives it to ~0 | **CONFIRMED — structurally, twice** | E6: `season_eval.py` simulates **no trades**, so `TradeValue` has **zero gradient** under `started_points`. E10 measured the predicted signature: ablate-to-0 was **+5.34 "helps" p=.021 on the 2024 fit slice** but **−1.08 neutral p=.403 on held-out 2021**. Sign-flipping across slices is exactly what a zero-gradient knob does. **Pinned at 10, never free-fit**; an in-code comment forbids it. |
+| **P12** | fitted `PlayoffSchedule` < 10; ablating it costs less than ablating `Upside` | **NOT TESTED** | `GENERAL_WEIGHTS` was never backtested |
+
+**Score: 1 confirmed (P11) · 2 refuted (P1, P8) · 1 split (P4) · 2 superseded (P6, P10) · 1 moot
+(P5) · 5 never tested (P2, P3, P7, P9, P12).** Only 6 of ~20 `DEFAULT_POLICY` knobs were gated at
+all; the whole `GENERAL_WEIGHTS` / `GENERAL_PENALTIES` / `SF_QB_WEIGHTS` surface is still
+un-backtested hand-authored numbers.
+
+### 6.2 §3's constant audit — corrections
+
+- **`faPenalty` (1000) and `injuryDiscount` (flat status→multiplier) NO LONGER EXIST.** E2b deleted
+  both from `PolicyParams`/`DEFAULT_POLICY`, along with `injuryAvailability()`. §3's audit rows and
+  §4's P5 are historical. `scoreBoard` now multiplies the score by `availabilityOf(p,
+  ctx.availability)` — a published `p_startable` from `public.player_availability`, falling back to
+  a local estimate and then to neutral (1). This is the change §3 asked for ("E2's
+  `AvailabilityModel` should replace it"), and it landed.
+- **`injuryRate` — the table is right to be a *different quantity* from E3's fit.** §3 grades the
+  shipped `{QB .08 RB .18 WR .12 TE .12 K .03 DST 0}` against §R2's derived hazard × duration. Both
+  are **availability-like** ("fraction of a season a starter misses"), and that is what the knob
+  means. **E3's fitted `{QB .0953 RB .1588 WR .1620 TE .1725 K .0847 DST 0}` are CLINICAL
+  INCIDENCE** — a different quantity. Substituting them **HURTS by 14.0 pts, p=0.0015**. Read
+  `fixtures/injury_rates.json`'s `"event"` string before ever proposing this again. Availability
+  belongs in the `p_startable` multiplier, not in this knob.
+- **`kdstCapRoundsFromEnd` (2) — "directly supported" survives; `kdstSoftPenalty` (20) is
+  unresolved.** E6 derived per-row K/DST timing and found caps spanning **2–13** and penalties
+  **0.36–47.5 pts/round** — emphatically not a constant. But **6 of 16 rows are `confidence="low"`**
+  because E5 models no K/DST *streaming*, so the metric over-rewards locking in a kicker early.
+  E10 gated only the high-confidence median (cap 2 unchanged, soft_penalty 20 → 4.06): **+2.08,
+  p=0.673, neutral.** Incumbent 20 stands, unproven either way.
+- **`overfillPenaltyPerExtra` (25) — "lands on the theory value" is untested.** E6 explicitly did
+  **not** re-derive it as a scalar; it is superseded in the engine by the derived ceilings (a body
+  past `hi` is *disallowed*, not priced). The frontend still uses 25 as a hand-authored number.
+- **`overfillDepth` — superseded in the engine, unchanged in the frontend.** E6's per-row
+  `BenchBounds` are the derived form; `DEFAULT_POLICY.overfillDepth` remains
+  `{QB3 RB5 WR5 TE2 K1 DST1}` and was never gated.
+
+### 6.3 The finding this doc most needs to carry: shape vs lever
+
+E6 and E10 reached **opposite** conclusions about the same bye rule, on the **same metric**, and
+neither is wrong:
+
+- **E6 asked "is this roster *shape* better?"** and could construct the shape directly, via a
+  derived roster-shape ablation over its own arm policies.
+- **E10 asked "does this scalar *knob* reach that shape?"** inside `draftAI.scoreBoard`, where the
+  penalty competes with `emptyOffensiveStarterBonus`, overfill and K/DST terms.
+
+**A shape can be right while the lever that reaches it is not.** Different objects, not
+contradictory results. E12 resolved it that way and added one datum: the deep-bench config
+(`t12-1qb-half-te0.5-b8-ir0`) is where the *dynamic* tier collapses too (−117.5, CI entirely below
+0), so **bench depth is a real conditioning variable that neither tier currently conditions on
+correctly** — which is *not* evidence that `byeStackPenalty` is the right place to condition.
+
+E10 shipped the conservative read: flat 12, with the mechanism (`byeStackDeepBenchSlots: 99` /
+`byeStackPenaltyDeepBench: 12`) **inert and bit-identical to §3's incumbent**, so arming it later
+costs nothing. The clean way to settle it is to gate **one** bye candidate on **both** decision
+surfaces in a single run — an open v6 item.
+
+### 6.4 Where to read the rest
+
+- `docs/decisions/2026-08-25-v5-perfect-the-draft.md` — the full harvest, negative results, open questions.
+- `docs/modeling/experiments.md` — every seed and command.
+- `docs/modeling/draft-eval.md` — the metric these verdicts are graded on, and its limits.
+- `docs/design/v5-static-dynamic.md` — E12's cross-tier reconciliation.
