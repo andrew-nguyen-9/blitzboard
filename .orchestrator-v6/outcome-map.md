@@ -11,6 +11,14 @@
 | Live scoring and explanations | Claude | traces and golden roster audit | C04 |
 | Promotion and land decision | Claude integrates | preregistered reproduction and blind audit | C05/C06 |
 
+## Authorized player-calibration amendment
+
+`amendments/player-calibration-v1.md` adds four deterministic C01 gates: explicit raw/VOR units,
+format-correct superflex replacement, no second redraft age adjustment, and no `search_rank` value
+input. C02 additionally owns the reproducible player-level benchmark/decomposition gate frozen in
+`experiments/player-calibration-v1.json`. These requirements are additive; they do not remove any
+original outcome or permit free coefficient tuning in C01.
+
 Known v5 carry-forward risks: `t14-2qb-std-te0.5-b4-ir1`; no promoted static-fit candidate;
 reactive-only waivers; fixed frontend overfill; scalar same-position bye credit; positional-depth
 handcuff inference; and unsupported rows that must not be labeled measured.
