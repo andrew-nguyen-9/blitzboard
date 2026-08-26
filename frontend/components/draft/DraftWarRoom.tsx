@@ -19,6 +19,7 @@ import {
   norm,
   proj,
 } from "@/lib/draftAI";
+import { projectionCeiling } from "@/lib/valueUnits";
 import { mapPicks, type MappedPick } from "@/lib/sleeperDraft";
 import { mapEspnPicks } from "@/lib/espnDraft";
 import { useSleeperSync } from "@/lib/useSleeperSync";
@@ -157,7 +158,7 @@ export default function DraftWarRoom({
       const ppos = norm(p.position);
       const equity = equityImpact(myTeamPicks, p, roster);
       const mean = proj(p);
-      const boom = p.value?.boom ?? mean;
+      const boom = projectionCeiling(p) ?? mean; // C01 unit fix: raw ceiling vs raw mean
       return {
         player: p,
         equity,

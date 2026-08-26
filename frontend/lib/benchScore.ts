@@ -13,6 +13,8 @@ import type { PlayerWithValue } from "./types";
 import { rulesFromConfig, type LeagueConfig } from "./leagueConfig";
 import { proj } from "./draftAI";
 import { playoffSchedule } from "./schedule2026";
+import { contingentRole, weeklyByeCoverage } from "./contingency";
+import { SUPERFLEX_ROSTER, fillRoster, type RosterSlot } from "./draft";
 
 // ── ctx / result shapes ────────────────────────────────────────────────────
 
@@ -107,11 +109,13 @@ function injuryRisk(status: string | null | undefined): number {
   return 0.4;
 }
 
-/** Season-projection-based upside from the ceiling estimate. */
+/** Upside from CEILING VOR (value.boom = projection ceiling − replacement — the C01 unit
+ * contract; it is NOT a raw season ceiling). Points-over-replacement is the right scale for
+ * "worth a bench spot", and it is never compared against a raw projection here. */
 function upsideSignal(p: PlayerWithValue): { v: number; degraded: boolean } {
-  const boom = p.value?.boom;
-  if (boom == null) return { v: NEUTRAL, degraded: true };
-  return { v: sat(boom, 150), degraded: false };
+  const ceilVor = p.value?.boom;
+  if (ceilVor == null) return { v: NEUTRAL, degraded: true };
+  return { v: sat(ceilVor, 150), degraded: false };
 }
 
 const FLEX_POS = new Set(["RB", "WR", "TE"]);
@@ -177,11 +181,18 @@ function generalScore(player: PlayerWithValue, ctx: BenchCtx, t: Terms): number 
   return clamp100(t.score);
 }
 
-/** Contingent value of a backup who inherits a role: starterRisk × standalone upside. */
+/** Contingent value of a backup who inherits a role: starterRisk × standalone upside —
+ * but ONLY with structured evidence (contingency.ts). v5 granted this to every positional
+ * backup; v6 grants nothing without team/succession or explicit role-transfer evidence,
+ * and flags missing/ambiguous evidence as a degraded term. Coefficients unchanged. */
 function handcuffValue(player: PlayerWithValue, ctx: BenchCtx, upside: number): { v: number; degraded: boolean } {
   const { same, idx } = positionDepth(player, ctx.roster);
   if (idx <= 0) return { v: 0.2 * upside, degraded: false }; // this IS the starter — not a handcuff
   const starter = same[0];
+  const role = contingentRole(player, starter);
+  if (role.status !== "supported") {
+    return { v: 0, degraded: role.status === "ambiguous-depth" || role.status === "missing-metadata" };
+  }
   const risk = injuryRisk(starter.injury_status);
   return { v: clamp01(0.4 * upside + risk * upside * 1.5), degraded: false };
 }
@@ -193,15 +204,26 @@ function scarcity(player: PlayerWithValue, ctx: BenchCtx): { v: number; degraded
   return { v: clamp01(1 - (tier - 1) * 0.2), degraded: false };
 }
 
-/** 1 if the bench player's bye differs from the position starter's (covers it), 0.25 if stacked. */
+/** The starting template this league implies — superflex keeps OP, otherwise it is dropped. */
+function starterTemplate(ctx: BenchCtx): RosterSlot[] {
+  const sf = ctx.superflex ?? deriveSuperflex(ctx);
+  return sf ? SUPERFLEX_ROSTER : SUPERFLEX_ROSTER.filter((s) => s.slot !== "OP");
+}
+
+/** Candidate-aware weekly bye coverage via the consolidated implementation (contingency.ts):
+ * 1 when the candidate can legally fill ≥1 starter-bye hole it is not itself absent for,
+ * 0 otherwise (a shared bye earns nothing), neutral+degraded when byes are unknown. */
 function byeCoverage(player: PlayerWithValue, ctx: BenchCtx): { v: number; degraded: boolean } {
-  const { same, idx } = positionDepth(player, ctx.roster);
-  const mine = player.bye_week;
-  if (mine == null) return { v: NEUTRAL, degraded: true };
+  if (player.bye_week == null) return { v: NEUTRAL, degraded: true }; // unknowable availability
+  const { idx } = positionDepth(player, ctx.roster);
   if (idx <= 0) return { v: 0.5, degraded: false }; // starter — no one to cover for
-  const starterBye = same[0].bye_week;
-  if (starterBye == null) return { v: NEUTRAL, degraded: true };
-  return { v: mine === starterBye ? 0.25 : 1, degraded: false };
+  const template = starterTemplate(ctx);
+  const fill = fillRoster(ctx.roster, template);
+  const starterIds = new Set(fill.starters.flatMap((s) => (s.player ? [s.player.id] : [])));
+  const ownedBench = ctx.roster.filter((p) => !starterIds.has(p.id));
+  const cov = weeklyByeCoverage(player, fill.starters, template, ownedBench);
+  if (cov.degraded && cov.covered.length === 0) return { v: NEUTRAL, degraded: true };
+  return { v: cov.covered.length > 0 ? 1 : 0, degraded: cov.degraded };
 }
 
 function startersAt(pos: string, ctx: BenchCtx): number {

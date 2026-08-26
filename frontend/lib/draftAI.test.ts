@@ -6,7 +6,6 @@ import {
   marginalStarterValue,
   DEFAULT_POLICY,
   detectRuns,
-  byeCover,
   injuryCover,
   ceilingWeeks,
   availability,
@@ -21,6 +20,7 @@ import {
   candidatePool,
 } from "./draftAI";
 import { SUPERFLEX_ROSTER } from "./draft";
+import { weeklyByeCoverage } from "./contingency";
 import { runSnakeDraft, runSnakeDraftAsync, mulberry32 } from "./snakeDraft";
 import type { PlayerWithValue } from "./types";
 
@@ -116,14 +116,23 @@ describe("marginalStarterValue", () => {
   });
 });
 
-describe("byeCover", () => {
-  it("counts one start per distinct same-position starter bye", () => {
-    const cand = mk("wr4", "WR", 120);
-    const starters = [mk("wr1", "WR", 240, { bye_week: 7 }), mk("wr2", "WR", 230, { bye_week: 11 })];
-    expect(byeCover(cand, starters)).toBe(2);
+describe("bye coverage (consolidated, candidate-aware)", () => {
+  it("counts one start per distinct coverable starter bye when the candidate's bye differs", () => {
+    const cand = mk("wr4", "WR", 120, { bye_week: 4 });
+    const starters = [
+      { slot: "WR", player: mk("wr1", "WR", 240, { bye_week: 7 }) },
+      { slot: "WR", player: mk("wr2", "WR", 230, { bye_week: 11 }) },
+    ];
+    expect(weeklyByeCoverage(cand, starters, SUPERFLEX_ROSTER).covered).toEqual([7, 11]);
   });
-  it("is 0 when no same-position starter has a bye", () => {
-    expect(byeCover(mk("wr4", "WR", 120), [mk("rb1", "RB", 240, { bye_week: 7 })])).toBe(0);
+  it("gives nothing for a shared bye or an ineligible slot", () => {
+    const cand = mk("wr4", "WR", 120, { bye_week: 7 });
+    expect(
+      weeklyByeCoverage(cand, [{ slot: "WR", player: mk("wr1", "WR", 240, { bye_week: 7 }) }], SUPERFLEX_ROSTER).covered,
+    ).toEqual([]);
+    expect(
+      weeklyByeCoverage(mk("wr4", "WR", 120, { bye_week: 4 }), [{ slot: "RB", player: mk("rb1", "RB", 240, { bye_week: 7 }) }], SUPERFLEX_ROSTER).covered,
+    ).toEqual([]);
   });
 });
 

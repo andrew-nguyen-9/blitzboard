@@ -1,15 +1,15 @@
 # v6 orchestration state — production (Claude-owned)
 
 - state: running
-- phase: C00B harness correction (post-BLOCK×2)
+- phase: C01 bench + player-value correctness (amended scope)
 - branch: `v6/bench-portfolio`
 - worktree: `.worktrees/v6-prod` (runtime-local, uncommitted parent location)
 - green base SHA: `01f01d3c5f9c00a046edd43707db75ce1426c0e8` (immutable baseline)
 - review counterpart: `.worktrees/v6-review` on `v6/bench-portfolio-review` (reviewer-owned; never edited from here)
-- current attempt: 3
-- blockers: none open on Claude side; C00A harness BLOCK corrected structurally (see checkpoints/C00B-claude.md) — awaiting re-review
+- current attempt: 1
+- blockers: none known; C01 implemented per amended scope — awaiting independent C01 verdict
 - verification: C00 receipts frozen in `.orchestrator-v6/receipts/`; DoD run recorded in `checkpoints/C00-claude.md`
-- next action: await independent C00 verdict; C01 implementation only after PASS
+- next action: stop at C01-claude.md; no merge, no C02 until independent PASS
 - external authority: no push, merge, PR, release, protected-branch edit, or branch deletion
 
 Ownership (from wishlist-v6-bench-portfolio.md):

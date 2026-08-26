@@ -13,6 +13,14 @@ Eight tracked outcomes → implementation surface, tests, metrics, checkpoint ev
 | 7 | Live scoring + explanations | `frontend/lib/draftAI.ts:133` fixed `DEFAULT_POLICY.overfillDepth` used at `:405` → shared lookup + fallback; component-level explanations, degraded-input status; browser stays simulation-free | trace goldens across format/bench/TE/IR configs | golden parity | C04-claude.md |
 | 8 | Promotion + land decision | `.orchestrator-v6/experiments/promotion-v1.json` (preregistered, sha256 020047cd…36d7f, byte-identical to reviewer copy) | matched-seat reproduction, blind audit | thresholds in manifest | C05-claude.md, C06 reviewer verdict |
 
+## C01 amended scope (2026-08-26)
+
+C01 additionally covers the independently confirmed player-rating correctness defects — unit
+contracts (boom≡ceilingVor), mixed-unit comparison bans, measured OP replacement demand, redraft
+age double-count removal, search_rank removal from shaped value — per
+`.orchestrator-v6/C01-scope-amendment.md`. C02 additionally owns the player-level calibration
+report and promotion-v3.json.
+
 ## Carried-forward v5 risks (all remain open at baseline)
 
 - `t14-2qb-std-te0.5-b4-ir1`: real −25.3 regression (p=0.0025), `engine/tests/test_roster_shape.py:241` KNOWN_REGRESSION_ROW; stays blocked until C03 clears it.
@@ -22,3 +30,4 @@ Eight tracked outcomes → implementation surface, tests, metrics, checkpoint ev
 - Scalar same-position bye credit in BOTH consumers: `draftAI.ts::byeCover` (candidate bye ignored) and `benchScore.ts::byeCoverage`.
 - Positional-depth handcuff inference (`handcuffValue`).
 - `bench_shape.json` rows lack evidence-status labels — unsupported rows must not be labeled measured.
+- Player-rating audit (2026-08-26): unfitted equal-weight projection ensemble (`value_engine_run.py:126`), hand-authored shaping coefficients (ELITE_PREMIUM/CLIFF_W/UPSIDE_W/MC_VOL_GAIN), and weak rookie/role-change projections remain open; C01 fixes only the deterministic unit/replacement/age/search_rank defects, C02 measures the rest.

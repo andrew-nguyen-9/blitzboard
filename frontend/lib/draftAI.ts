@@ -8,6 +8,8 @@ import type { PlayerWithValue } from "./types";
 import type { RosterSlot } from "./draft";
 import { fillRoster, SUPERFLEX_ROSTER } from "./draft";
 import { BYE_WEEKS_2026 } from "./byeWeeks";
+import { contingentRole, weeklyByeCoverage } from "./contingency";
+import { projectionCeiling } from "./valueUnits";
 import type { MappedPick } from "./sleeperDraft";
 import { benchScore, type BenchCtx } from "./benchScore";
 import { availabilityOf, ZERO_AVAILABILITY_EPS, type AvailabilityMap } from "./availability";
@@ -243,14 +245,10 @@ export function marginalStarterValue(
   return Math.max(0, candDelta - repDelta);
 }
 
-// Distinct same-position starter byes this candidate could fill — one start each.
-export function byeCover(cand: PlayerWithValue, starters: PlayerWithValue[]): number {
-  const pos = norm(cand.position);
-  const byes = new Set(
-    starters.filter((s) => s && norm(s.position) === pos && s.bye_week != null).map((s) => s.bye_week),
-  );
-  return byes.size;
-}
+// Bye coverage is the consolidated candidate-aware implementation in contingency.ts —
+// weeks the candidate can legally start for an absent starter, shared byes excluded.
+// (v5's byeCover counted starter byes without checking the candidate's own bye or slot
+// eligibility; both defects and the consolidation are C01 contract items.)
 
 // Expected games filling in for an injured starter; amplified for a same-team handcuff,
 // which starts precisely when its starter is out (negative availability correlation).
@@ -272,8 +270,10 @@ export function ceilingWeeks(
   marginalStarterProj: number,
   params: PolicyParams,
 ): number {
-  const boom = cand.value?.boom ?? proj(cand);
-  const edge = boom - marginalStarterProj;
+  // C01 unit fix: value.boom is ceiling VOR; the bar is a RAW projection, so compare the
+  // RAW ceiling (boom + replacement). v5 compared mixed units and zeroed real option value.
+  const rawCeiling = projectionCeiling(cand) ?? proj(cand);
+  const edge = rawCeiling - marginalStarterProj;
   if (edge <= 0) return 0;
   return Math.min(params.maxCeilingWeeks, (edge / (Math.abs(marginalStarterProj) + 1)) * params.ceilingScale);
 }
@@ -296,20 +296,24 @@ export function benchValue(
 
   const samePos = ctx.teamPicks.filter((p) => norm(p.position) === pos).sort((a, b) => proj(b) - proj(a));
   const coveredStarter = samePos[0] ?? null;
-  const isHandcuff = !!cand.nfl_team && coveredStarter?.nfl_team === cand.nfl_team;
+  // v6: "handcuff" needs structured contingent-role evidence, not the v5 same-team boolean.
+  const isHandcuff = contingentRole(cand, coveredStarter).status === "supported";
   // weakest same-eligible starter is the bar the candidate's ceiling must clear
   const marginalStarter = starters
     .filter((s) => norm(s.position) === pos)
     .sort((a, b) => proj(a) - proj(b))[0];
   const marginalStarterProj = marginalStarter ? proj(marginalStarter) : 0;
 
+  const starterIds = new Set(starters.map((s) => s.id));
+  const ownedBench = ctx.teamPicks.filter((p) => !starterIds.has(p.id));
+  const coveredByeWeeks = weeklyByeCoverage(cand, fill.starters, ctx.roster, ownedBench).covered.length;
   const eStarts =
-    params.benchByeWeight * byeCover(cand, starters) +
+    params.benchByeWeight * coveredByeWeeks +
     params.benchInjuryWeight * injuryCover(cand, coveredStarter, isHandcuff, params) +
     params.benchCeilingWeight * ceilingWeeks(cand, marginalStarterProj, params);
 
   const mean = proj(cand);
-  const boom = cand.value?.boom ?? mean;
+  const boom = projectionCeiling(cand) ?? mean; // C01 unit fix: blend raw with raw
   const valuePerGame = ((1 - params.boomWeight) * mean + params.boomWeight * boom) / STARTABLE_WEEKS;
 
   // E5: fold E4's bench-composition score (per-position superflex multipliers +
