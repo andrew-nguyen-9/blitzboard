@@ -46,6 +46,7 @@ import {
   serializeManualDraft,
   type ManualDraftState,
 } from "./manualDraftState";
+import { disagreement, matchExpertBoard } from "./expertOverlay";
 
 type Mode = "manual" | "sleeper" | "espn";
 type View = "board" | "teams" | "log" | "analysis";
@@ -217,6 +218,7 @@ export default function DraftWarRoom({
     }
     return r.slice(0, 60);
   }, [available, q, pos]);
+  const expertOverlay = useMemo(() => matchExpertBoard(players, numTeams), [players, numTeams]);
 
   useEffect(() => {
     saveSnapshot({ config, picks, mySlot });
@@ -521,8 +523,24 @@ export default function DraftWarRoom({
               )}
             </div>
 
+            {expertOverlay && (
+              <details className="mb-3 text-label text-ink-muted">
+                <summary className="cursor-pointer">
+                  Expert overlay {expertOverlay.asOf} · {expertOverlay.byPlayerId.size} matched
+                  {expertOverlay.unmatched.length > 0 && ` · ${expertOverlay.unmatched.length} unmatched`}
+                  {expertOverlay.ambiguous.length > 0 && ` · ${expertOverlay.ambiguous.length} ambiguous`}
+                </summary>
+                {(expertOverlay.unmatched.length > 0 || expertOverlay.ambiguous.length > 0) && (
+                  <div className="mt-1 pl-4">
+                    {expertOverlay.unmatched.length > 0 && <div>Unmatched: {expertOverlay.unmatched.join(", ")}</div>}
+                    {expertOverlay.ambiguous.length > 0 && <div>Ambiguous: {expertOverlay.ambiguous.join(", ")}</div>}
+                  </div>
+                )}
+              </details>
+            )}
+
             {/* best available */}
-            <div className="glass overflow-hidden">
+            <div className="glass overflow-x-auto">
               <table className="w-full text-left text-body">
                 <thead className="border-b border-hairline text-label text-ink-muted">
                   <tr>
@@ -530,6 +548,7 @@ export default function DraftWarRoom({
                     <th className="px-2 py-2.5 font-normal">Player</th>
                     <th className="px-2 py-2.5 font-normal">Pos</th>
                     <th className="px-2 py-2.5 text-right font-normal">Pts</th>
+                    <th className="px-2 py-2.5 font-normal">Expert</th>
                     <th className="px-3 py-2.5" />
                   </tr>
                 </thead>
@@ -540,6 +559,20 @@ export default function DraftWarRoom({
                       <td className="px-2 py-2"><Link href={`/players/${p.id}`} className="font-medium transition hover:text-accent">{p.full_name}</Link></td>
                       <td className="px-2 py-2 text-label text-ink-muted">{p.position === "DEF" ? "DST" : p.position ?? "—"}</td>
                       <td className="px-2 py-2 text-right font-mono text-label">{projPoints(p) > 0 ? projPoints(p).toFixed(0) : "—"}</td>
+                      <td className="px-2 py-2 text-label">
+                        {(() => {
+                          const expert = expertOverlay?.byPlayerId.get(p.id);
+                          if (!expert) return <span className="text-ink-muted/50">—</span>;
+                          const signal = disagreement(p.value?.rank, expert.modelRank);
+                          return (
+                            <div title={expert.note} className={`min-w-28 rounded-lg border px-2 py-1 ${signal ? "border-amber-400/50 bg-amber-400/10" : "border-hairline"}`}>
+                              <div className="font-mono">E{expert.modelRank} · ADP {expert.marketAdp || "—"}</div>
+                              <div className="text-ink-muted">Risk {expert.risk} · Upside {expert.upside}</div>
+                              {signal && <div className="text-amber-300">{signal}</div>}
+                            </div>
+                          );
+                        })()}
+                      </td>
                       <td className="px-3 py-2 text-right">
                         {mode === "manual" ? (
                           <div className="flex justify-end gap-1">
@@ -558,7 +591,7 @@ export default function DraftWarRoom({
                     </tr>
                   ))}
                   {!shown.length && (
-                    <tr><td colSpan={5} className="px-4 py-8 text-center text-label text-ink-muted">No players match.</td></tr>
+                    <tr><td colSpan={6} className="px-4 py-8 text-center text-label text-ink-muted">No players match.</td></tr>
                   )}
                 </tbody>
               </table>
