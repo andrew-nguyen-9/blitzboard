@@ -268,3 +268,103 @@ def test_in_season_breakout_is_acquired_from_a_low_prior(certain: None) -> None:
     ctl_pool, ctl_rosters, ctl_row = _breakout_fixture(weeks=6, breakout_ppw=1.0)
     ctl = se.evaluate_rosters(ctl_pool, ctl_rosters, ctl_row, config=_cfg())
     assert ctl.upside_adds.sum() == 0
+
+
+# ── C02A supplement: one shared weekly move budget (waiver-realism-v2) ────────
+
+
+def _budget_fixture(rb_bye: int):
+    # Seat 0 can face BOTH an emergency (RB bye hole — its only backup is a QB) and an
+    # attractive upside upgrade (free K 10 over started K 5) in the same waiver window.
+    a = [_mk("a_qb", "QB", 20), _mk("a_rb", "RB", 15, bye=rb_bye), _mk("a_k", "K", 5),
+         _mk("a_bench", "QB", 3)]
+    b = [_mk("b_qb", "QB", 18), _mk("b_rb", "RB", 14), _mk("b_k", "K", 9),
+         _mk("b_bench", "RB", 8)]
+    pool = [*a, *b, _mk("f_rb", "RB", 12), _mk("f_k", "K", 10)]
+    return pool, [a, b]
+
+
+def test_emergency_consumes_the_shared_weekly_budget(certain: None) -> None:
+    pool, rosters = _budget_fixture(rb_bye=2)
+    res = se.evaluate_rosters(pool, rosters, _row(bench=1),
+                              config=_cfg(n_seasons=1))
+    # week-1 window (weeks=4 → 3 windows): seat 0's emergency RB claim consumes the
+    # entire default budget of 1, so its same-week K upgrade must NOT execute; the
+    # remaining windows have no emergency, so the K stream lands later. Weekly totals
+    # can therefore never exceed the budget:
+    per_week_max = res.n_seasons * (WEEKS - 1)  # 3 windows × budget 1
+    assert res.waiver_adds[0] * res.n_seasons <= per_week_max
+    assert res.emergency_adds[0] >= 1
+    assert np.allclose(res.waiver_adds, res.emergency_adds + res.upside_adds)
+
+
+def test_budget_boundary_emergency_blocks_same_week_upside(certain: None) -> None:
+    # Single waiver window (weeks=2): the emergency claim must win the one allowance
+    # and the upside K upgrade must be blocked entirely.
+    def mk2(pid, pos, ppw, bye=0):
+        return se.SeasonPlayer(player_id=pid, position=pos, nfl_team="AAA", bye_week=bye,
+                               points_if_plays=(float(ppw),) * 2, projection=ppw * 2.0,
+                               depth_rank=1)
+    a = [mk2("a_qb", "QB", 20), mk2("a_rb", "RB", 15, bye=2), mk2("a_k", "K", 5),
+         mk2("a_bench", "QB", 3), mk2("a_bench2", "WR", 2)]
+    b = [mk2("b_qb", "QB", 18), mk2("b_rb", "RB", 14), mk2("b_k", "K", 9),
+         mk2("b_bench", "RB", 8), mk2("b_bench2", "WR", 6)]
+    pool = [*a, *b, mk2("f_rb", "RB", 12), mk2("f_k", "K", 10)]
+    res = se.evaluate_rosters(pool, [a, b], _row(bench=2), config=_cfg(n_seasons=1))
+    assert res.emergency_adds[0] == 1  # the hole was patched…
+    assert res.upside_adds[0] == 0  # …and the same-week upgrade was budget-blocked
+
+    # control: no bye → no emergency → the same window executes the upside K upgrade
+    a2 = [mk2("a_qb", "QB", 20), mk2("a_rb", "RB", 15), mk2("a_k", "K", 5),
+          mk2("a_bench", "QB", 3), mk2("a_bench2", "WR", 2)]
+    pool2 = [*a2, *b, mk2("f_rb", "RB", 12), mk2("f_k", "K", 10)]
+    ctl = se.evaluate_rosters(pool2, [a2, b], _row(bench=2), config=_cfg(n_seasons=1))
+    assert ctl.emergency_adds[0] == 0
+    assert ctl.upside_adds[0] >= 1
+
+    # a weekly budget of 2 permits both claim kinds in the same window
+    both = se.evaluate_rosters(pool, [a, b], _row(bench=2),
+                               config=_cfg(n_seasons=1, waiver_moves_per_week=2))
+    assert both.emergency_adds[0] == 1
+    assert both.upside_adds[0] >= 1
+
+
+# ── C02B: laptop-2 production equivalents (waiver-realism-v3/v4) ──────────────
+
+
+def test_dead_bench_body_dropped_for_cross_role_upgrade(certain: None) -> None:
+    # Production equivalent of the laptop-2 case: a configuration-ineligible bench WR
+    # (no WR slot exists in this row) is the roster-wide lowest nonstarter and is
+    # dropped for a legal RB add — no shared role space required.
+    positions = ["RB", "WR", "RB"]
+    proj = np.array([100.0, 1.0, 20.0])
+    swap = se._best_upgrade(squad=[0, 1], free=[2], positions=positions, proj=proj,
+                            known_out=np.zeros(3, dtype=bool), margin=0.15,
+                            slots={"RB": 1})
+    assert swap == (1, 2)
+
+    # end-to-end: only seat 0's dead WR clears the margin gate, so exactly that seat
+    # executes the cross-role swap
+    a = [_mk("a_rb", "RB", 25), _mk("a_wr", "WR", 1)]
+    b = [_mk("b_rb", "RB", 24), _mk("b_wr", "WR", 11)]
+    pool = [*a, *b, _mk("f_rb", "RB", 12)]
+    row = {"id": "dead-body", "teams": 2, "bench_slots": 1, "starting_slots": {"RB": 1}}
+    res = se.evaluate_rosters(pool, [a, b], row, config=_cfg())
+    assert res.upside_adds.tolist() == [1.0, 0.0]
+
+
+def test_combined_weekly_cap_production_equivalent(certain: None) -> None:
+    # Production equivalent of the laptop-2 weekly-cap case, via the public config:
+    # defaults (1, 1) permit ONE total claim per team-week even when an emergency and
+    # an upside opportunity coexist; the budget formula is max(emergency, proactive).
+    positions = ["RB", "K", "RB", "K"]
+    projections = np.array([10.0, 1.0, 8.0, 10.0])
+    squads = [[0, 1]]
+    free = [2, 3]
+    emergency, upside = se._run_waivers(
+        squads, free, np.zeros(1), {"RB": 1, "K": 1}, positions, projections,
+        known_out=np.array([True, False, False, False]), limit=1, cap=2,
+        proactive_limit=1, upgrade_margin=0.15, moves_left=np.array([10]),
+    )
+    assert (emergency + upside).tolist() == [1.0]
+    assert emergency.tolist() == [1.0]  # the emergency won the shared allowance

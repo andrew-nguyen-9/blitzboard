@@ -325,10 +325,13 @@ class EvalConfig:
     included; `upgrade_margin` is the relative anti-churn gate such a claim must clear.
     `waiver_cost` (fantasy points per claim) is BOTH a decision gate — a claim whose
     per-week believed gain × remaining weeks does not strictly exceed it never executes —
-    and a single accounting charge at season aggregation (H2H weeks are decided on the
-    field, so weekly scores are not touched). `season_moves_cap` hard-bounds total claims
-    per team-season; `playoff_slots` sizes the playoff proxy (top seats by wins, season
-    points as tiebreak).
+    and a single accounting charge at season aggregation (H2H weeks and the
+    playoff/championship proxies stay on-field: seeding uses wins with GROSS season
+    points). The weekly move budget is shared across all claim types
+    (waiver-realism-v4): total claims per team-week ≤ max(`waiver_moves_per_week`,
+    `proactive_moves_per_week`), emergencies ≤ `waiver_moves_per_week` drawing first,
+    upside ≤ `proactive_moves_per_week` from the remainder. `season_moves_cap`
+    hard-bounds total claims per team-season; `playoff_slots` sizes the playoff proxy.
     """
 
     n_seasons: int = 8
@@ -628,13 +631,18 @@ def _run_waivers(
     claim at season aggregation (accounting), which is a separate, single charge, not a
     second gate.
 
-    - EMERGENCY (up to `limit`): an unfillable starting slot claims the best free agent
-      at the missing position; its per-week gain is the added projection (the
-      alternative is a 0-point hole).
-    - UPSIDE (up to `proactive_limit`): the roster-wide feasible (drop, add) swap chosen
-      by `_best_upgrade` — slot-eligibility aware, cross-position through FLEX/OP role
-      space, lowest forward-looking nonstarter preferred as the drop, `upgrade_margin`
-      retained as the relative anti-churn gate. K/DST streams through the same rule.
+    The weekly move budget is shared across BOTH claim kinds (waiver-realism-v4):
+    total claims per team-week ≤ max(`limit`, `proactive_limit`), with emergencies
+    additionally capped by `limit` (drawing from the shared allowance first) and
+    upside claims capped by `proactive_limit` (using only the remainder).
+
+    - EMERGENCY: an unfillable starting slot claims the best free agent at the missing
+      position; its per-week gain is the added projection (the alternative is a 0-point
+      hole).
+    - UPSIDE: the roster-wide feasible (drop, add) swap chosen by `_best_upgrade` —
+      slot-eligibility aware, cross-position through FLEX/OP role space, lowest
+      forward-looking nonstarter preferred as the drop, `upgrade_margin` retained as
+      the relative anti-churn gate. K/DST streams through the same rule.
 
     Priority is reverse standings and the pool is shared, so two teams wanting the same
     player is a real contest. Deliberately OMITTED: FAAB budgets, trades, multi-week
@@ -646,10 +654,15 @@ def _run_waivers(
     upside = np.zeros(len(squads), dtype=np.float64)
     if moves_left is None:
         moves_left = np.full(len(squads), np.iinfo(np.int64).max, dtype=np.int64)
+    # waiver-realism-v4: ONE total per-team weekly budget shared across claim types —
+    # max(limit, proactive_limit) — with each kind also capped by its own knob.
+    # Emergencies draw from the shared allowance first; upside uses the remainder.
+    week_left = np.full(len(squads), max(limit, proactive_limit), dtype=np.int64)
     order = sorted(range(len(squads)), key=lambda t: (season_wins[t], t))
     for t in order:
-        for _ in range(limit):
-            if moves_left[t] <= 0:
+        e_used = 0
+        while True:
+            if e_used >= limit or week_left[t] <= 0 or moves_left[t] <= 0:
                 break
             usable = ~known_out
             filled = _fill(squads[t], slots, positions, proj, usable)
@@ -674,10 +687,12 @@ def _run_waivers(
             squads[t].append(best)
             free.remove(best)
             emerg[t] += 1.0
+            e_used += 1
             moves_left[t] -= 1
+            week_left[t] -= 1
     for t in order:
         for _ in range(proactive_limit):
-            if moves_left[t] <= 0:
+            if week_left[t] <= 0 or moves_left[t] <= 0:
                 break
             swap = _best_upgrade(
                 squads[t], free, positions, proj, known_out, upgrade_margin,
@@ -692,6 +707,7 @@ def _run_waivers(
             free.remove(best)
             upside[t] += 1.0
             moves_left[t] -= 1
+            week_left[t] -= 1
     return emerg, upside
 
 
@@ -708,47 +724,64 @@ def _best_upgrade(
 ) -> tuple[int, int] | None:
     """The feasible roster-wide (drop, add) swap with the largest believed edge, else None.
 
-    Preregistered rule (waiver-realism-v1): for every free agent not known out and
-    eligible for at least one actual lineup slot, the drop candidates are the squad
-    bodies sharing at least one eligible slot with it (its ROLE SPACE — FLEX/OP overlap
-    makes cross-position swaps legal; identical nominal positions are NOT required).
-    Nonstarters in the role space are preferred, lowest believed projection first (the
-    lowest forward-looking nonstarter opportunity cost); only a role space with no
-    nonstarter may replace a started body — exactly K/DST streaming. A swap executes
-    only if it clears BOTH gates, strictly:
+    Preregistered rule (waiver-realism-v3, superseding v1's role-space restriction):
+    for every free agent not known out and eligible for at least one actual lineup
+    slot, the drop candidate is the lowest forward-looking NONSTARTER roster-wide —
+    it need not share the add's nominal position or role space, so a dead or
+    configuration-ineligible bench body is droppable for any legal add (removing a
+    nonstarter can never reduce lineup coverage). Only when no nonstarter exists may
+    a STARTED body be replaced, and then only if the post-swap lineup still fills at
+    least as many slots — exactly K/DST streaming, while dropping a slot's only
+    possible filler stays forbidden. A swap executes only if it clears BOTH gates,
+    strictly:
 
       proj[add] > proj[drop] × (1 + margin)          (relative anti-churn margin)
       (proj[add] − proj[drop]) × weeks_left > cost   (remaining-horizon cost gate)
 
-    With `slots=None` the role space is unconstrained and the drop candidate is the
+    With `slots=None` there is no lineup to consult and the drop candidate is the
     lowest-believed-projection body (the manifest's no-slots fallback).
     """
+    usable = ~known_out
     if slots is not None:
         eligible = {
             pos: frozenset(s for s in slots if pos in slot_positions(s))
             for pos in set(positions[i] for i in [*squad, *free])
         }
-        started = set(_fill(squad, slots, positions, proj, ~known_out))
+        started = _fill(squad, slots, positions, proj, usable)
+        n_now = len(started)
+        started_set = set(started)
+        nonstarters = sorted(
+            (i for i in squad if i not in started_set), key=lambda i: (float(proj[i]), i)
+        )
+        starters_lowfirst = sorted(started, key=lambda i: (float(proj[i]), i))
     else:
         eligible = None
-        started = set()
+        nonstarters = sorted(squad, key=lambda i: (float(proj[i]), i))
+        starters_lowfirst = []
+        n_now = 0
 
     best: tuple[int, int] | None = None
     best_edge = 0.0
     for f in free:
         if known_out[f]:
             continue
-        if eligible is not None:
-            f_slots = eligible[positions[f]]
-            if not f_slots:
-                continue  # no lineup slot can ever use this body — infeasible add
-            cands = [i for i in squad if eligible[positions[i]] & f_slots]
+        if eligible is not None and not eligible[positions[f]]:
+            continue  # no lineup slot can ever use this body — infeasible add
+        if nonstarters:
+            drop = nonstarters[0]  # lowest forward-looking nonstarter, roster-wide
         else:
-            cands = list(squad)
-        if not cands:
-            continue
-        bench_cands = [i for i in cands if i not in started]
-        drop = min(bench_cands or cands, key=lambda i: (float(proj[i]), i))
+            # empty bench: a started body is replaceable only if the post-swap lineup
+            # still fills at least as many slots (streaming, never a sole-filler drop)
+            drop = next(
+                (
+                    d for d in starters_lowfirst
+                    if len(_fill([*(i for i in squad if i != d), f],
+                                 slots, positions, proj, usable)) >= n_now
+                ),
+                None,
+            )
+            if drop is None:
+                continue
         gain = float(proj[f] - proj[drop])
         if proj[f] <= proj[drop] * (1.0 + margin):
             continue
