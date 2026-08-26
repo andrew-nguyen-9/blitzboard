@@ -67,10 +67,24 @@ export const GENERAL_WEIGHTS = {
 export const GENERAL_PENALTIES = { DuplicatePositionPenalty: 10, DeadRosterSpotPenalty: 5 } as const;
 
 export const SF_QB_WEIGHTS = { Opportunity: 40, StartingProb: 25, WeeklyProj: 15, JobSecurity: 10, Schedule: 10 } as const;
+// e10 — `TradeValue` is PINNED at 10, deliberately NOT fitted. e5's season simulator trades
+// nothing (trades are one of its documented omissions), so TradeValue has ZERO GRADIENT under
+// `started_points` and no amount of search can adjudicate it. Measured both ways to prove it:
+// ablating both TradeValue terms to 0 scored +5.3 pts "helps" (p=0.021) on the 2024 fit slice and
+// −1.1 "neutral" (p=0.403) on the held-out 2021 slice — sign-flipping noise, exactly the
+// signature of a zero-gradient knob. It therefore did NOT clear block-release and was NOT changed.
+// Any future fit must PIN or ABLATE this term, never free-fit it. Receipts:
+// engine/experiments/static/{results,holdout-2021}.json (exp e10-trade_value_zero).
 export const SF_RB_WEIGHTS = { Upside: 35, Opportunity: 25, Injury: 15, StartingProbability: 15, TradeValue: 10 } as const;
 export const SF_WR_WEIGHTS = { TargetShare: 35, RouteParticipation: 25, Upside: 20, Schedule: 10, TradeValue: 10 } as const;
 
 /** Superflex positional multipliers (docs §3). TE reuses the WR formula at ×1.00. */
+// e10 — UNCHANGED, and the reason is a negative result, not an oversight. e6 derived that
+// superflex DRAINS RB bench depth (mean derived ceiling 3.75 → 2.50), so a 1.2 RB *boost* is
+// backwards on paper; the corrected value 0.67 (= 2.50/3.75) was gated against e5's metric over
+// the real policy and came back **neutral** (+1.2 pts, p=0.545) — the metric cannot tell the two
+// apart, so under block-release the unproven correction does not ship. WR's 1.1 is left alone:
+// e6 confirmed its sign (WR ceiling 1.50 → 2.25 in superflex). Receipt: exp e10-sf_multiplier_rb.
 export const SF_MULTIPLIER: Record<string, number> = { QB: 2.25, RB: 1.2, WR: 1.1, TE: 1.0 };
 
 // ── helpers ─────────────────────────────────────────────────────────────────

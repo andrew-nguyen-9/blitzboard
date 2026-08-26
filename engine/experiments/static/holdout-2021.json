@@ -1,0 +1,29 @@
+[
+  {
+    "name": "trade_value_zero",
+    "delta_started_points": -1.077,
+    "verdict": "neutral",
+    "p_value": 0.4025,
+    "mae_with": 1434.928,
+    "mae_without": 1432.741,
+    "no_regression": false,
+    "candidate_mae": 1434.928,
+    "reference_mae": 1432.741,
+    "n_obs": 1176,
+    "ships": false,
+    "rationale": "e5's simulator trades nothing, so TradeValue has ZERO GRADIENT under started_points and can never be free-fit. Ablate to 0 and report the (expected) neutral verdict; an unproven weight is worse than no weight.",
+    "patch": {
+      "bench": {
+        "SF_RB_WEIGHTS": {
+          "TradeValue": 0
+        },
+        "SF_WR_WEIGHTS": {
+          "TradeValue": 0
+        }
+      }
+    },
+    "season": 2021,
+    "seed": 20260826,
+    "n_seasons": 8
+  }
+]

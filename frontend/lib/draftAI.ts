@@ -96,7 +96,14 @@ export interface PolicyParams {
   overfillDepth: Record<string, number>; // reasonable owned count per position before penalty
   overfillPenaltyPerExtra: number;        // points penalty per player past the depth cap
   // ── e1 (v4) ──────────────────────────────────────────────────────────────
-  byeStackPenalty: number;       // points shaved per current starter already on a candidate's bye week
+  byeStackPenalty: number;       // points shaved per current starter already on a candidate's bye week (SHALLOW benches)
+  // ── e10 ────────────────────────────────────────────────────────────────────
+  // e6 refuted a flat byeStackPenalty: the SIGN is conditional on bench depth. On deep benches
+  // (>= byeStackDeepBenchSlots) clustering byes BEATS spreading them, because a deep bench can
+  // absorb one bad week outright; on shallow benches it reverses. So the deep-bench value is a
+  // separate knob and may be NEGATIVE (a clustering bonus).
+  byeStackDeepBenchSlots: number;     // bench size at/above which the deep-bench value applies
+  byeStackPenaltyDeepBench: number;   // per-shared-starter delta on deep benches (<0 ⇒ cluster)
   emptyOffensiveStarterBonus: number; // lift for a candidate that fills an EMPTY startable offensive slot
   // ── E5 (v4) ────────────────────────────────────────────────────────────────
   benchQualityWeight: number;    // strength of E4 benchScore's bench-composition tilt (0 = ablated ⇒ v3 bench)
@@ -111,14 +118,29 @@ export const DEFAULT_POLICY: PolicyParams = {
   boomWeight: 0.5,
   availabilityPrior: 0.9,
   handcuffAmplify: 1.6,
+  // e10 — NOT replaced by e3's fitted numbers. fixtures/injury_rates.json carries an explicit
+  // `event` string naming CLINICAL-INJURY incidence; this knob is documented as the fraction of
+  // the season a starter MISSES. Different quantities. Swapping them in scored −14.0 pts, verdict
+  // **hurts** (p=0.0015) — the semantic mismatch is measurable, not theoretical. Availability is a
+  // separate model (e2a p_startable) and does not belong here. Receipt: exp e10-injury_rate_clinical.
   injuryRate: { QB: 0.08, RB: 0.18, WR: 0.12, TE: 0.12, K: 0.03, DST: 0.0 },
   maxCeilingWeeks: 4,
   ceilingScale: 6,
   kdstCapRoundsFromEnd: 2,
+  // e10: e6's high-confidence median (cap 2 — already this value — with soft_penalty 4.06) came
+  // back neutral (+2.1 pts, p=0.673); unproven ⇒ 20 stands. Receipt: exp e10-kdst_soft_penalty_e6.
   kdstSoftPenalty: 20,
   overfillDepth: { QB: 3, RB: 5, WR: 5, TE: 2, K: 1, DST: 1 },
   overfillPenaltyPerExtra: 25,
+  // e10 — byeStackPenalty stays 12 and the bench-depth seam below ships INERT. Not an oversight:
+  // e6 refuted the flat constant off its own half-league ablation, but neither replacement could
+  // be proven against e5's metric driving THIS policy over the node bridge. Conditional form
+  // (>=7 bench slots ⇒ −12 cluster bonus, else 18): −10.4 pts, neutral, p=0.053, no_regression
+  // FAILED. Dropping it to 0: −9.0 pts, neutral, p=0.118, no_regression FAILED. Both are worse
+  // than the incumbent, so block-release keeps 12. Receipt: exp e10-byeStack_{conditional,off}.
   byeStackPenalty: 12,           // e1: discourage piling starters onto one bye week (spec cat 4)
+  byeStackDeepBenchSlots: 99,    // e10: 99 ⇒ the deep-bench arm never fires (seam, not a fit)
+  byeStackPenaltyDeepBench: 12,  // e10: equals byeStackPenalty ⇒ behaviour-identical to e1
   emptyOffensiveStarterBonus: 140, // e1: never leave a startable offensive slot empty at draft end
   benchQualityWeight: 1,         // E5: full E4 tilt — QB2/RB-lottery/WR-breakout up, dead K/DST/dup down
 };
@@ -338,7 +360,12 @@ export function byeStackPenalty(
     .map((s) => s.player)
     .filter((p): p is PlayerWithValue => !!p);
   const shared = starters.filter((s) => resolveBye(s) === bye).length;
-  return shared * params.byeStackPenalty;
+  // e10/e6: deep benches prefer CLUSTERED byes, shallow benches prefer spread ones.
+  const per =
+    (ctx.benchSize ?? 0) >= params.byeStackDeepBenchSlots
+      ? params.byeStackPenaltyDeepBench
+      : params.byeStackPenalty;
+  return shared * per;
 }
 
 // Offensive starting slots (K/DST excluded) — the ones we must never leave empty.
@@ -409,9 +436,10 @@ export function scoreBoard(ctx: AIContext, params: PolicyParams = DEFAULT_POLICY
     }
     // e1: don't pile another starter onto a bye week already shared by the lineup.
     const byeStack = byeStackPenalty(p, ctx, params);
-    if (byeStack > 0) {
+    if (byeStack !== 0) {
+      // e10: may be negative on deep benches (clustering byes is the better shape there).
       score -= byeStack;
-      why.push("bye stack");
+      why.push(byeStack > 0 ? "bye stack" : "bye cluster");
     }
     score -= overfillPenalty(p, ctx, params);
     // Soft K/DST penalty (4.6): even a *first* kicker/defense is shaved so QB/RB/WR/TE bench
