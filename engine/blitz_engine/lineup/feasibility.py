@@ -45,7 +45,8 @@ pass `out_now=`; his rows then recover week by week.
 Ponytail: legality and optimal assignment are NOT reimplemented — every week is one
 `optimize_lineup` call. The week is normalised away before the solve (bye players dropped,
 `bye_week` cleared), so a process-wide memo collapses weeks that share a bye set *and* repeats
-across rosters inside e5's season loop: 18 weeks costs 2.1 ms warm, ~60 ms cold.
+across rosters inside e5's season loop: 18 weeks costs 2.1 ms warm (cold is dominated by
+fixture/JSON load, measured ~300 ms).
 """
 from __future__ import annotations
 

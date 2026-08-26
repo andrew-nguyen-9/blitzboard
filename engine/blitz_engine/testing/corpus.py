@@ -21,7 +21,7 @@ Fixture design (see `build_season` below):
 from __future__ import annotations
 
 import json
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -53,7 +53,7 @@ def scoring_key(scoring: str, te_premium: float) -> str:
 Slice = dict[str, Any]
 
 
-@lru_cache(maxsize=None)
+@cache
 def _load(path: str) -> Slice:
     return json.loads(Path(path).read_text())
 
@@ -104,7 +104,10 @@ def player_pool(year: int, row_id: str) -> list[dict[str, Any]]:
         pre = p["preseason"][key]
         out.append(
             {
-                **{k: p[k] for k in ("player_id", "name", "position", "nfl_team", "bye_week", "adp")},
+                **{
+                    k: p[k]
+                    for k in ("player_id", "name", "position", "nfl_team", "bye_week", "adp")
+                },
                 "weekly_points": weekly,
                 "actual_points": round(sum(w for w in weekly if w is not None), 2),
                 "projection": pre["projection"],
@@ -331,7 +334,11 @@ def build_season(year: int, data_root: Path | str | None = None) -> Path:  # pra
             for tep in TE_PREMIUMS:
                 key = scoring_key(sc, tep)
                 points[key] = [week_points(e, w, pos, sc, tep) for w in range(1, weeks + 1)]
-                pw = [week_points(prior, w, pos, sc, tep) for w in sorted(prior["w"])] if prior else []
+                pw = (
+                    [week_points(prior, w, pos, sc, tep) for w in sorted(prior["w"])]
+                    if prior
+                    else []
+                )
                 pw = [x for x in pw if x is not None]
                 if pw:
                     proj = float(np.mean(pw)) * weeks
@@ -344,7 +351,10 @@ def build_season(year: int, data_root: Path | str | None = None) -> Path:  # pra
         team = e["team"]
         players.append({
             "player_id": pid,
-            "name": f"{team} D/ST" if pos == "DST" else (posmap.get(pid, (None, ""))[1] or e["name"]),
+            "name": (
+                f"{team} D/ST" if pos == "DST"
+                else (posmap.get(pid, (None, ""))[1] or e["name"])
+            ),
             "position": pos,
             "nfl_team": team,
             "bye_week": byes.get(team),

@@ -86,7 +86,10 @@ def test_unknown_season_and_row_raise() -> None:
 
 # ── golden drafts ──────────────────────────────────────────────────────────────────────
 def test_every_smoke_row_has_a_golden_draft() -> None:
-    missing = [r["id"] for r in matrix.smoke() if not (corpus.GOLDEN_DIR / f"{r['id']}.json").exists()]
+    missing = [
+        r["id"] for r in matrix.smoke()
+        if not (corpus.GOLDEN_DIR / f"{r['id']}.json").exists()
+    ]
     assert not missing, f"smoke rows without a golden draft: {missing}"
 
 

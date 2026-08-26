@@ -146,13 +146,17 @@ fact.
 - **The per-wave integration DoD caught what no per-unit DoD could see:** a circular import between
   `lineup.feasibility` and `simulation` that existed only once E4 and E5 were *both* merged. Each
   was green alone.
-- **RUFF DISCREPANCY (recorded, deliberately not fixed here).** 8 pre-existing ruff issues sit on
-  `integration` in `engine/blitz_engine/testing/corpus.py` and `engine/tests/test_backtest_metrics.py`,
-  attributed to E7b — whose note claimed ruff clean. Engine ruff is **not** on the `CLAUDE.md` DoD
-  line (engine DoD = pytest), so this is not a gate violation. It is recorded because every
-  downstream unit trades on notes, and a note-vs-tree inconsistency devalues all of them. Reconcile
-  it deliberately; do not inherit it silently. Reproduce:
-  `(cd engine && ../pipeline/.venv/bin/python -m ruff check blitz_engine/testing/corpus.py tests/test_backtest_metrics.py)`.
+- **RUFF DISCREPANCY (found mid-cycle, RESOLVED at the land gate).** 8 ruff issues sat on
+  `integration` in `engine/blitz_engine/testing/corpus.py`, `engine/blitz_engine/testing/generate_matrix.py`,
+  `engine/tests/test_backtest_metrics.py` and `engine/tests/test_corpus.py`, attributed to E7b —
+  whose note claimed ruff clean. Session D's own sweep found **13**, not 8: the other 5 were added
+  later by E8a/E8b in `engine/tests/regression/test_draft_invariants.py` and were reported by
+  nobody. Engine ruff is **not** on the `CLAUDE.md` DoD line (engine DoD = pytest), which is
+  exactly why it drifted unnoticed for six waves. All 13 are fixed; `(cd engine &&
+  ../pipeline/.venv/bin/python -m ruff check blitz_engine tests)` is clean.
+  The durable lesson is not the lint: a checker that no gate runs will drift, and **a unit note
+  asserting a check nobody re-runs is unverifiable by construction**. Either put engine ruff on the
+  DoD line next cycle or stop asking units to claim it.
 
 ## 7. E13 deferred
 

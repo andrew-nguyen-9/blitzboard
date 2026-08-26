@@ -6,8 +6,8 @@ proving the walk-forward report and benchmark board surface the ranking metric a
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
 import pytest
+from test_backtest import SCORING, WEIGHTS, make_seasons
 
 from blitz_engine.backtest import (
     BenchmarkBoard,
@@ -19,8 +19,6 @@ from blitz_engine.backtest import (
     top_n_hit_rate,
     walk_forward,
 )
-
-from test_backtest import SCORING, WEIGHTS, make_seasons
 
 
 # ── proper scoring: CRPS penalises overconfidence ─────────────────────────────

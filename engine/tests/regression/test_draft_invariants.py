@@ -66,9 +66,9 @@ from blitz_engine.value import (
     interim_surface,
     is_truly_free_agent,
     optimize_lineup,
+    roster_shape,
     solve_roster,
 )
-from blitz_engine.value import roster_shape
 from blitz_engine.value.roster_solver import slot_accepts
 
 # -- simulation knobs (bounded so this runs in the normal pytest gate) -----
@@ -422,8 +422,8 @@ def _assert_bench_covers_every_starting_position(lineup: Lineup, reqs: RosterReq
 # optimum is to carry ZERO bench depth at that position, not one. Forcing coverage of every
 # starting position would fight e6's own measured bounds, not merely a value-maximizer's
 # pathology. The correct, generalised property (P10: no *excess* bench depth) is asserted in
-# `test_bench_mix.py::test_bench_positional_mix_within_e6_bounds_across_grid`, which DOES pass
-# for all 432 rows -- see that file for the replacement invariant and its traceability entry.
+# `test_bench_positional_mix_within_e6_bounds_across_grid` (below in this file), which DOES pass
+# for all 432 rows -- see `README.md` for the replacement invariant's traceability entry.
 # The predicate below is kept only to prove the "uncovered slot" detector itself is sound; it is
 # no longer asserted grid-wide because the grid-wide claim it would check is not true.
 def test_bench_coverage_predicate_catches_an_uncovered_slot() -> None:
@@ -529,7 +529,8 @@ def _bounds_aware_roster_cached(row_id: str) -> tuple[Lineup, RosterRequirements
 def test_bench_positional_mix_within_e6_bounds_across_grid_predicate_soundness() -> None:
     """Proves the predicate bites before trusting it grid-wide (brief item 4)."""
     bounds = roster_shape.BenchBounds(
-        row_id="synthetic", bench_slots=4, lo={"QB": 0, "RB": 0, "WR": 0, "TE": 0, "K": 0, "DST": 0},
+        row_id="synthetic", bench_slots=4,
+        lo={"QB": 0, "RB": 0, "WR": 0, "TE": 0, "K": 0, "DST": 0},
         hi={"QB": 0, "RB": 2, "WR": 2, "TE": 1, "K": 1, "DST": 0}, measured=True,
     )
     assert bounds.contains({"RB": 2, "WR": 1, "TE": 1})  # compliant
@@ -554,8 +555,12 @@ def test_bench_positional_mix_naive_value_max_would_violate_e6_bounds() -> None:
     counts: dict[str, int] = defaultdict(int)
     for p in lineup.bench:
         counts[p.position] += 1
-    assert bounds.contains(counts), f"bounds-aware solve produced an out-of-bounds bench {dict(counts)}"
-    assert counts["RB"] < reqs_bench_size(row), "bounds-aware solve still packed the whole bench with RB"
+    assert bounds.contains(counts), (
+        f"bounds-aware solve produced an out-of-bounds bench {dict(counts)}"
+    )
+    assert counts["RB"] < reqs_bench_size(row), (
+        "bounds-aware solve still packed the whole bench with RB"
+    )
 
 
 def reqs_bench_size(row: matrix.Row) -> int:
@@ -590,7 +595,9 @@ def test_kdst_timing_cap_matches_derived_rule_across_grid(row: matrix.Row) -> No
     assert reqs.k_cap(timing.cap_rounds_from_end) > reqs.k_cap(timing.cap_rounds_from_end + 1), (
         f"row {row['id']}: K cap must lift inside the row's own derived window"
     )
-    assert reqs.dst_cap(timing.cap_rounds_from_end) > reqs.dst_cap(timing.cap_rounds_from_end + 1), (
+    assert reqs.dst_cap(timing.cap_rounds_from_end) > reqs.dst_cap(
+        timing.cap_rounds_from_end + 1
+    ), (
         f"row {row['id']}: DST cap must lift inside the row's own derived window"
     )
 

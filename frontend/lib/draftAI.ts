@@ -465,7 +465,14 @@ export function scoreBoard(ctx: AIContext, params: PolicyParams = DEFAULT_POLICY
       if (trend > 0) avail = 1;
     }
     if (avail < 1) {
-      score *= avail;
+      // Availability discounts a candidate's VALUE — it is never a credit. Scaling the running
+      // score would pull an already-penalised (negative) score UP toward zero, ranking an
+      // unavailable player ABOVE an identical healthy one, so only the positive part is
+      // discounted. (`score > 0` => this is exactly `score * avail`, as before.)
+      score -= Math.max(score, 0) * (1 - avail);
+      // Below e2a's eps the player will not take a snap all season: demote him below every
+      // legal pick without dropping him from the board, same idiom as the K/DST cap above.
+      if (avail < ZERO_AVAILABILITY_EPS) score -= 1e6;
       why.push(avail < ZERO_AVAILABILITY_EPS ? "unavailable" : "availability discount");
     }
     if (jitter > 0) score *= 1 + (rng() - 0.5) * jitter;

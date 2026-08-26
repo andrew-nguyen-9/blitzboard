@@ -69,7 +69,10 @@ def _all_rows() -> list[dict[str, Any]]:
                                 "bench_slots": bench_slots,
                                 "ir_slots": ir_slots,
                             }
-                            row = {"id": _row_id(v), **v, "starting_slots": _starting_slots(qb_mode)}
+                            row = {
+                                "id": _row_id(v), **v,
+                                "starting_slots": _starting_slots(qb_mode),
+                            }
                             rows.append(row)
     return rows
 
