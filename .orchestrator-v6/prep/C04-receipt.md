@@ -53,3 +53,31 @@ ignored local symlink. The symlink is runtime-only and is not committed.
 Skipped tests are retained as collection-visible requirements. No production behavior or canonical
 artifact was changed to make them pass.
 
+## Provisional C02 follow-up
+
+After the original preparation commit, provisional C02 commit
+`edbcc4d743b447ebcbbfe84a0e1210380c6250d1` was inspected read-only. C04-owned contracts now record
+its aggregate waiver counters, churn-related configuration, four paired sample field identifiers,
+and `paired_ci` result shape. Candidate transaction/replacement evidence and stable producer-issued
+outcome identifiers remain absent and intentionally dependency-blocked. All assumptions remain
+provisional pending independent C02 acceptance and any later interface revision.
+
+Follow-up verification:
+
+```text
+cd frontend
+./node_modules/.bin/vitest run \
+  lib/v6DraftIntegration.adversarial.test.ts \
+  lib/v6DraftTrace.contract.test.ts \
+  lib/v6Explanation.contract.test.ts
+
+3 test files passed
+23 tests passed, 13 skipped (C03/candidate-adapter dependencies)
+```
+
+```text
+cd frontend
+./node_modules/.bin/tsc --noEmit
+
+exit 0
+```
