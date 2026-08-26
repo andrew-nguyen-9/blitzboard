@@ -227,3 +227,145 @@ def test_league_sampler_calibrated() -> None:
     realized = sample_correlated(mean, sd, chol, 1, rng)[0]
     q = pd.DataFrame({"player_id": ids, "mean": mean, "stdev": sd})
     assert calibrated(q, realized)
+
+
+# ── E5: the imperfect-information season evaluator (THE eval fix) ─────────────────
+# These are the acceptance tests for the metric every later v5 fit is scored against.
+# See `blitz_engine/simulation/season_eval.py` for what the metric means.
+import pytest  # noqa: E402
+
+from blitz_engine.backtest.ablation import paired_permutation_p  # noqa: E402
+from blitz_engine.backtest.harness import LeakageError  # noqa: E402
+from blitz_engine.simulation import season_eval as se  # noqa: E402
+from blitz_engine.testing import corpus, matrix  # noqa: E402
+
+_ROW = "t12-1qb-half-te0.5-b8-ir0"  # 12-team, 8 bench — enough bench for insurance to exist
+_YEAR = corpus.GOLDEN_SEASON
+
+
+@pytest.fixture(scope="module")
+def eval_pool() -> list[se.SeasonPlayer]:
+    return se.build_players(_YEAR, _ROW)
+
+
+def test_same_seed_reproduces_the_season_exactly(eval_pool: list[se.SeasonPlayer]) -> None:
+    # One seed drives draft seats, injury paths, availability draws and waiver order.
+    row = matrix.by_id(_ROW)
+    cfg = se.EvalConfig(n_seasons=2, seed=se.SEASON_EVAL_SEED)
+    a = se.evaluate_season(_YEAR, row, config=cfg, players=eval_pool)
+    b = se.evaluate_season(_YEAR, row, config=cfg, players=eval_pool)
+    assert np.array_equal(a.per_season, b.per_season)  # bit-identical, not merely close
+    assert a.seat_policy == b.seat_policy
+    other = se.evaluate_season(
+        _YEAR, row, config=se.EvalConfig(n_seasons=2, seed=se.SEASON_EVAL_SEED + 1),
+        players=eval_pool,
+    )
+    assert not np.array_equal(a.per_season, other.per_season)  # the seed is load-bearing
+
+
+def test_leaked_lineup_decision_trips_the_guard(eval_pool: list[se.SeasonPlayer]) -> None:
+    # Lineups are time-honest MECHANICALLY: a decision frame that contains the week being
+    # decided must raise, not silently inflate the score.
+    row = matrix.by_id(_ROW)
+    cfg = se.EvalConfig(n_seasons=1)
+    rosters, seats = se.draft_league(eval_pool, row, seed=cfg.seed)
+    se.evaluate_rosters(eval_pool, rosters, row, seat_policy=seats, config=cfg)  # clean run
+    with pytest.raises(LeakageError):
+        se.evaluate_rosters(
+            eval_pool, rosters, row, seat_policy=seats, config=cfg, leak={"week": 5}
+        )
+
+
+def test_mixed_policy_h2h_is_non_degenerate(eval_pool: list[se.SeasonPlayer]) -> None:
+    # The retired harness ran all 12 seats on ONE policy, so H2H was 50% by construction.
+    # With a documented policy mix the strongest policy must beat 50% across seeds.
+    row = matrix.by_id(_ROW)
+    by_policy: dict[str, list[float]] = {p: [] for p in se.policy_names()}
+    for k in range(4):
+        res = se.evaluate_season(
+            _YEAR, row, config=se.EvalConfig(n_seasons=2, seed=se.SEASON_EVAL_SEED + 97 * k),
+            players=eval_pool,
+        )
+        for pol, rate in zip(res.seat_policy, res.h2h_win_rate, strict=True):
+            by_policy[pol].append(float(rate))
+    means = {p: float(np.mean(v)) for p, v in by_policy.items()}
+    best = max(means, key=lambda p: means[p])
+    assert means[best] > 0.52, means  # not 50% by construction any more
+    diffs = np.asarray(by_policy[best]) - 0.5
+    assert paired_permutation_p(diffs, seed=3) < 0.05, (means, diffs.mean())
+    assert len(set(np.round(list(means.values()), 4))) == len(means)  # policies are distinct
+
+
+def test_bench_insurance_moves_the_new_metric_and_not_hindsight(
+    eval_pool: list[se.SeasonPlayer],
+) -> None:
+    # THE acceptance test. Two arms draft identical starters from the same board and the same
+    # talent band; only the BENCH differs (cover vs deliberately non-covering). The
+    # imperfect-information metric must see it. The retired perfect-hindsight metric must not.
+    row = matrix.by_id(_ROW)
+    cfg = se.EvalConfig(n_seasons=12)
+    arms, hind, drafts = {}, {}, {}
+    for cover in (True, False):
+        rosters, seats = se.draft_league(
+            eval_pool, row, seed=cfg.seed, pick_fn=se.bench_cover_pick_fn(cover)
+        )
+        drafts[cover] = rosters
+        arms[cover] = se.evaluate_rosters(
+            eval_pool, rosters, row, seat_policy=seats, config=cfg
+        )
+        hind[cover] = se.hindsight_points(eval_pool, rosters, row)
+    starters = sum(int(n) for n in row["starting_slots"].values())
+    # the arms really are matched on starters — the ablation is a pure BENCH ablation
+    assert [p.player_id for p in drafts[True][0][:starters]] == [
+        p.player_id for p in drafts[False][0][:starters]
+    ]
+
+    new_delta = arms[True].metric - arms[False].metric
+    new_p = paired_permutation_p((arms[True].per_season - arms[False].per_season).ravel(), seed=1)
+    hind_delta = float((hind[True] - hind[False]).mean())
+    hind_p = paired_permutation_p(hind[True] - hind[False], seed=1)
+
+    assert new_delta > 0.0, new_delta
+    assert new_p < 0.05, (new_delta, new_p)  # the new metric MOVES — the eval is fixed
+    assert hind_p >= 0.05, (hind_delta, hind_p)  # the old metric is blind to bench insurance
+    # and the bench actually did its job: fewer starting slots lost to a hole
+    assert arms[True].starts_lost.mean() < arms[False].starts_lost.mean()
+
+
+@pytest.mark.parametrize("row", matrix.smoke(), ids=lambda r: r["id"])
+def test_smoke_matrix_row_evaluates(row: dict) -> None:
+    # Cost discipline (v5-architecture §3): the DoD path runs `matrix.smoke()` (16 rows) at one
+    # sampled season each; `matrix.all()` (432 rows) sits behind BLITZ_EVAL_FULL=1.
+    res = se.evaluate_season(_YEAR, row, config=se.EvalConfig(n_seasons=1))
+    assert res.started_points.shape == (row["teams"],)
+    assert np.all(res.started_points > 0.0)
+    assert abs(float(res.h2h_win_rate.mean()) - 0.5) < 1e-9  # H2H is zero-sum by construction
+    assert res.per_season.dtype == np.float64
+
+
+@pytest.mark.skipif(not se.full_sweep_enabled(), reason="set BLITZ_EVAL_FULL=1 for the full sweep")
+def test_full_matrix_sweep() -> None:
+    for row in matrix.all():
+        res = se.evaluate_season(_YEAR, row, config=se.EvalConfig(n_seasons=1))
+        assert np.all(res.started_points > 0.0), row["id"]
+
+
+def test_uncertainty_is_read_from_the_fitted_models_not_hardcoded(
+    eval_pool: list[se.SeasonPlayer],
+) -> None:
+    # No availability or injury number lives in this module: both arrive through the public
+    # interfaces, and e3's fixture must still say the event is CLINICAL injury (otherwise
+    # multiplying it by e2a's availability would double-count one signal).
+    from blitz_engine.lineup.feasibility import InjuryDynamics
+
+    dyn = InjuryDynamics.load()
+    assert "clinical" in dyn.event.lower()
+    row = matrix.by_id(_ROW)
+    real = se.evaluate_season(_YEAR, row, config=se.EvalConfig(n_seasons=3), players=eval_pool)
+    healthy = se.evaluate_season(
+        _YEAR, row,
+        config=se.EvalConfig(n_seasons=3, injury=InjuryDynamics.healthy()),
+        players=eval_pool,
+    )
+    assert healthy.metric > real.metric  # turning e3's model off is visible in the metric
+    assert healthy.starts_lost.mean() < real.starts_lost.mean()

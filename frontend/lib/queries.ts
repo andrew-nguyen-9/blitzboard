@@ -4,7 +4,9 @@
 import { getSupabase } from "./supabase";
 import { careerRows, type SeasonRow } from "./playerStats";
 import type { BoxStats } from "./playerColumns";
-import type { Article, ArticleSummary, Engine, Player, PlayerTrends, PlayerWithValue } from "./types";
+import type {
+  Article, ArticleSummary, Engine, Player, PlayerAvailability, PlayerTrends, PlayerWithValue,
+} from "./types";
 
 const PLAYER_COLS =
   "id,sleeper_id,espn_id,full_name,position,nfl_team,bye_week,age,years_exp,status,injury_status,metadata";
@@ -396,6 +398,27 @@ export async function getPlayerTrends(ids?: string[]): Promise<Record<string, Pl
     return {};
   }
   return Object.fromEntries((data ?? []).map((r: any) => [r.player_id as string, r as PlayerTrends]));
+}
+
+// player_id -> p_startable (v5 E2b), the engine-published availability truth that
+// draftAI.ts multiplies a candidate's score by. Keeps the LATEST (season, week) row per
+// player when several are published. Null-safe -> {} offline, so the board degrades to
+// lib/availability.ts's local estimate rather than throwing.
+export async function getAvailabilityMap(ids?: string[]): Promise<Record<string, number>> {
+  const sb = getSupabase();
+  if (!sb || (ids && !ids.length)) return {};
+  let q = sb.from("player_availability").select("player_id,season,week,p_startable");
+  if (ids?.length) q = q.in("player_id", ids);
+  const { data, error } = await q.order("season", { ascending: false }).order("week", { ascending: false });
+  if (error) {
+    console.error("[queries.getAvailabilityMap]", error.message);
+    return {};
+  }
+  const out: Record<string, number> = {};
+  for (const r of (data ?? []) as Pick<PlayerAvailability, "player_id" | "p_startable">[]) {
+    if (!(r.player_id in out)) out[r.player_id] = r.p_startable; // first hit = latest (sorted desc)
+  }
+  return out;
 }
 
 export async function getPlayerCount(): Promise<number> {

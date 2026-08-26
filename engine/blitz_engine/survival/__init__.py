@@ -24,7 +24,18 @@ from blitz_engine.survival.availability import (
     AvailabilityModel,
     resolve_status_p,
 )
-from blitz_engine.survival.hazard import DiscreteTimeHazard, build_person_periods
+from blitz_engine.survival.hazard import (
+    FANTASY_POSITIONS,
+    DiscreteTimeHazard,
+    DurationModel,
+    InjuryModel,
+    ReinjuryRisk,
+    ReturnCurve,
+    build_injury_panel,
+    build_person_periods,
+    fit_injury_model,
+    write_injury_rates,
+)
 from blitz_engine.survival.redistribution import (
     SCALED_COLUMNS,
     apply_availability,
@@ -33,12 +44,20 @@ from blitz_engine.survival.redistribution import (
 )
 
 __all__ = [
+    "FANTASY_POSITIONS",
     "SCALED_COLUMNS",
     "STATUS_P",
     "AvailabilityModel",
     "DiscreteTimeHazard",
+    "DurationModel",
+    "InjuryModel",
+    "ReinjuryRisk",
+    "ReturnCurve",
     "apply_availability",
+    "build_injury_panel",
     "build_person_periods",
+    "fit_injury_model",
+    "write_injury_rates",
     "redistribute_shares",
     "resolve_status_p",
     "scale_quantiles",

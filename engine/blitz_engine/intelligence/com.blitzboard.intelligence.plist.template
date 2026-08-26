@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.blitzboard.intelligence</string>
+  <key>WorkingDirectory</key><string>__WORKTREE__</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__PYTHON__</string><string>-m</string>
+    <string>blitz_engine.intelligence.baseline</string><string>--seasonal-cycle</string>
+    <string>--data-root</string><string>__DATA_ROOT__</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict><key>PYTHONPATH</key><string>__WORKTREE__/engine</string></dict>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>15</integer></dict>
+    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>17</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>17</integer></dict>
+    <dict><key>Weekday</key><integer>6</integer><key>Hour</key><integer>17</integer></dict>
+    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>10</integer></dict>
+  </array>
+  <key>StandardOutPath</key><string>__DATA_ROOT__/intelligence/launchd.out.log</string>
+  <key>StandardErrorPath</key><string>__DATA_ROOT__/intelligence/launchd.err.log</string>
+  <key>ProcessType</key><string>Background</string>
+  <key>LowPriorityIO</key><true/>
+</dict>
+</plist>
+

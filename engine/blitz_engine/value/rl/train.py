@@ -124,6 +124,13 @@ class DraftEnv:
     n_teams: int = 6
     template: tuple[str, ...] = SUPERFLEX_TEMPLATE
     reward_fn: RewardFn = starter_value_reward
+    #: E11: swap the synthetic universe for a real corpus board (`rl.real_env.real_universe`).
+    universe_fn: Callable[[int], dict[str, tuple[str, float]]] = draft_universe
+    #: E11: when set, returns EVERY team's return at once — the E5 metric is a league-level
+    #: quantity (`rl.real_env.e5_league_reward`), so it cannot be computed roster-by-roster.
+    league_reward_fn: Callable[
+        [Mapping[int, Sequence[tuple[str, str, float]]], int], Sequence[float]
+    ] | None = None
 
     def rollout(
         self, net: DraftPolicyNet, *, seed: int, greedy: bool = False
@@ -132,7 +139,7 @@ class DraftEnv:
 
         ``greedy`` argmaxes the net (evaluation); otherwise it samples (exploration for PPO).
         """
-        players = draft_universe(seed)
+        players = self.universe_fn(seed)
         field = OpponentField.uniform(self.n_teams - 1)
         taken: set[str] = set()
         slots = {t: list(self.template) for t in range(self.n_teams)}
@@ -169,7 +176,11 @@ class DraftEnv:
                 rosters[t].append((pid, pos, val))
                 _consume(slots[t], pos)
 
-        returns = [self.reward_fn(rosters[t]) for t in range(self.n_teams)]
+        returns = (
+            [float(v) for v in self.league_reward_fn(rosters, seed)]
+            if self.league_reward_fn is not None
+            else [self.reward_fn(rosters[t]) for t in range(self.n_teams)]
+        )
         flat: list[_Step] = []
         for t in range(self.n_teams):
             for st in steps[t]:
@@ -194,6 +205,8 @@ def train_rl_policy(
     warm_start: bool = True,
     distilled_weights: PolicyWeights | None = None,
     seed: int = 0,
+    env: DraftEnv | None = None,
+    on_iter: Callable[[int, DraftPolicyNet, list[float]], None] | None = None,
 ) -> DraftPolicyNet:
     """Bounded PPO self-play (``float32``, CPU) from a warm-started net → a trained policy net.
 
@@ -208,14 +221,18 @@ def train_rl_policy(
         if warm_start
         else DraftPolicyNet(hidden=hidden)
     )
-    env = DraftEnv(n_teams=n_teams, template=template, reward_fn=reward_fn)
+    env = env or DraftEnv(n_teams=n_teams, template=template, reward_fn=reward_fn)
     opt = torch.optim.Adam(net.parameters(), lr=lr)
 
     for it in range(n_iters):
         batch: list[_Step] = []
+        iter_returns: list[float] = []
         for e in range(episodes_per_iter):
-            steps, _ = env.rollout(net, seed=seed + 1 + it * episodes_per_iter + e)
+            steps, rets = env.rollout(net, seed=seed + 1 + it * episodes_per_iter + e)
             batch.extend(steps)
+            iter_returns.extend(rets)
+        if on_iter is not None:  # checkpoint hook: a long run resumes instead of restarting
+            on_iter(it, net, iter_returns)
         if not batch:
             continue
         rets = np.array([st.ret for st in batch], dtype=np.float32)
@@ -358,19 +375,33 @@ def build_live_policy(
     template: tuple[str, ...] = SUPERFLEX_TEMPLATE,
     reward_fn: RewardFn = starter_value_reward,
     distilled: FastDraftPolicy | None = None,
+    env: DraftEnv | None = None,
+    eval_configs: Sequence[tuple[int, Mapping[str, object]]] | None = None,
+    eval_n_seasons: int = 4,
     **train_kw: object,
 ) -> LivePolicyResult:
     """One-call entry: warm-start + PPO self-play, grade vs distilled, return the winner.
 
     This is the surface the live draft room reads. On a degrade (RL fails to beat the distilled
     baseline) ``result.policy is result.distilled`` — the shipped fast policy stays live.
+
+    ``eval_configs`` (E11) — a list of ``(year, matrix_row)``: grade on **E5's metric**
+    (`real_env.season_metric_edge`, paired per config × season) instead of the synthetic
+    roster-sum edge. The bootstrap-CI-clears-0 bar is unchanged either way.
     """
     distilled = distilled or FastDraftPolicy()
     net = train_rl_policy(
-        n_teams=n_teams, template=template, reward_fn=reward_fn,
+        n_teams=n_teams, template=template, reward_fn=reward_fn, env=env,
         distilled_weights=distilled.weights, seed=train_seed, **train_kw,  # type: ignore[arg-type]
     )
     rl = RLDraftPolicy(net=net)
-    seeds = list(eval_seeds) if eval_seeds is not None else list(range(100, 120))
-    edge = evaluate_edge(rl, distilled, seeds, n_teams=n_teams, template=template)
+    if eval_configs is not None:
+        from blitz_engine.value.rl.real_env import season_metric_edge
+
+        edge = season_metric_edge(
+            rl, distilled, eval_configs, n_seasons=eval_n_seasons  # type: ignore[arg-type]
+        )
+    else:
+        seeds = list(eval_seeds) if eval_seeds is not None else list(range(100, 120))
+        edge = evaluate_edge(rl, distilled, seeds, n_teams=n_teams, template=template)
     return select_live_policy(rl, distilled, edge, seed=train_seed)

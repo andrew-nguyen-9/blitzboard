@@ -1,0 +1,7974 @@
+{
+  "version": 1,
+  "factors": {
+    "teams": [
+      8,
+      10,
+      12,
+      14
+    ],
+    "qb_mode": [
+      "1qb",
+      "superflex",
+      "2qb"
+    ],
+    "scoring": [
+      "std",
+      "half",
+      "ppr"
+    ],
+    "te_premium": [
+      0.0,
+      0.5
+    ],
+    "bench_slots": [
+      4,
+      6,
+      8
+    ],
+    "ir_slots": [
+      0,
+      1
+    ]
+  },
+  "rows": [
+    {
+      "id": "t8-1qb-std-te0.0-b4-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-std-te0.0-b4-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-std-te0.0-b6-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-std-te0.0-b6-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-std-te0.0-b8-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-std-te0.0-b8-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-std-te0.5-b4-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-std-te0.5-b4-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-std-te0.5-b6-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-std-te0.5-b6-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-std-te0.5-b8-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-std-te0.5-b8-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.0-b4-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.0-b4-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.0-b6-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.0-b6-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.0-b8-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.0-b8-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.5-b4-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.5-b4-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.5-b6-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.5-b6-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.5-b8-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-half-te0.5-b8-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.0-b4-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.0-b4-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.0-b6-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.0-b6-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.0-b8-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.0-b8-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.5-b4-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.5-b4-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.5-b6-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.5-b6-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.5-b8-ir0",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-1qb-ppr-te0.5-b8-ir1",
+      "teams": 8,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.0-b4-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.0-b4-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.0-b6-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.0-b6-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.0-b8-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.0-b8-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.5-b4-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.5-b4-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.5-b6-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.5-b6-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.5-b8-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-std-te0.5-b8-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.0-b4-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.0-b4-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.0-b6-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.0-b6-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.0-b8-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.0-b8-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.5-b4-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.5-b4-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.5-b6-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.5-b6-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.5-b8-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-half-te0.5-b8-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.0-b4-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.0-b4-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.0-b6-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.0-b6-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.0-b8-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.0-b8-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.5-b4-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.5-b4-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.5-b6-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.5-b6-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.5-b8-ir0",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-superflex-ppr-te0.5-b8-ir1",
+      "teams": 8,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.0-b4-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.0-b4-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.0-b6-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.0-b6-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.0-b8-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.0-b8-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.5-b4-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.5-b4-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.5-b6-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.5-b6-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.5-b8-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-std-te0.5-b8-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.0-b4-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.0-b4-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.0-b6-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.0-b6-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.0-b8-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.0-b8-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.5-b4-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.5-b4-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.5-b6-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.5-b6-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.5-b8-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-half-te0.5-b8-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.0-b4-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.0-b4-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.0-b6-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.0-b6-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.0-b8-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.0-b8-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.5-b4-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.5-b4-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.5-b6-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.5-b6-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.5-b8-ir0",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t8-2qb-ppr-te0.5-b8-ir1",
+      "teams": 8,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.0-b4-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.0-b4-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.0-b6-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.0-b6-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.0-b8-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.0-b8-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.5-b4-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.5-b4-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.5-b6-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.5-b6-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.5-b8-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-std-te0.5-b8-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.0-b4-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.0-b4-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.0-b6-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.0-b6-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.0-b8-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.0-b8-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.5-b4-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.5-b4-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.5-b6-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.5-b6-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.5-b8-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-half-te0.5-b8-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.0-b4-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.0-b4-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.0-b6-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.0-b6-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.0-b8-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.0-b8-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.5-b4-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.5-b4-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.5-b6-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.5-b6-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.5-b8-ir0",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-1qb-ppr-te0.5-b8-ir1",
+      "teams": 10,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.0-b4-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.0-b4-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.0-b6-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.0-b6-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.0-b8-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.0-b8-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.5-b4-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.5-b4-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.5-b6-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.5-b6-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.5-b8-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-std-te0.5-b8-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.0-b4-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.0-b4-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.0-b6-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.0-b6-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.0-b8-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.0-b8-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.5-b4-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.5-b4-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.5-b6-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.5-b6-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.5-b8-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-half-te0.5-b8-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.0-b4-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.0-b4-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.0-b6-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.0-b6-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.0-b8-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.0-b8-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.5-b4-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.5-b4-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.5-b6-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.5-b6-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.5-b8-ir0",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-superflex-ppr-te0.5-b8-ir1",
+      "teams": 10,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.0-b4-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.0-b4-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.0-b6-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.0-b6-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.0-b8-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.0-b8-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.5-b4-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.5-b4-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.5-b6-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.5-b6-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.5-b8-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-std-te0.5-b8-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.0-b4-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.0-b4-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.0-b6-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.0-b6-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.0-b8-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.0-b8-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.5-b4-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.5-b4-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.5-b6-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.5-b6-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.5-b8-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-half-te0.5-b8-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.0-b4-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.0-b4-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.0-b6-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.0-b6-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.0-b8-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.0-b8-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.5-b4-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.5-b4-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.5-b6-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.5-b6-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.5-b8-ir0",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t10-2qb-ppr-te0.5-b8-ir1",
+      "teams": 10,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.0-b4-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.0-b4-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.0-b6-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.0-b6-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.0-b8-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.0-b8-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.5-b4-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.5-b4-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.5-b6-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.5-b6-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.5-b8-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-std-te0.5-b8-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.0-b4-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.0-b4-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.0-b6-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.0-b6-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.0-b8-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.0-b8-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.5-b4-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.5-b4-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.5-b6-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.5-b6-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.5-b8-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-half-te0.5-b8-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.0-b4-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.0-b4-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.0-b6-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.0-b6-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.0-b8-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.0-b8-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.5-b4-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.5-b4-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.5-b6-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.5-b6-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.5-b8-ir0",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-1qb-ppr-te0.5-b8-ir1",
+      "teams": 12,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.0-b4-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.0-b4-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.0-b6-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.0-b6-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.0-b8-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.0-b8-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.5-b4-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.5-b4-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.5-b6-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.5-b6-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.5-b8-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-std-te0.5-b8-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.0-b4-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.0-b4-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.0-b6-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.0-b6-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.0-b8-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.0-b8-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.5-b4-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.5-b4-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.5-b6-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.5-b6-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.5-b8-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-half-te0.5-b8-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.0-b4-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.0-b4-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.0-b6-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.0-b6-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.0-b8-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.0-b8-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.5-b4-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.5-b4-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.5-b6-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.5-b6-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.5-b8-ir0",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-superflex-ppr-te0.5-b8-ir1",
+      "teams": 12,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.0-b4-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.0-b4-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.0-b6-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.0-b6-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.0-b8-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.0-b8-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.5-b4-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.5-b4-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.5-b6-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.5-b6-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.5-b8-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-std-te0.5-b8-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.0-b4-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.0-b4-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.0-b6-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.0-b6-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.0-b8-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.0-b8-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.5-b4-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.5-b4-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.5-b6-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.5-b6-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.5-b8-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-half-te0.5-b8-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.0-b4-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.0-b4-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.0-b6-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.0-b6-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.0-b8-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.0-b8-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.5-b4-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.5-b4-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.5-b6-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.5-b6-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.5-b8-ir0",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t12-2qb-ppr-te0.5-b8-ir1",
+      "teams": 12,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.0-b4-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.0-b4-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.0-b6-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.0-b6-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.0-b8-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.0-b8-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.5-b4-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.5-b4-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.5-b6-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.5-b6-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.5-b8-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-std-te0.5-b8-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.0-b4-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.0-b4-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.0-b6-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.0-b6-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.0-b8-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.0-b8-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.5-b4-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.5-b4-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.5-b6-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.5-b6-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.5-b8-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-half-te0.5-b8-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.0-b4-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.0-b4-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.0-b6-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.0-b6-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.0-b8-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.0-b8-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.5-b4-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.5-b4-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.5-b6-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.5-b6-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.5-b8-ir0",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-1qb-ppr-te0.5-b8-ir1",
+      "teams": 14,
+      "qb_mode": "1qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.0-b4-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.0-b4-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.0-b6-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.0-b6-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.0-b8-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.0-b8-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.5-b4-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.5-b4-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.5-b6-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.5-b6-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.5-b8-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-std-te0.5-b8-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.0-b4-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.0-b4-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.0-b6-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.0-b6-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.0-b8-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.0-b8-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.5-b4-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.5-b4-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.5-b6-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.5-b6-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.5-b8-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-half-te0.5-b8-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.0-b4-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.0-b4-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.0-b6-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.0-b6-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.0-b8-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.0-b8-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.5-b4-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.5-b4-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.5-b6-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.5-b6-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.5-b8-ir0",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-superflex-ppr-te0.5-b8-ir1",
+      "teams": 14,
+      "qb_mode": "superflex",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 1,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "SUPERFLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.0-b4-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.0-b4-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.0-b6-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.0-b6-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.0-b8-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.0-b8-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.5-b4-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.5-b4-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.5-b6-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.5-b6-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.5-b8-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-std-te0.5-b8-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "std",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.0-b4-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.0-b4-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.0-b6-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.0-b6-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.0-b8-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.0-b8-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.5-b4-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.5-b4-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.5-b6-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.5-b6-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.5-b8-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-half-te0.5-b8-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "half",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.0-b4-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.0-b4-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.0-b6-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.0-b6-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.0-b8-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.0-b8-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.0,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.5-b4-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.5-b4-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 4,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.5-b6-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.5-b6-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 6,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.5-b8-ir0",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 0,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    },
+    {
+      "id": "t14-2qb-ppr-te0.5-b8-ir1",
+      "teams": 14,
+      "qb_mode": "2qb",
+      "scoring": "ppr",
+      "te_premium": 0.5,
+      "bench_slots": 8,
+      "ir_slots": 1,
+      "starting_slots": {
+        "QB": 2,
+        "RB": 2,
+        "WR": 2,
+        "TE": 1,
+        "FLEX": 1,
+        "K": 1,
+        "DST": 1
+      }
+    }
+  ],
+  "smoke": [
+    "t8-1qb-std-te0.0-b4-ir0",
+    "t8-superflex-half-te0.5-b6-ir1",
+    "t10-2qb-ppr-te0.0-b8-ir1",
+    "t12-1qb-half-te0.5-b8-ir0",
+    "t14-superflex-ppr-te0.0-b6-ir0",
+    "t14-2qb-std-te0.5-b4-ir1",
+    "t10-1qb-std-te0.5-b6-ir0",
+    "t12-1qb-ppr-te0.0-b4-ir1",
+    "t10-superflex-half-te0.0-b4-ir0",
+    "t8-2qb-ppr-te0.5-b6-ir0",
+    "t12-superflex-std-te0.0-b8-ir0",
+    "t12-2qb-half-te0.0-b6-ir0",
+    "t14-1qb-half-te0.0-b8-ir0",
+    "t8-1qb-std-te0.0-b8-ir0",
+    "t8-1qb-std-te0.0-b4-ir1",
+    "t8-1qb-std-te0.0-b6-ir0"
+  ]
+}

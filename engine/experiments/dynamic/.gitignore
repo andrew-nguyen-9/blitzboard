@@ -1,0 +1,2 @@
+# model checkpoints are reproducible from the seeded runner — never commit binaries
+*.pt

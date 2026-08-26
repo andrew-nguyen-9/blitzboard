@@ -7,7 +7,7 @@ import type { PlayerWithValue } from "./types";
 // A free agent (no NFL team) plays no games, so scores no fantasy points — its
 // projected points are 0 regardless of any stale value row. Keeps the board's Pts
 // column honest and sinks FAs to the bottom naturally. (Draft-order handling of FAs
-// also lives in draftAI's faPenalty; this is the display/points source of truth.)
+// also lives in draftAI's availability discount; this is the display/points source of truth.)
 export const projPoints = (p: PlayerWithValue) =>
   p.nfl_team == null ? 0 : (p.value?.vor ?? 0) + (p.value?.replacement ?? 0);
 

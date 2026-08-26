@@ -57,6 +57,8 @@ pipeline scripts idempotent, accessibility checks pass, no secrets in client bun
 Full checklist: `docs/workflow/DEFINITION_OF_DONE.md`.
 
 <!-- Canonical machine-greppable lines (orchestrator GATE 1 + cleaning). Prose above is the human detail. -->
-DoD: (cd frontend && npm run build && npm run typecheck && npm run lint && npm test) && (cd pipeline && python -m pytest)
+DoD: (cd frontend && npm run build && npm run typecheck && npm run lint && npm test) && (cd pipeline && ./.venv/bin/python -m pytest) && (cd engine && ../pipeline/.venv/bin/python -m pytest)
+DoD-note: use pipeline/.venv (Python 3.12, jax/torch/numpyro + blitz_engine editable); Homebrew python3 is 3.14 and will NOT work; pipeline/ must never import jax/torch (keeps free GH-Actions cron alive)
+DoD-note: WORKTREE, load-bearing — in a LINKED git worktree the venv's *editable* blitz_engine resolves to the MAIN checkout, so `cd engine && pytest` collects the worktree's tests but imports MAIN's code — you can green-light code that is not yours. Always run `(cd engine && PYTHONPATH="$PWD" /abs/path/to/blitzboard/pipeline/.venv/bin/python -m pytest)`; `../pipeline/.venv` does not exist in a linked worktree (gitignored), use the absolute main-checkout path. Frontend: run `npm ci` in the worktree's `frontend/` first (node_modules is not shared). See `docs/modeling/experiments.md` §0.
 Secrets: frontend `.env.local` (anon key = public reads, RLS-enforced); pipeline via GitHub Actions secrets / Supabase vault; service-role key = pipeline only, never in client bundle
-Branches: per-unit `v4/<unit>` off `integration`; PR-based land to `main`
+Branches: per-unit `v5/<unit>` off `integration`; local-merge into `integration` during waves, land via one PR `integration`→`main` (main is branch-protected); block-release (a unit that can't meet DoD blocks, never ships degraded)

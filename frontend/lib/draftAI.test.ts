@@ -387,6 +387,45 @@ describe("1.2 — free-agent penalty (NEW term)", () => {
     const pool = [mk("rb1", "RB", 200, { nfl_team: "KC" })];
     expect(scoreBoard(ctx(pool))[0].score).toBeGreaterThan(0);
   });
+  // e2b: a published near-zero availability (e2a's ZERO_AVAILABILITY_EPS territory — e.g. IR/
+  // retired) sinks even a much higher raw projection. Asserts the property (never selected),
+  // not a magnitude — e2a's roster-ceiling priors are stated, not fitted, and will move.
+  it("a published zero-availability player is never selected over a healthy one", () => {
+    const zeroAvail = mk("zero", "WR", 400, { nfl_team: "KC" });
+    const healthy = mk("healthy", "WR", 90, { nfl_team: "PHI" });
+    const c = { ...ctx([zeroAvail, healthy]), availability: { zero: 0.005 } };
+    expect(scoreBoard(c)[0].player.id).toBe("healthy");
+  });
+  // The discount must hold across the WHOLE range the score can take, not just the positive
+  // part. A candidate carrying subtractive penalties (K/DST deferral, overfill, bye stack, the
+  // K/DST cap demotion) can be at or below zero when availability is applied; a multiplicative
+  // discount there moves an unavailable player UP the board instead of down.
+  it("an unavailable player never outranks his healthy twin, even at a negative score", () => {
+    // Round 1 of 16 => kdstSoftPenalty pushes both kickers below zero before availability.
+    const healthy = mk("k_healthy", "K", 100, { nfl_team: "KC" });
+    const out = mk("k_out", "K", 100, { nfl_team: "KC" });
+    const c = { ...ctx([healthy, out]), round: 1, availability: { k_out: 0 } };
+    const ranked = scoreBoard(c);
+    const h = ranked.find((s) => s.player.id === "k_healthy")!;
+    const o = ranked.find((s) => s.player.id === "k_out")!;
+    expect(h.score).toBeGreaterThan(o.score);
+    expect(ranked[0].player.id).toBe("k_healthy");
+  });
+  it("a capped-and-unavailable player stays below a capped-but-available one", () => {
+    // isCapped demotes by 1e6; a multiplicative availability discount collapsed that to ~-4e3.
+    const kAvail = mk("k_avail", "K", 100, { nfl_team: "KC" });
+    const kOut = mk("k_out", "K", 100, { nfl_team: "KC" });
+    const c = {
+      ...ctx([kAvail, kOut]),
+      round: 1,
+      teamPicks: [mk("k_owned", "K", 120, { nfl_team: "SF" })], // a K is already owned => capped
+      availability: { k_out: 0.004 },
+    };
+    const ranked = scoreBoard(c);
+    const a = ranked.find((s) => s.player.id === "k_avail")!;
+    const o = ranked.find((s) => s.player.id === "k_out")!;
+    expect(a.score).toBeGreaterThan(o.score);
+  });
 });
 
 describe("1.3 — more dynamic to rival drafting", () => {

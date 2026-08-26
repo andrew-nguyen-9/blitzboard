@@ -367,3 +367,63 @@ def test_no_regression_mcts_policy_is_additive() -> None:
     assert [iv.player_id for iv in surface] == ["b", "a", "c"]
     # the fast policy default weights are the documented scarcity-aware cold start.
     assert starter_value(DraftState(board={}, slots_left=(), my_picks=(("p", "RB", 7.0),))) == 7.0
+
+
+# ======================================================================================
+# E11 — MCTS on the REAL corpus board, and the distilled policy's agreement with it
+# ======================================================================================
+#: The documented agreement bar e12 reconciles against: the distilled linear policy must
+#: reproduce the MCTS robust-child pick on at least this share of real decision points.
+E11_AGREEMENT_FLOOR = 0.55
+
+
+def _e11_row(row_id: str = "t8-1qb-std-te0.0-b4-ir0") -> dict:
+    import json
+    from pathlib import Path as _P
+
+    doc = json.loads(
+        (_P(__file__).resolve().parents[2] / "fixtures" / "league_matrix.json").read_text()
+    )
+    return next(r for r in doc["rows"] if r["id"] == row_id)
+
+
+def test_mcts_runs_on_the_real_corpus_board_and_yields_distillable_samples() -> None:
+    """MCTS at every decision point of a REAL draft → features + a visit distribution."""
+    from blitz_engine.value.rl.real_env import distill_samples, row_template
+
+    row = _e11_row()
+    samples, best = distill_samples(2024, row, n_iter=60, seed=1, board_top_n=60)
+    assert len(samples) == len(best) >= 5
+    assert len(samples) <= len(row_template(row))
+    for s in samples:
+        assert set(s.target) <= set(s.features) | set(s.target)  # targets are positions
+        assert abs(sum(s.target.values()) - 1.0) < 1e-9  # a visit DISTRIBUTION
+        assert all(len(v) == 4 for v in s.features.values())  # FEATURE_NAMES order
+
+
+def test_real_data_distillation_is_seed_reproducible_and_lifts_mcts_agreement() -> None:
+    """Same seed ⇒ same samples ⇒ same weights; distilling raises agreement past the floor."""
+    from blitz_engine.value.rl.real_env import distill_samples, policy_agreement
+
+    row = _e11_row()
+    s1, b1 = distill_samples(2024, row, n_iter=60, seed=4, board_top_n=60)
+    s2, b2 = distill_samples(2024, row, n_iter=60, seed=4, board_top_n=60)
+    assert b1 == b2
+    w1 = distill_policy(s1, n_steps=300)
+    w2 = distill_policy(s2, n_steps=300)
+    np.testing.assert_array_equal(w1.coef, w2.coef)  # bit-identical, not merely close
+
+    cold = policy_agreement(FastDraftPolicy(), s1, b1)
+    fitted = policy_agreement(FastDraftPolicy(weights=w1), s1, b1)
+    assert fitted >= cold
+    assert fitted >= E11_AGREEMENT_FLOOR
+
+
+def test_bench_slot_accepts_every_position_and_leaves_starter_slots_alone() -> None:
+    """E11 added `BN`; the starter/FLEX/SUPERFLEX vocabulary is unchanged."""
+    from blitz_engine.value.mcts import slot_positions as sp
+
+    assert sp("BN") == frozenset({"QB", "RB", "WR", "TE", "K", "DST"})
+    assert sp("FLEX") == frozenset({"RB", "WR", "TE"})
+    assert sp("SUPERFLEX") == frozenset({"QB", "RB", "WR", "TE"})
+    assert sp("QB") == frozenset({"QB"}) and sp("DST") == frozenset({"DST"})

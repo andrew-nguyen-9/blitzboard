@@ -83,10 +83,22 @@ class RosterRequirements:
     final_rounds: int = 2  # within this many picks of the end, the K/DST cap lifts
     k_late_cap: int = 2
     dst_late_cap: int = 2
+    #: E6-derived bench positional bounds as ``(position, min, max)`` triples — the *shape* of the
+    #: bench, not just its size. Empty (the default) leaves the solver's historic behaviour
+    #: untouched; `value.roster_shape.to_requirements` fills it with measured numbers.
+    bench_bounds: tuple[tuple[str, int, int], ...] = ()
 
     @property
     def roster_size(self) -> int:
         return len(self.starters) + self.bench_size
+
+    def bench_floor(self) -> dict[str, int]:
+        """Minimum bench bodies required per position (empty when no bounds are set)."""
+        return {pos: lo for pos, lo, _ in self.bench_bounds if lo > 0}
+
+    def bench_ceiling(self) -> dict[str, int]:
+        """Maximum bench bodies allowed per position (empty when no bounds are set)."""
+        return {pos: hi for pos, _, hi in self.bench_bounds}
 
     def k_cap(self, rounds_remaining: int) -> int:
         """Max kickers allowed on the roster given rounds left (1 until the final rounds)."""
@@ -250,6 +262,21 @@ def _build_and_solve(
             idxs = [i for i, p in enumerate(pool) if p.position == pos]
             if idxs:
                 model.add(sum(rostered(i) for i in idxs) <= cap)
+
+    # E6 bench SHAPE: derived per-position floors/ceilings on the BENCH (not the whole roster).
+    # This is what stops a value-maximising objective from benching six RBs and zero QBs.
+    if enforce_pos_caps and requirements.bench_bounds:
+        by_pos: dict[str, list[int]] = {}
+        for i, p in enumerate(pool):
+            by_pos.setdefault(p.position, []).append(i)
+        floor, ceiling = requirements.bench_floor(), requirements.bench_ceiling()
+        for pos, idxs in by_pos.items():
+            benched = sum(bench[i] for i in idxs)
+            if pos in ceiling:
+                model.add(benched <= ceiling[pos])
+            lo = floor.get(pos, 0)
+            if lo:  # only demandable if the pool can supply it
+                model.add(benched >= min(lo, len(idxs)))
 
     # Forced (already-drafted) players must be rostered.
     fset = set(forced_ids)

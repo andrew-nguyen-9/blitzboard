@@ -10,6 +10,7 @@ import { fillRoster, SUPERFLEX_ROSTER } from "./draft";
 import { BYE_WEEKS_2026 } from "./byeWeeks";
 import type { MappedPick } from "./sleeperDraft";
 import { benchScore, type BenchCtx } from "./benchScore";
+import { availabilityOf, ZERO_AVAILABILITY_EPS, type AvailabilityMap } from "./availability";
 
 const POS_GROUPS = ["QB", "RB", "WR", "TE", "K", "DST"] as const;
 export function norm(pos: string | null | undefined): string {
@@ -28,6 +29,7 @@ export interface AIContext {
   totalRounds: number;
   randomness?: number; // 0..1 jitter for human-like variance
   rng?: () => number;
+  availability?: AvailabilityMap; // e2b: published player_id -> p_startable (queries.getAvailabilityMap)
 }
 
 export interface RunInfo {
@@ -80,7 +82,6 @@ export const STARTABLE_WEEKS = 17;
 export interface PolicyParams {
   runDepletion: number;          // hot-position depletion multiplier in the replacement walk
   runThresholdMult: number;      // a position is "running" past this × its fair share (lower = more sensitive)
-  faPenalty: number;             // points buried off a free agent (nfl_team==null) so ~zero FAs are drafted
   benchByeWeight: number;        // weight on bye-coverage starts
   benchInjuryWeight: number;     // weight on injury-cover starts
   benchCeilingWeight: number;    // weight on ceiling-week starts
@@ -95,8 +96,14 @@ export interface PolicyParams {
   overfillDepth: Record<string, number>; // reasonable owned count per position before penalty
   overfillPenaltyPerExtra: number;        // points penalty per player past the depth cap
   // ── e1 (v4) ──────────────────────────────────────────────────────────────
-  injuryDiscount: Record<string, number>; // injury_status (lower-cased) → availability multiplier
-  byeStackPenalty: number;       // points shaved per current starter already on a candidate's bye week
+  byeStackPenalty: number;       // points shaved per current starter already on a candidate's bye week (SHALLOW benches)
+  // ── e10 ────────────────────────────────────────────────────────────────────
+  // e6 refuted a flat byeStackPenalty: the SIGN is conditional on bench depth. On deep benches
+  // (>= byeStackDeepBenchSlots) clustering byes BEATS spreading them, because a deep bench can
+  // absorb one bad week outright; on shallow benches it reverses. So the deep-bench value is a
+  // separate knob and may be NEGATIVE (a clustering bonus).
+  byeStackDeepBenchSlots: number;     // bench size at/above which the deep-bench value applies
+  byeStackPenaltyDeepBench: number;   // per-shared-starter delta on deep benches (<0 ⇒ cluster)
   emptyOffensiveStarterBonus: number; // lift for a candidate that fills an EMPTY startable offensive slot
   // ── E5 (v4) ────────────────────────────────────────────────────────────────
   benchQualityWeight: number;    // strength of E4 benchScore's bench-composition tilt (0 = ablated ⇒ v3 bench)
@@ -105,29 +112,35 @@ export interface PolicyParams {
 export const DEFAULT_POLICY: PolicyParams = {
   runDepletion: 2.2,        // (1.3) up from 1.6 — a hot position depletes faster, pulling its picks forward
   runThresholdMult: 1.4,    // (1.3) down from the old hardcoded 1.6 — detect runs sooner, react more dynamically
-  faPenalty: 1000,          // (1.2) heavy: an FA sorts below every rostered-team player; lifted by a positive trend signal
   benchByeWeight: 1,
   benchInjuryWeight: 1,
   benchCeilingWeight: 1,
   boomWeight: 0.5,
   availabilityPrior: 0.9,
   handcuffAmplify: 1.6,
+  // e10 — NOT replaced by e3's fitted numbers. fixtures/injury_rates.json carries an explicit
+  // `event` string naming CLINICAL-INJURY incidence; this knob is documented as the fraction of
+  // the season a starter MISSES. Different quantities. Swapping them in scored −14.0 pts, verdict
+  // **hurts** (p=0.0015) — the semantic mismatch is measurable, not theoretical. Availability is a
+  // separate model (e2a p_startable) and does not belong here. Receipt: exp e10-injury_rate_clinical.
   injuryRate: { QB: 0.08, RB: 0.18, WR: 0.12, TE: 0.12, K: 0.03, DST: 0.0 },
   maxCeilingWeeks: 4,
   ceilingScale: 6,
   kdstCapRoundsFromEnd: 2,
+  // e10: e6's high-confidence median (cap 2 — already this value — with soft_penalty 4.06) came
+  // back neutral (+2.1 pts, p=0.673); unproven ⇒ 20 stands. Receipt: exp e10-kdst_soft_penalty_e6.
   kdstSoftPenalty: 20,
   overfillDepth: { QB: 3, RB: 5, WR: 5, TE: 2, K: 1, DST: 1 },
   overfillPenaltyPerExtra: 25,
-  // e1: availability-adjusted draft value — a listed injury shaves a pick's worth so a
-  // healthy comparable outranks it (spec cat 5). Draft-facing (steeper than the season
-  // projection factor) since a draft can't stream a Week-1 IR. Identity when absent.
-  injuryDiscount: {
-    questionable: 0.9, q: 0.9, doubtful: 0.75, d: 0.75, out: 0.6, o: 0.6,
-    na: 0.6, inactive: 0.6, cov: 0.75, sus: 0.5, suspended: 0.5,
-    pup: 0.4, nfi: 0.4, ir: 0.35, injured_reserve: 0.35, dnr: 0.35,
-  },
+  // e10 — byeStackPenalty stays 12 and the bench-depth seam below ships INERT. Not an oversight:
+  // e6 refuted the flat constant off its own half-league ablation, but neither replacement could
+  // be proven against e5's metric driving THIS policy over the node bridge. Conditional form
+  // (>=7 bench slots ⇒ −12 cluster bonus, else 18): −10.4 pts, neutral, p=0.053, no_regression
+  // FAILED. Dropping it to 0: −9.0 pts, neutral, p=0.118, no_regression FAILED. Both are worse
+  // than the incumbent, so block-release keeps 12. Receipt: exp e10-byeStack_{conditional,off}.
   byeStackPenalty: 12,           // e1: discourage piling starters onto one bye week (spec cat 4)
+  byeStackDeepBenchSlots: 99,    // e10: 99 ⇒ the deep-bench arm never fires (seam, not a fit)
+  byeStackPenaltyDeepBench: 12,  // e10: equals byeStackPenalty ⇒ behaviour-identical to e1
   emptyOffensiveStarterBonus: 140, // e1: never leave a startable offensive slot empty at draft end
   benchQualityWeight: 1,         // E5: full E4 tilt — QB2/RB-lottery/WR-breakout up, dead K/DST/dup down
 };
@@ -325,15 +338,6 @@ export interface ScoredPick {
 
 // ── e1 (v4) draft-awareness terms ───────────────────────────────────────────
 
-// Availability multiplier from a player's injury designation (identity when healthy
-// or unlisted). So an injured/questionable body's value drops below a healthy
-// comparable and the AI takes the healthy one (spec cat 5). Degrades to 1 with no data.
-export function injuryAvailability(cand: PlayerWithValue, params: PolicyParams): number {
-  const s = (cand.injury_status ?? "").trim().toLowerCase();
-  if (!s) return 1;
-  return params.injuryDiscount[s] ?? params.injuryDiscount[s.replace(/\s+/g, "_")] ?? 1;
-}
-
 // Bye week from the row, falling back to the baked schedule snapshot (byeWeeks.ts) by
 // nfl_team — so bye reasoning fires even when the player row didn't carry bye_week.
 function resolveBye(p: PlayerWithValue | null | undefined): number | null {
@@ -356,7 +360,12 @@ export function byeStackPenalty(
     .map((s) => s.player)
     .filter((p): p is PlayerWithValue => !!p);
   const shared = starters.filter((s) => resolveBye(s) === bye).length;
-  return shared * params.byeStackPenalty;
+  // e10/e6: deep benches prefer CLUSTERED byes, shallow benches prefer spread ones.
+  const per =
+    (ctx.benchSize ?? 0) >= params.byeStackDeepBenchSlots
+      ? params.byeStackPenaltyDeepBench
+      : params.byeStackPenalty;
+  return shared * per;
 }
 
 // Offensive starting slots (K/DST excluded) — the ones we must never leave empty.
@@ -418,14 +427,6 @@ export function scoreBoard(ctx: AIContext, params: PolicyParams = DEFAULT_POLICY
       score = bench;
       why.push("bench upside");
     }
-    // e1: availability discount — shave the unavailable share of a listed player's
-    // projected points (proportional to the projection, so a high-ceiling injured stud
-    // is docked hardest) so a healthy comparable outranks it. Identity when unlisted.
-    const avail = injuryAvailability(p, params);
-    if (avail < 1) {
-      score -= (1 - avail) * Math.max(0, proj(p));
-      why.push("injury discount");
-    }
     // e1: guarantee startable offensive slots fill before bench/K/DST — the draft-end
     // invariant. Additive + equal across offensive-slot fillers, so it never reorders
     // among them, only lifts them over depth/defense picks.
@@ -435,9 +436,10 @@ export function scoreBoard(ctx: AIContext, params: PolicyParams = DEFAULT_POLICY
     }
     // e1: don't pile another starter onto a bye week already shared by the lineup.
     const byeStack = byeStackPenalty(p, ctx, params);
-    if (byeStack > 0) {
+    if (byeStack !== 0) {
+      // e10: may be negative on deep benches (clustering byes is the better shape there).
       score -= byeStack;
-      why.push("bye stack");
+      why.push(byeStack > 0 ? "bye stack" : "bye cluster");
     }
     score -= overfillPenalty(p, ctx, params);
     // Soft K/DST penalty (4.6): even a *first* kicker/defense is shaved so QB/RB/WR/TE bench
@@ -451,17 +453,27 @@ export function scoreBoard(ctx: AIContext, params: PolicyParams = DEFAULT_POLICY
       score -= 1e6; // demote below every legal pick without dropping it from the board
       why.push("K/DST capped");
     }
-    // Free-agent penalty (1.2): bury a player on no NFL team so ~zero FAs are drafted. Keys off
-    // pool candidates only, so the synthetic replacement (id __rep__) is never reached. Lift hook:
-    // a positive news/signing signal cancels the penalty.
-    // ponytail: signal read from metadata.trend_score (flat penalty when absent); upgrade path =
-    // join the `trending` table into getAllPlayersByValue so the draft load carries the signal.
+    // e2b: real availability (roster/injury truth, published by the engine — see lib/availability.ts)
+    // replaces the old flat faPenalty + injuryDiscount hacks. Multiplies score directly so a
+    // near-zero-availability player (retired/FA/season-long IR) sorts to the bottom regardless of
+    // its raw projection. A positive news/signing signal still lifts a free agent back to neutral —
+    // the one lift hook the old faPenalty hack had. Keys off pool candidates only, so the
+    // synthetic replacement (id __rep__, never added to ctx.pool) is never scored/penalized.
+    let avail = availabilityOf(p, ctx.availability);
     if (p.nfl_team == null) {
       const trend = typeof p.metadata?.trend_score === "number" ? p.metadata.trend_score : 0;
-      if (trend <= 0) {
-        score -= params.faPenalty;
-        why.push("free agent");
-      }
+      if (trend > 0) avail = 1;
+    }
+    if (avail < 1) {
+      // Availability discounts a candidate's VALUE — it is never a credit. Scaling the running
+      // score would pull an already-penalised (negative) score UP toward zero, ranking an
+      // unavailable player ABOVE an identical healthy one, so only the positive part is
+      // discounted. (`score > 0` => this is exactly `score * avail`, as before.)
+      score -= Math.max(score, 0) * (1 - avail);
+      // Below e2a's eps the player will not take a snap all season: demote him below every
+      // legal pick without dropping him from the board, same idiom as the K/DST cap above.
+      if (avail < ZERO_AVAILABILITY_EPS) score -= 1e6;
+      why.push(avail < ZERO_AVAILABILITY_EPS ? "unavailable" : "availability discount");
     }
     if (jitter > 0) score *= 1 + (rng() - 0.5) * jitter;
     return { player: p, score, reason: why.join(" · ") || "best available" };

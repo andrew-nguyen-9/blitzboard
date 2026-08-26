@@ -30,9 +30,13 @@ CP-SAT tie-breaking never matters here — the invariants hold for *any* optimal
 """
 from __future__ import annotations
 
+import os
 import random
+import zlib
 from collections import defaultdict
+from collections.abc import Sequence
 from dataclasses import dataclass
+from functools import cache
 
 import pytest
 
@@ -41,17 +45,31 @@ from blitz_engine.data.reconcile import (
     reconcile_teams,
     validate_publish,
 )
+from blitz_engine.lineup.feasibility import (
+    InjuryDynamics,
+    feasibility_surface,
+    requirements_from_row,
+)
+from blitz_engine.survival.availability import (
+    ROSTER_STATE_P,
+    RosterState,
+    is_effectively_unavailable,
+)
+from blitz_engine.testing import matrix
 from blitz_engine.value import (
     FAStatus,
     InterimValue,
+    Lineup,
     Player,
     RosterRequirements,
     apply_fa_penalty,
     interim_surface,
     is_truly_free_agent,
     optimize_lineup,
+    roster_shape,
     solve_roster,
 )
+from blitz_engine.value.roster_solver import slot_accepts
 
 # -- simulation knobs (bounded so this runs in the normal pytest gate) -----
 N_TEAMS = 4
@@ -260,3 +278,332 @@ class _Row:
 
     player_id: str
     value: float
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+# E8a — structural invariants over the full 432-row league-config matrix.
+#
+# These assert PROPERTIES/RELATIONSHIPS that must hold for any generated roster in any config
+# row, not today's fitted constants (e6/e10/e11 will legitimately move those; an invariant
+# pinned to a current value would fail for the wrong reason). Where a concrete number matters
+# (the PS availability ceiling), it is read through the model (`ROSTER_STATE_P`), never
+# retyped as a literal.
+#
+# `ponytail:` no hypothesis dependency (not already a project dep) — deterministic per-row
+# generation (seeded by the row's own id, mirroring `matrix.to_league_config`'s crc32 scheme)
+# stands in for a property-based generator without adding one.
+#
+# Harness entry point for e8b (bench positional-mix invariant, needs e6's derived bounds):
+# `_generated_roster_cached(row_id) -> (Lineup, RosterRequirements)`, iterate `matrix.all()`.
+# Placeholder test id: `test_bench_positional_mix_TODO_e8b` below.
+# ═══════════════════════════════════════════════════════════════════════════════════════════
+_M_POS_SUPPLY = {"QB": 20, "RB": 40, "WR": 40, "TE": 16, "K": 10, "DST": 10}
+_M_POS_VALUE = {
+    "QB": (18.0, 32.0), "RB": (8.0, 30.0), "WR": (8.0, 30.0),
+    "TE": (6.0, 22.0), "K": (6.0, 9.0), "DST": (6.0, 9.0),
+}
+OFFENSIVE_SLOTS = frozenset({"QB", "RB", "WR", "TE", "FLEX", "SUPERFLEX"})
+ALL_ROWS = matrix.all()
+SMOKE_ROWS = matrix.smoke()
+# e8b: full-matrix sweep flag. Set BLITZ_ENGINE_FULL_SWEEP=1 to run the one expensive,
+# smoke-gated invariant (full-season feasibility, ~40x cost) across the full 432-row grid --
+# e.g. `BLITZ_ENGINE_FULL_SWEEP=1 pytest tests/regression/test_draft_invariants.py -k full_season`.
+# See the module-level "e8b: full-matrix sweep" note near the bottom of this file for the
+# wall-clock cost comparison.
+FULL_SWEEP = os.environ.get("BLITZ_ENGINE_FULL_SWEEP", "") == "1"
+FEASIBILITY_ROWS = ALL_ROWS if FULL_SWEEP else SMOKE_ROWS
+
+
+def _pool_for_row(row: matrix.Row) -> list[Player]:
+    """A generous, deterministic candidate pool for one row (never a supply bottleneck)."""
+    rng = random.Random(zlib.crc32(row["id"].encode()))
+    pool: list[Player] = []
+    for pos, n in _M_POS_SUPPLY.items():
+        lo, hi = _M_POS_VALUE[pos]
+        pool.extend(
+            Player(id=f"{row['id']}:{pos}{i}", position=pos, value=rng.uniform(lo, hi))
+            for i in range(n)
+        )
+    return pool
+
+
+@cache
+def _generated_roster_cached(row_id: str) -> tuple[Lineup, RosterRequirements]:
+    """One policy-generated, fully-legal roster for a matrix row via the real `solve_roster`.
+
+    Cached per row id so the 3 cheap structural invariants below share one CP-SAT solve per
+    row (432 solves total, ~15s) instead of one each.
+    """
+    row = matrix.by_id(row_id)
+    reqs = requirements_from_row(row)
+    lineup = solve_roster(_pool_for_row(row), reqs)
+    return lineup, reqs
+
+
+# -- invariant: no empty startable offensive slot (brief item 2, bullet 1) -------------------
+def _assert_no_empty_offensive_slot(lineup: Lineup) -> None:
+    offensive = [(slot, p) for slot, p in lineup.starters if slot in OFFENSIVE_SLOTS]
+    assert offensive, "lineup carries no offensive starter slots at all"
+    empty = [slot for slot, p in offensive if p is None]
+    assert not empty, f"empty offensive starter slot(s): {empty}"
+
+
+@pytest.mark.parametrize("row", ALL_ROWS, ids=lambda r: r["id"])
+def test_no_empty_offensive_slot_across_grid(row: matrix.Row) -> None:
+    lineup, _ = _generated_roster_cached(row["id"])
+    _assert_no_empty_offensive_slot(lineup)
+
+
+def test_no_empty_offensive_slot_predicate_catches_a_hole() -> None:
+    """Proves the predicate bites: a `None` offensive starter must fail it."""
+    broken = Lineup(
+        starters=(("QB", None), ("RB", Player(id="r1", position="RB", value=10.0))),
+        bench=(), starter_value=10.0, bench_value_total=0.0,
+    )
+    with pytest.raises(AssertionError):
+        _assert_no_empty_offensive_slot(broken)
+
+
+# -- invariant: at most 1 K / 1 DST before the final rounds (brief item 2, bullet 2) ---------
+def _assert_k_dst_cap(lineup: Lineup, reqs: RosterRequirements, rounds_remaining: int) -> None:
+    """BENCH_MODEL P10 (dead-weight, K/DST half; the 3rd-QB/1qb half is e8b's bench-mix)."""
+    counts: dict[str, int] = defaultdict(int)
+    for _, p in lineup.starters:
+        counts[p.position] += 1
+    for p in lineup.bench:
+        counts[p.position] += 1
+    k_cap, dst_cap = reqs.k_cap(rounds_remaining), reqs.dst_cap(rounds_remaining)
+    rem = rounds_remaining
+    assert counts["K"] <= k_cap, f"{counts['K']} kickers > cap {k_cap} (rem={rem})"
+    assert counts["DST"] <= dst_cap, f"{counts['DST']} DSTs > cap {dst_cap} (rem={rem})"
+
+
+@pytest.mark.parametrize("row", ALL_ROWS, ids=lambda r: r["id"])
+def test_k_dst_cap_before_final_rounds_across_grid(row: matrix.Row) -> None:
+    lineup, reqs = _generated_roster_cached(row["id"])
+    # `roster_size` rounds-remaining == "round 1" for THIS row -- always outside its own
+    # final_rounds window, whatever that row's bench_slots/qb_mode makes roster_size.
+    _assert_k_dst_cap(lineup, reqs, rounds_remaining=reqs.roster_size)
+
+
+@pytest.mark.parametrize("row", ALL_ROWS, ids=lambda r: r["id"])
+def test_k_dst_cap_threshold_is_a_per_row_round_number(row: matrix.Row) -> None:
+    """The round the cap lifts at is `roster_size - final_rounds`, which VARIES by row
+    (bench_slots 4/6/8, qb_mode) -- never a literal round number across the grid."""
+    reqs = requirements_from_row(row)
+    assert reqs.k_cap(reqs.final_rounds) > reqs.k_cap(reqs.final_rounds + 1), (
+        f"row {row['id']}: cap must lift inside the row's own final {reqs.final_rounds} "
+        f"round(s) of {reqs.roster_size}"
+    )
+
+
+def test_k_dst_cap_predicate_catches_hoarding() -> None:
+    reqs = RosterRequirements()
+    hoarded = tuple(Player(id=f"K{i}", position="K", value=1.0) for i in range(3))
+    lineup = Lineup(starters=(), bench=hoarded, starter_value=0.0, bench_value_total=0.0)
+    with pytest.raises(AssertionError):
+        _assert_k_dst_cap(lineup, reqs, rounds_remaining=99)
+
+
+# -- invariant: every starting position has bench coverage (brief item 2, bullet 3) ----------
+def _assert_bench_covers_every_starting_position(lineup: Lineup, reqs: RosterRequirements) -> None:
+    bench_positions = {p.position for p in lineup.bench}
+    uncovered = [
+        slot for slot in dict.fromkeys(reqs.starters)
+        if not any(slot_accepts(slot, bp) for bp in bench_positions)
+    ]
+    assert not uncovered, f"starting position(s) with zero bench coverage: {uncovered}"
+
+
+# e8b RESOLUTION (was xfail'd): e6's derived bounds landed and were checked against this exact
+# claim -- see `_bounds_aware_roster_cached` below. Result: the grid-wide claim is FALSE, not
+# merely untested. e6's own `bench_bounds` gives a bench CEILING of 0 for a position in 234/432
+# rows (e.g. QB/DST/TE hi=0 on several 4-6 slot benches) -- i.e. the DERIVED, evidence-based
+# optimum is to carry ZERO bench depth at that position, not one. Forcing coverage of every
+# starting position would fight e6's own measured bounds, not merely a value-maximizer's
+# pathology. The correct, generalised property (P10: no *excess* bench depth) is asserted in
+# `test_bench_positional_mix_within_e6_bounds_across_grid` (below in this file), which DOES pass
+# for all 432 rows -- see `README.md` for the replacement invariant's traceability entry.
+# The predicate below is kept only to prove the "uncovered slot" detector itself is sound; it is
+# no longer asserted grid-wide because the grid-wide claim it would check is not true.
+def test_bench_coverage_predicate_catches_an_uncovered_slot() -> None:
+    reqs = RosterRequirements(starters=("QB", "RB"), bench_size=2)
+    lineup = Lineup(
+        starters=(("QB", Player(id="q1", position="QB", value=20.0)),
+                  ("RB", Player(id="r1", position="RB", value=15.0))),
+        bench=(Player(id="k1", position="K", value=5.0),),  # no RB/QB backup at all
+        starter_value=35.0, bench_value_total=5.0,
+    )
+    with pytest.raises(AssertionError):
+        _assert_bench_covers_every_starting_position(lineup, reqs)
+
+
+# -- invariant: no week 1-18 without a legal lineup (brief item 2, bullet 4) -----------------
+# SMOKE-ONLY: `feasibility_surface` runs up to 18 `optimize_lineup` solves per roster; over the
+# full 432-row grid that is ~40x the cost of the other (single-solve) invariants above, so this
+# one follows the brief's named exception and runs the 16-row pairwise-covering `smoke()` set.
+def _assert_full_season_feasible(row: matrix.Row) -> None:
+    lineup, reqs = _generated_roster_cached(row["id"])
+    roster = [p for _, p in lineup.starters] + list(lineup.bench)
+    surface = feasibility_surface(roster, reqs, injury=InjuryDynamics.healthy())
+    infeasible = surface.infeasible_weeks()
+    assert not infeasible, f"row {row['id']}: infeasible week(s) {infeasible}, no exclusions"
+
+
+@pytest.mark.parametrize("row", FEASIBILITY_ROWS, ids=lambda r: r["id"])
+def test_full_season_feasible_smoke_grid(row: matrix.Row) -> None:
+    _assert_full_season_feasible(row)
+
+
+def test_full_season_feasible_predicate_catches_a_missing_position() -> None:
+    """A roster with no player at all for a hard-required slot must be infeasible every week."""
+    reqs = RosterRequirements(starters=("QB", "DST"), bench_size=0)
+    roster = [Player(id="q1", position="QB", value=20.0)]  # no DST anywhere
+    surface = feasibility_surface(roster, reqs, injury=InjuryDynamics.healthy())
+    assert surface.infeasible_weeks(), "expected every week infeasible with no DST in the pool"
+
+
+# -- invariant: no rostered player with ~zero availability (brief item 2, bullet 5) ----------
+def _assert_no_zero_availability_rostered(
+    roster: Sequence[Player], p_startable: dict[str, float]
+) -> None:
+    zeroed = [p.id for p in roster if is_effectively_unavailable(p_startable.get(p.id, 1.0))]
+    assert not zeroed, f"rostered player(s) below e2a's zero-availability threshold: {zeroed}"
+
+
+@pytest.mark.parametrize("row", ALL_ROWS, ids=lambda r: r["id"])
+def test_no_zero_availability_player_survives_the_availability_filter(row: matrix.Row) -> None:
+    """A draft policy filters e2a's `is_effectively_unavailable` pool BEFORE the solver ever
+    sees it (mirrors e4's `feasibility_surface`, which drops rather than discounts). Plants one
+    below-eps practice-squad body per position, read through e2a's own `ROSTER_STATE_P` -- never
+    a retyped literal -- and proves it never survives the filter into the drafted roster."""
+    reqs = requirements_from_row(row)
+    pool = _pool_for_row(row)
+    ps_p = ROSTER_STATE_P[RosterState.PRACTICE_SQUAD]
+    assert is_effectively_unavailable(ps_p), "fixture drift: PS ceiling no longer crosses eps"
+
+    p_startable = {p.id: 1.0 for p in pool}
+    planted = {next(p.id for p in pool if p.position == pos) for pos in _M_POS_SUPPLY}
+    for pid in planted:
+        p_startable[pid] = ps_p
+
+    filtered_pool = [p for p in pool if not is_effectively_unavailable(p_startable[p.id])]
+    lineup = solve_roster(filtered_pool, reqs)
+    roster = [p for _, p in lineup.starters] + list(lineup.bench)
+    _assert_no_zero_availability_rostered(roster, p_startable)
+    assert not (planted & {p.id for p in roster}), "planted PS body drafted despite the filter"
+
+
+def test_availability_predicate_catches_a_skipped_filter() -> None:
+    """Proves the invariant bites: skip the availability filter and hand solve_roster a
+    below-eps body with an inflated value -- the value-blind solver drafts it anyway."""
+    reqs = RosterRequirements(starters=("QB",), bench_size=0)
+    ps_p = ROSTER_STATE_P[RosterState.PRACTICE_SQUAD]
+    pool = [Player(id="unavailable-qb", position="QB", value=99.0)]
+    p_startable = {"unavailable-qb": ps_p}
+    lineup = solve_roster(pool, reqs)  # NOT filtered -- the bug this invariant guards against
+    roster = [p for _, p in lineup.starters] + list(lineup.bench)
+    with pytest.raises(AssertionError):
+        _assert_no_zero_availability_rostered(roster, p_startable)
+
+
+# -- e8b: bench positional-mix (BENCH_MODEL P10 generalised) -- e6's bounds now exist --------
+# Harness note: `_generated_roster_cached` (above) deliberately does NOT carry e6's bounds --
+# it is e8a's shared harness for the OTHER four invariants and stays untouched. e8b's own
+# harness below feeds `roster_shape.to_requirements(row)` (bounds + derived K/DST timing) to
+# the same `solve_roster`, at `rounds_remaining=0`: a single-shot full-roster solve represents a
+# COMPLETED roster, so it belongs in the "late" cap regime, not the "round 1" one
+# `_generated_roster_cached` uses. At `rounds_remaining=99` (e8a's default) e6's bench FLOOR on
+# K/DST can conflict with `RosterRequirements`'s own early-round K/DST cap (floor demands a bench
+# body the early cap forbids) -- an artifact of solving the whole roster in one shot, not a bug
+# in e6's numbers. Confirmed empirically: 0/432 rows infeasible at rounds_remaining=0, vs 1+
+# infeasible at 99.
+@cache
+def _bounds_aware_roster_cached(row_id: str) -> tuple[Lineup, RosterRequirements]:
+    row = matrix.by_id(row_id)
+    reqs = roster_shape.to_requirements(row)
+    lineup = solve_roster(_pool_for_row(row), reqs, rounds_remaining=0)
+    return lineup, reqs
+
+
+def test_bench_positional_mix_within_e6_bounds_across_grid_predicate_soundness() -> None:
+    """Proves the predicate bites before trusting it grid-wide (brief item 4)."""
+    bounds = roster_shape.BenchBounds(
+        row_id="synthetic", bench_slots=4,
+        lo={"QB": 0, "RB": 0, "WR": 0, "TE": 0, "K": 0, "DST": 0},
+        hi={"QB": 0, "RB": 2, "WR": 2, "TE": 1, "K": 1, "DST": 0}, measured=True,
+    )
+    assert bounds.contains({"RB": 2, "WR": 1, "TE": 1})  # compliant
+    assert not bounds.contains({"RB": 4})  # violates RB hi=2
+    assert not bounds.contains({"DST": 1})  # violates DST hi=0 (dead weight, BENCH_MODEL P10)
+
+
+def test_bench_positional_mix_naive_value_max_would_violate_e6_bounds() -> None:
+    """The exact failure mode this suite exists to catch: a naive bench.BENCH_DISCOUNT-driven
+    value maximizer packs the WHOLE bench into RB (highest discount, .45) -- optimal under that
+    naive score, insane under e6's derived ceiling. Confirms the constraint is load-bearing, not
+    a no-op: e8a's own harness (bounds-blind) hits exactly this on `t8-1qb-std-te0.0-b8-ir0`
+    (RB ceiling 3 < its 8-slot bench)."""
+    row = matrix.by_id("t8-1qb-std-te0.0-b8-ir0")
+    bounds = roster_shape.bench_bounds(row)
+    naive_all_rb_bench = {"RB": reqs_bench_size(row)}
+    assert not bounds.contains(naive_all_rb_bench), (
+        "expected an all-RB bench to violate e6's derived ceiling (this is the gap e8a left open)"
+    )
+    # ... and the bounds-aware harness never produces it:
+    lineup, _ = _bounds_aware_roster_cached(row["id"])
+    counts: dict[str, int] = defaultdict(int)
+    for p in lineup.bench:
+        counts[p.position] += 1
+    assert bounds.contains(counts), (
+        f"bounds-aware solve produced an out-of-bounds bench {dict(counts)}"
+    )
+    assert counts["RB"] < reqs_bench_size(row), (
+        "bounds-aware solve still packed the whole bench with RB"
+    )
+
+
+def reqs_bench_size(row: matrix.Row) -> int:
+    return int(row["bench_slots"])
+
+
+@pytest.mark.parametrize("row", ALL_ROWS, ids=lambda r: r["id"])
+def test_bench_positional_mix_within_e6_bounds_across_grid(row: matrix.Row) -> None:
+    """BENCH_MODEL P10 (generalised): every generated roster's bench positional counts lie
+    within e6's derived per-config bounds, for all 432 matrix rows. Bounds are a HARD CP-SAT
+    constraint here (`to_requirements` -> `RosterRequirements.bench_bounds`), so a bound e6
+    could not satisfy would raise `InfeasibleRosterError`, not silently pass."""
+    lineup, _ = _bounds_aware_roster_cached(row["id"])
+    counts: dict[str, int] = defaultdict(int)
+    for p in lineup.bench:
+        counts[p.position] += 1
+    bounds = roster_shape.bench_bounds(row)
+    assert bounds.contains(counts), (
+        f"row {row['id']}: bench mix {dict(counts)} outside e6 bounds {bounds.as_pairs()}"
+    )
+
+
+@pytest.mark.parametrize("row", ALL_ROWS, ids=lambda r: r["id"])
+def test_kdst_timing_cap_matches_derived_rule_across_grid(row: matrix.Row) -> None:
+    """The derived K/DST timing rule as its own named assertion (brief item 1): the cap lifts
+    exactly at e6's `kdst_timing(row).cap_rounds_from_end`, per-row -- never a literal round
+    number (measured caps span 2-13, per e6's `.done.md`)."""
+    timing = roster_shape.kdst_timing(row)
+    reqs = roster_shape.to_requirements(row)
+    assert reqs.final_rounds == timing.cap_rounds_from_end
+    assert 1 <= timing.cap_rounds_from_end <= reqs.roster_size
+    assert reqs.k_cap(timing.cap_rounds_from_end) > reqs.k_cap(timing.cap_rounds_from_end + 1), (
+        f"row {row['id']}: K cap must lift inside the row's own derived window"
+    )
+    assert reqs.dst_cap(timing.cap_rounds_from_end) > reqs.dst_cap(
+        timing.cap_rounds_from_end + 1
+    ), (
+        f"row {row['id']}: DST cap must lift inside the row's own derived window"
+    )
+
+
+# -- e8b: full-matrix sweep note -----------------------------------------------------------
+# The structural invariants above (incl. the 2 new e8b ones) already run over ALL_ROWS (432
+# rows) by default -- see e8b's `.done.md` for measured wall-clock. Only
+# `test_full_season_feasible_smoke_grid` (18x `optimize_lineup` per row, ~40x the cost) stays
+# SMOKE_ROWS by default, gated by `FULL_SWEEP` (declared near `ALL_ROWS`/`SMOKE_ROWS` above).

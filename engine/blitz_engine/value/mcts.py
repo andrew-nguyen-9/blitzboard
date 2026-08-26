@@ -43,14 +43,18 @@ SUPERFLEX_TEMPLATE: tuple[str, ...] = (
 )
 _FLEX: frozenset[str] = frozenset({"RB", "WR", "TE"})
 _SUPERFLEX: frozenset[str] = frozenset({"QB", "RB", "WR", "TE"})
+#: A bench slot accepts anybody — E11 drafts benches so the E5 metric can price the insurance.
+_BENCH: frozenset[str] = frozenset({"QB", "RB", "WR", "TE", "K", "DST"})
 
 
 def slot_positions(slot: str) -> frozenset[str]:
-    """The set of positions a template slot accepts (FLEX/SUPERFLEX widen it)."""
+    """The set of positions a template slot accepts (FLEX/SUPERFLEX/BN widen it)."""
     if slot == "FLEX":
         return _FLEX
     if slot == "SUPERFLEX":
         return _SUPERFLEX
+    if slot == "BN":
+        return _BENCH
     return frozenset({slot})
 
 

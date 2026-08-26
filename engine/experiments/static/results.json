@@ -1,0 +1,151 @@
+[
+  {
+    "name": "byeStack_conditional",
+    "delta_started_points": -10.437,
+    "verdict": "neutral",
+    "p_value": 0.0525,
+    "mae_with": 1466.026,
+    "mae_without": 1456.448,
+    "no_regression": false,
+    "candidate_mae": 1466.026,
+    "reference_mae": 1456.448,
+    "n_obs": 1176,
+    "ships": false,
+    "rationale": "e6 refuted a flat penalty: on >=7-slot benches clustering byes BEATS spreading (+18.9/+16.0/+12.4), on 6-slot benches it reverses (-23.6/-15.3). Sign must be conditional on bench depth.",
+    "patch": {
+      "policy": {
+        "byeStackDeepBenchSlots": 7,
+        "byeStackPenaltyDeepBench": -12,
+        "byeStackPenalty": 18
+      }
+    },
+    "season": 2024,
+    "seed": 20260825,
+    "n_seasons": 8
+  },
+  {
+    "name": "byeStack_off",
+    "delta_started_points": -9.029,
+    "verdict": "neutral",
+    "p_value": 0.1175,
+    "mae_with": 1462.462,
+    "mae_without": 1453.935,
+    "no_regression": false,
+    "candidate_mae": 1462.462,
+    "reference_mae": 1453.935,
+    "n_obs": 1176,
+    "ships": false,
+    "rationale": "Fallback if the conditional form does not clear: e6 says a single positive constant is wrong in one regime or the other, so 0 beats an unproven 12.",
+    "patch": {
+      "policy": {
+        "byeStackPenalty": 0
+      }
+    },
+    "season": 2024,
+    "seed": 20260825,
+    "n_seasons": 8
+  },
+  {
+    "name": "sf_multiplier_rb",
+    "delta_started_points": 1.203,
+    "verdict": "neutral",
+    "p_value": 0.5445,
+    "mae_with": 1454.125,
+    "mae_without": 1456.047,
+    "no_regression": true,
+    "candidate_mae": 1454.125,
+    "reference_mae": 1456.047,
+    "n_obs": 1176,
+    "ships": false,
+    "rationale": "e6: superflex DRAINS RB bench depth (derived ceiling 3.75 -> 2.50), so the shipped 1.2 BOOST is backwards. 0.67 = 2.50/3.75. WR's 1.1 is left alone \u2014 e6 confirmed its sign.",
+    "patch": {
+      "bench": {
+        "SF_MULTIPLIER": {
+          "RB": 0.67
+        }
+      }
+    },
+    "season": 2024,
+    "seed": 20260825,
+    "n_seasons": 8
+  },
+  {
+    "name": "trade_value_zero",
+    "delta_started_points": 5.339,
+    "verdict": "helps",
+    "p_value": 0.0205,
+    "mae_with": 1449.045,
+    "mae_without": 1454.534,
+    "no_regression": true,
+    "candidate_mae": 1449.045,
+    "reference_mae": 1454.534,
+    "n_obs": 1176,
+    "ships": true,
+    "rationale": "e5's simulator trades nothing, so TradeValue has ZERO GRADIENT under started_points and can never be free-fit. Ablate to 0 and report the (expected) neutral verdict; an unproven weight is worse than no weight.",
+    "patch": {
+      "bench": {
+        "SF_RB_WEIGHTS": {
+          "TradeValue": 0
+        },
+        "SF_WR_WEIGHTS": {
+          "TradeValue": 0
+        }
+      }
+    },
+    "season": 2024,
+    "seed": 20260825,
+    "n_seasons": 8
+  },
+  {
+    "name": "injury_rate_clinical",
+    "delta_started_points": -13.97,
+    "verdict": "hurts",
+    "p_value": 0.0015,
+    "mae_with": 1462.928,
+    "mae_without": 1447.87,
+    "no_regression": false,
+    "candidate_mae": 1462.928,
+    "reference_mae": 1447.87,
+    "n_obs": 1176,
+    "ships": false,
+    "rationale": "e3's fitted rates. Semantics differ from the knob's docstring (clinical incidence vs fraction-of-season-missed), so this is measured, not assumed.",
+    "patch": {
+      "policy": {
+        "injuryRate": {
+          "QB": 0.0953,
+          "RB": 0.1588,
+          "WR": 0.162,
+          "TE": 0.1725,
+          "K": 0.0847,
+          "DST": 0.0
+        }
+      }
+    },
+    "season": 2024,
+    "seed": 20260825,
+    "n_seasons": 8
+  },
+  {
+    "name": "kdst_soft_penalty_e6",
+    "delta_started_points": 2.075,
+    "verdict": "neutral",
+    "p_value": 0.673,
+    "mae_with": 1450.397,
+    "mae_without": 1451.22,
+    "no_regression": true,
+    "candidate_mae": 1450.397,
+    "reference_mae": 1451.22,
+    "n_obs": 1176,
+    "ships": false,
+    "rationale": "e6's `fixtures/bench_shape.json`, restricted to the HIGH-confidence rows (cap inside the bench phase, i.e. cap <= bench_slots \u2014 e6 flags the rest low-confidence because e5 models no K/DST streaming and over-rewards locking a kicker early). Median over those 9 rows: cap = 2 (already shipped, unchanged) and soft_penalty = 4.06 (shipped: 20).",
+    "patch": {
+      "policy": {
+        "kdstCapRoundsFromEnd": 2,
+        "kdstSoftPenalty": 4.06
+      }
+    },
+    "season": 2024,
+    "seed": 20260825,
+    "n_seasons": 8
+  }
+]
