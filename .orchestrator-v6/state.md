@@ -12,7 +12,7 @@
 - blockers: C02 roster-wide proactive replacement and transaction-cost decision semantics
 - verification: focused gate green; build/typecheck/lint green; pipeline 146 passed; engine Ruff
   green and 4,123 passed / 1 skipped / 1 expected failure
-- next action: await immutable C02A production checkpoint and re-run independent decision-boundary tests
+- next action: await immutable C02B production checkpoint and re-run primary plus remote adversarial suites
 - external authority: no push, merge, PR, release, protected-branch edit, or branch deletion
 
 The 25 files between the reviewed predecessor and baseline belong to the separately landed
