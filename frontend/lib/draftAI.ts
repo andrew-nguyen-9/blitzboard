@@ -8,7 +8,7 @@ import type { PlayerWithValue } from "./types";
 import type { RosterSlot } from "./draft";
 import { fillRoster, SUPERFLEX_ROSTER } from "./draft";
 import { BYE_WEEKS_2026 } from "./byeWeeks";
-import { contingentRole, weeklyByeCoverage } from "./contingency";
+import { contingentValuation, weeklyByeCoverage, type ContingentValuation } from "./contingency";
 import { projectionCeiling } from "./valueUnits";
 import type { MappedPick } from "./sleeperDraft";
 import { benchScore, type BenchCtx } from "./benchScore";
@@ -250,18 +250,22 @@ export function marginalStarterValue(
 // (v5's byeCover counted starter byes without checking the candidate's own bye or slot
 // eligibility; both defects and the consolidation are C01 contract items.)
 
-// Expected games filling in for an injured starter; amplified for a same-team handcuff,
-// which starts precisely when its starter is out (negative availability correlation).
+// Expected starts filling in for the covered starter. With structured succession
+// evidence the SHARED contingent valuation (contingency.ts) supplies the whether and
+// the probability; this function only scales it into starts — inheritanceProb × season
+// weeks × the pinned handcuffAmplify coefficient, capped at the season (a handcuff
+// starts precisely when its starter is out — negative availability correlation).
+// Without evidence the generic positional fill-in prior applies: no succession claim,
+// coefficient (injuryRate) unchanged from v5.
 export function injuryCover(
   cand: PlayerWithValue,
   coveredStarter: PlayerWithValue | null,
-  isHandcuff: boolean,
+  role: ContingentValuation,
   params: PolicyParams,
 ): number {
   if (!coveredStarter) return 0;
-  const pos = norm(cand.position);
-  const games = (params.injuryRate[pos] ?? 0.1) * STARTABLE_WEEKS;
-  return isHandcuff ? games * params.handcuffAmplify : games;
+  if (!role.eligible) return (params.injuryRate[norm(cand.position)] ?? 0.1) * STARTABLE_WEEKS;
+  return Math.min(STARTABLE_WEEKS, role.inheritanceProb * STARTABLE_WEEKS * params.handcuffAmplify);
 }
 
 // Weeks the candidate's ceiling outscores a weak marginal starter — the upside term.
@@ -296,8 +300,9 @@ export function benchValue(
 
   const samePos = ctx.teamPicks.filter((p) => norm(p.position) === pos).sort((a, b) => proj(b) - proj(a));
   const coveredStarter = samePos[0] ?? null;
-  // v6: "handcuff" needs structured contingent-role evidence, not the v5 same-team boolean.
-  const isHandcuff = contingentRole(cand, coveredStarter).status === "supported";
+  // v6: the SHARED structured valuation decides whether/probability of succession —
+  // never a local boolean bridge (C01A).
+  const role = contingentValuation(cand, coveredStarter);
   // weakest same-eligible starter is the bar the candidate's ceiling must clear
   const marginalStarter = starters
     .filter((s) => norm(s.position) === pos)
@@ -306,10 +311,10 @@ export function benchValue(
 
   const starterIds = new Set(starters.map((s) => s.id));
   const ownedBench = ctx.teamPicks.filter((p) => !starterIds.has(p.id));
-  const coveredByeWeeks = weeklyByeCoverage(cand, fill.starters, ctx.roster, ownedBench).covered.length;
+  const coveredByeStarts = weeklyByeCoverage(cand, fill.starters, ctx.roster, ownedBench).expectedStarts;
   const eStarts =
-    params.benchByeWeight * coveredByeWeeks +
-    params.benchInjuryWeight * injuryCover(cand, coveredStarter, isHandcuff, params) +
+    params.benchByeWeight * coveredByeStarts +
+    params.benchInjuryWeight * injuryCover(cand, coveredStarter, role, params) +
     params.benchCeilingWeight * ceilingWeeks(cand, marginalStarterProj, params);
 
   const mean = proj(cand);
@@ -325,12 +330,12 @@ export function benchValue(
 }
 
 // E5: E4 benchScore → a bounded multiplier centered at 1 (score 50). The candidate is
-// appended to the roster so E4 sees its true positional depth; superflex is read off the
-// league's slots (any non-QB slot that also accepts a QB = an OP/SF slot).
+// appended to the roster so E4 sees its true positional depth; the league's REAL slots
+// are passed through so both consumers evaluate the same league shape (superflex/2QB
+// and the coverage template are derived from them inside benchScore — C01A).
 function benchQuality(cand: PlayerWithValue, ctx: AIContext, params: PolicyParams): number {
   if (params.benchQualityWeight === 0) return 1;
-  const superflex = ctx.roster.some((s) => s.slot !== "QB" && s.eligible.includes("QB"));
-  const bctx: BenchCtx = { roster: [...ctx.teamPicks, cand], superflex };
+  const bctx: BenchCtx = { roster: [...ctx.teamPicks, cand], rosterSlots: ctx.roster };
   return 1 + params.benchQualityWeight * (benchScore(cand, bctx).score / 100 - 0.5);
 }
 

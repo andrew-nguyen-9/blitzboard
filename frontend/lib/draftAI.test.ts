@@ -18,9 +18,10 @@ import {
   pickRawVorp,
   pickAdp,
   candidatePool,
+  STARTABLE_WEEKS,
 } from "./draftAI";
 import { SUPERFLEX_ROSTER } from "./draft";
-import { weeklyByeCoverage } from "./contingency";
+import { weeklyByeCoverage, contingentValuation } from "./contingency";
 import { runSnakeDraft, runSnakeDraftAsync, mulberry32 } from "./snakeDraft";
 import type { PlayerWithValue } from "./types";
 
@@ -123,7 +124,12 @@ describe("bye coverage (consolidated, candidate-aware)", () => {
       { slot: "WR", player: mk("wr1", "WR", 240, { bye_week: 7 }) },
       { slot: "WR", player: mk("wr2", "WR", 230, { bye_week: 11 }) },
     ];
-    expect(weeklyByeCoverage(cand, starters, SUPERFLEX_ROSTER).covered).toEqual([7, 11]);
+    const r = weeklyByeCoverage(cand, starters, SUPERFLEX_ROSTER);
+    expect(r.expectedStarts).toBe(2);
+    expect(r.covered).toEqual([
+      { week: 7, slot: "WR", starterId: "wr1" },
+      { week: 11, slot: "WR", starterId: "wr2" },
+    ]);
   });
   it("gives nothing for a shared bye or an ineligible slot", () => {
     const cand = mk("wr4", "WR", 120, { bye_week: 7 });
@@ -136,16 +142,29 @@ describe("bye coverage (consolidated, candidate-aware)", () => {
   });
 });
 
-describe("injuryCover", () => {
+describe("injuryCover (shared contingent valuation)", () => {
   it("is 0 with no starter to cover", () => {
-    expect(injuryCover(mk("rb3", "RB", 100), null, false, DEFAULT_POLICY)).toBe(0);
+    const cand = mk("rb3", "RB", 100);
+    expect(injuryCover(cand, null, contingentValuation(cand, null), DEFAULT_POLICY)).toBe(0);
   });
-  it("amplifies a same-team handcuff over a generic backup", () => {
-    const cand = mk("rb-hc", "RB", 100, { nfl_team: "KC" });
-    const starter = mk("rb1", "RB", 240, { nfl_team: "KC" });
-    const hc = injuryCover(cand, starter, true, DEFAULT_POLICY);
-    const generic = injuryCover(cand, starter, false, DEFAULT_POLICY);
+  it("an evidenced handcuff behind an ailing starter beats the generic fill-in prior", () => {
+    const cand = mk("rb-hc", "RB", 100, { nfl_team: "KC", depth: 2 });
+    const starter = mk("rb1", "RB", 240, { nfl_team: "KC", depth: 1 });
+    starter.injury_status = "Questionable";
+    const supported = contingentValuation(cand, starter);
+    expect(supported.eligible).toBe(true);
+    const hc = injuryCover(cand, starter, supported, DEFAULT_POLICY);
+    const genericCand = mk("rb-gen", "RB", 100, { nfl_team: "DAL", depth: 2 });
+    const generic = injuryCover(genericCand, starter, contingentValuation(genericCand, starter), DEFAULT_POLICY);
     expect(hc).toBeGreaterThan(generic);
+  });
+  it("never credits more starts than the season, even for a near-certain inheritance", () => {
+    const cand = mk("rb-hc", "RB", 100, { nfl_team: "KC", depth: 2 });
+    const starter = mk("rb1", "RB", 240, { nfl_team: "KC", depth: 1 });
+    starter.injury_status = "IR";
+    const starts = injuryCover(cand, starter, contingentValuation(cand, starter), DEFAULT_POLICY);
+    expect(starts).toBeLessThanOrEqual(STARTABLE_WEEKS);
+    expect(starts).toBeGreaterThan(0);
   });
 });
 

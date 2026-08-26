@@ -10,10 +10,10 @@
 // callers can show which inputs were degraded.
 
 import type { PlayerWithValue } from "./types";
-import { rulesFromConfig, type LeagueConfig } from "./leagueConfig";
+import type { LeagueConfig } from "./leagueConfig";
 import { proj } from "./draftAI";
 import { playoffSchedule } from "./schedule2026";
-import { contingentRole, weeklyByeCoverage } from "./contingency";
+import { contingentValuation, injuryRisk, weeklyByeCoverage } from "./contingency";
 import { SUPERFLEX_ROSTER, fillRoster, type RosterSlot } from "./draft";
 
 // ── ctx / result shapes ────────────────────────────────────────────────────
@@ -33,7 +33,10 @@ export interface BenchTrends {
 export interface BenchCtx {
   /** The full roster (starters + bench) — needed for handcuff, duplicate, bye-cover logic. */
   roster: PlayerWithValue[];
-  /** Superflex/2QB overlay. If omitted, derived from `config` (OP/SF slot present). */
+  /** The league's actual starting-lineup slots. If omitted, read from `config.rosterSlots`;
+   * the hard-coded superflex preset is only the last-resort default for flag-only callers. */
+  rosterSlots?: RosterSlot[];
+  /** Superflex/2QB overlay. If omitted, derived from the league slots (≥2 QB-capable slots). */
   superflex?: boolean;
   config?: LeagueConfig;
   /** player_id → E1 trends. */
@@ -97,17 +100,6 @@ const clamp100 = (x: number) => (x < 0 ? 0 : x > 100 ? 100 : x);
 /** Saturating map [0,∞)→[0,1): x/(x+k). x=k → 0.5. */
 const sat = (x: number, k: number) => (x <= 0 ? 0 : x / (x + k));
 const normPos = (p: string | null | undefined) => (p === "DEF" ? "DST" : (p ?? "?"));
-
-/** Probability the starter is lost, from injury_status (null/active = low baseline). */
-function injuryRisk(status: string | null | undefined): number {
-  const s = (status ?? "").toLowerCase();
-  if (!s || s === "active" || s === "healthy") return 0.1;
-  if (s.includes("question")) return 0.35;
-  if (s.includes("doubt")) return 0.65;
-  if (s.includes("out")) return 0.85;
-  if (s.includes("ir") || s.includes("pup") || s.includes("reserve") || s.includes("suspend")) return 0.95;
-  return 0.4;
-}
 
 /** Upside from CEILING VOR (value.boom = projection ceiling − replacement — the C01 unit
  * contract; it is NOT a raw season ceiling). Points-over-replacement is the right scale for
@@ -181,20 +173,17 @@ function generalScore(player: PlayerWithValue, ctx: BenchCtx, t: Terms): number 
   return clamp100(t.score);
 }
 
-/** Contingent value of a backup who inherits a role: starterRisk × standalone upside —
- * but ONLY with structured evidence (contingency.ts). v5 granted this to every positional
- * backup; v6 grants nothing without team/succession or explicit role-transfer evidence,
- * and flags missing/ambiguous evidence as a degraded term. Coefficients unchanged. */
+/** Contingent value of a backup who inherits a role, from the SHARED valuation
+ * (contingency.ts): whether (eligibility) and probability come from it exclusively; this
+ * model only rescales the shared expectedValue (= inheritanceProb × raw projection) onto
+ * its saturating VOR upside scale — inheritanceProb × upside — with the v5 coefficients
+ * (0.4, 1.5) unchanged. Missing/ambiguous evidence is a degraded term, never value. */
 function handcuffValue(player: PlayerWithValue, ctx: BenchCtx, upside: number): { v: number; degraded: boolean } {
   const { same, idx } = positionDepth(player, ctx.roster);
   if (idx <= 0) return { v: 0.2 * upside, degraded: false }; // this IS the starter — not a handcuff
-  const starter = same[0];
-  const role = contingentRole(player, starter);
-  if (role.status !== "supported") {
-    return { v: 0, degraded: role.status === "ambiguous-depth" || role.status === "missing-metadata" };
-  }
-  const risk = injuryRisk(starter.injury_status);
-  return { v: clamp01(0.4 * upside + risk * upside * 1.5), degraded: false };
+  const val = contingentValuation(player, same[0]);
+  if (!val.eligible) return { v: 0, degraded: val.degradedReason != null };
+  return { v: clamp01(0.4 * upside + val.inheritanceProb * upside * 1.5), degraded: false };
 }
 
 /** Positional scarcity from the player's tier (1 = scarcest/best). */
@@ -204,8 +193,17 @@ function scarcity(player: PlayerWithValue, ctx: BenchCtx): { v: number; degraded
   return { v: clamp01(1 - (tier - 1) * 0.2), degraded: false };
 }
 
-/** The starting template this league implies — superflex keeps OP, otherwise it is dropped. */
-function starterTemplate(ctx: BenchCtx): RosterSlot[] {
+/** The league's actual starting slots, when the caller provided them. */
+function leagueSlots(ctx: BenchCtx): RosterSlot[] | null {
+  return ctx.rosterSlots ?? ctx.config?.rosterSlots ?? null;
+}
+
+/** The starting template this league implies: the REAL slots when available (custom
+ * shapes, 2QB, missing slots all honored — the same template both consumers pass to
+ * weeklyByeCoverage); the superflex preset only for flag-only callers. */
+export function starterTemplate(ctx: BenchCtx): RosterSlot[] {
+  const slots = leagueSlots(ctx);
+  if (slots && slots.length > 0) return slots;
   const sf = ctx.superflex ?? deriveSuperflex(ctx);
   return sf ? SUPERFLEX_ROSTER : SUPERFLEX_ROSTER.filter((s) => s.slot !== "OP");
 }
@@ -222,8 +220,8 @@ function byeCoverage(player: PlayerWithValue, ctx: BenchCtx): { v: number; degra
   const starterIds = new Set(fill.starters.flatMap((s) => (s.player ? [s.player.id] : [])));
   const ownedBench = ctx.roster.filter((p) => !starterIds.has(p.id));
   const cov = weeklyByeCoverage(player, fill.starters, template, ownedBench);
-  if (cov.degraded && cov.covered.length === 0) return { v: NEUTRAL, degraded: true };
-  return { v: cov.covered.length > 0 ? 1 : 0, degraded: cov.degraded };
+  if (cov.degraded && cov.expectedStarts === 0) return { v: NEUTRAL, degraded: true };
+  return { v: cov.expectedStarts > 0 ? 1 : 0, degraded: cov.degraded };
 }
 
 function startersAt(pos: string, ctx: BenchCtx): number {
@@ -313,7 +311,11 @@ function routeParticipation(trends?: BenchTrends): { v: number; degraded: boolea
 
 function deriveSuperflex(ctx: BenchCtx): boolean {
   if (ctx.superflex != null) return ctx.superflex;
-  return ctx.config ? rulesFromConfig(ctx.config).superflex : false;
+  const slots = leagueSlots(ctx);
+  if (!slots) return false;
+  // An explicitly named OP/SF slot, or any shape with ≥2 QB-capable slots (pure 2QB included).
+  return slots.some((s) => s.slot === "OP" || s.slot === "SF") ||
+    slots.filter((s) => s.eligible.includes("QB")).length >= 2;
 }
 
 const SF_POS = new Set(["QB", "RB", "WR", "TE"]);
