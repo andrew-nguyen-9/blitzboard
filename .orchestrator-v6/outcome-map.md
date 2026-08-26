@@ -4,7 +4,7 @@ Eight tracked outcomes → implementation surface, tests, metrics, checkpoint ev
 
 | # | Outcome | Implementation surface (baseline today) | Tests (Claude-side) | Metrics | Checkpoint evidence |
 |---|---------|------------------------------------------|---------------------|---------|---------------------|
-| 1 | Candidate-aware slot coverage | `frontend/lib/benchScore.ts:197` `byeCoverage` (scalar starter-bye compare; no slot eligibility, shared bye still credits 0.25) → replace with max-matched by-week coverage | new `benchScore` coverage tests: missing bye, FLEX, superflex, double counting, shared bye = 0 credit | coverage term value per candidate/week | C01-claude.md + reviewer adversarial tests |
+| 1 | Candidate-aware slot coverage | TWO shipped consumers, both defective and both in C01 scope: `frontend/lib/draftAI.ts:247` `byeCover` (counts distinct same-position starter byes; ignores the candidate's own bye and slot eligibility; weighted at `draftAI.ts:307`) and `frontend/lib/benchScore.ts:197` `byeCoverage` (scalar starter-bye compare; no slot eligibility, shared bye still credits 0.25). C01 consolidates both onto ONE public candidate-aware max-matched weekly coverage implementation consumed by draftAI and benchScore; consolidation is documented and tested (no divergent copies survive) | new `benchScore` coverage tests: missing bye, FLEX, superflex, double counting, shared bye = 0 credit | coverage term value per candidate/week | C01-claude.md + reviewer adversarial tests |
 | 2 | Structured contingent role | `frontend/lib/benchScore.ts:181` `handcuffValue` (own-roster positional depth only) → structured evidence: RB succession; QB authoritative depth; WR/TE explicit role transfer | evidence-typed tests: unrelated backup, ambiguous depth, missing metadata → no credit | contingent-role evidence status distribution | C01-claude.md |
 | 3 | Proactive point-in-time waivers | `engine/blitz_engine/simulation/season_eval.py:530` `_run_waivers` (reactive-only: exits when no lineup hole) → bounded proactive adds, costs, reverse-standings, shared pool | engine tests: stale bench upgrade, breakout claim, contested pool, cost bound, K/DST stream, leak guard | waiver_adds, started_points delta | C02-claude.md |
 | 4 | Paired H2H + playoff outcomes | `season_eval.py` `SeasonEvalResult` (has started_points, h2h_win_rate) → add paired H2H + playoff/championship proxies, deterministic seeds | determinism (same seed = same result), sample counts, CI receipts | paired deltas + CI95 | C02-claude.md, C05-claude.md |
@@ -19,6 +19,6 @@ Eight tracked outcomes → implementation surface, tests, metrics, checkpoint ev
 - No promoted static-fit candidate (v5 dynamic lost; leaf evaluator is the constraint).
 - Reactive-only waivers (`_run_waivers` docstring lists deliberate omissions).
 - Fixed frontend `overfillDepth` as sole authority.
-- Scalar same-position bye credit (`byeCoverage`).
+- Scalar same-position bye credit in BOTH consumers: `draftAI.ts::byeCover` (candidate bye ignored) and `benchScore.ts::byeCoverage`.
 - Positional-depth handcuff inference (`handcuffValue`).
 - `bench_shape.json` rows lack evidence-status labels — unsupported rows must not be labeled measured.
