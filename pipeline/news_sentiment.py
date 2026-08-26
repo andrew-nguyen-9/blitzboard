@@ -14,8 +14,8 @@ SOURCES (all free, no key — the $0 refresh; see docs/architecture/DATA_SOURCES
             path (self-text, hot ranking) is an OPTIONAL keyed source that only
             joins the run when REDDIT_CLIENT_ID/SECRET are set — absent ⇒ skipped.
 
-CADENCE: every 30 min, 08:00–01:00, on waiver-relevant days (news-refresh workflow
-step; see .github/workflows/etl_daily.yml). Idempotent — `news_articles` dedupes on
+CADENCE: daily at 11:00 UTC as a step in `.github/workflows/etl_daily.yml`.
+There is no separate high-frequency news workflow. Idempotent — `news_articles` dedupes on
 `url`, `trending` is a replaced snapshot; re-running writes no partial/dup rows.
 
 DEGRADE / STALE-FALLBACK (E6): each source runs through `collect()` in the F2

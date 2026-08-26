@@ -1,7 +1,7 @@
 name: ETL — daily player & history refresh
 
-# Daily player universe + (offseason) history refresh. The waiver-window
-# sentiment cron (P4) is a SEPARATE workflow with its own conditional schedule.
+# Daily player universe, history, news, and value refresh. There is no separate
+# high-frequency news workflow; a failure before the news step blocks it.
 on:
   schedule:
     - cron: "0 11 * * *" # 11:00 UTC daily (~6am CT)
