@@ -363,25 +363,27 @@ export default function DraftWarRoom({
 
   const teamName = (slot: number) => config.teams.find((t) => t.slot === slot)?.name ?? `Team ${slot}`;
 
+  if (pendingRestore) {
+    return (
+      <div className="glass flex flex-wrap items-center gap-3 border border-accent/40 p-4" role="alert">
+        <div className="mr-auto">
+          <div className="font-display text-heading">Saved draft found</div>
+          <div className="text-label text-ink-muted">
+            Restore {pendingRestore.picks.length} picks and {pendingRestore.keepers.length} keepers from today.
+          </div>
+        </div>
+        <button onClick={restoreDraft} className="rounded-full bg-accent px-4 py-2 text-label text-bg transition hover:opacity-90 motion-reduce:transition-none">
+          Restore draft
+        </button>
+        <button onClick={startFresh} className="rounded-full border border-hairline px-4 py-2 text-label transition hover:bg-surface-elevated motion-reduce:transition-none">
+          Start fresh
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div>
-      {pendingRestore && (
-        <div className="glass mb-4 flex flex-wrap items-center gap-3 border border-accent/40 p-4" role="alert">
-          <div className="mr-auto">
-            <div className="font-display text-heading">Saved draft found</div>
-            <div className="text-label text-ink-muted">
-              Restore {pendingRestore.picks.length} picks and {pendingRestore.keepers.length} keepers from today.
-            </div>
-          </div>
-          <button onClick={restoreDraft} className="rounded-full bg-accent px-4 py-2 text-label text-bg transition hover:opacity-90 motion-reduce:transition-none">
-            Restore draft
-          </button>
-          <button onClick={startFresh} className="rounded-full border border-hairline px-4 py-2 text-label transition hover:bg-surface-elevated motion-reduce:transition-none">
-            Start fresh
-          </button>
-        </div>
-      )}
-
       {/* league bar */}
       <div className="glass mb-4 flex flex-wrap items-center gap-3 p-3">
         <div className="text-body">
