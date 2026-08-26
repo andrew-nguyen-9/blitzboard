@@ -1,0 +1,169 @@
+{
+  "schema_version": 3,
+  "status": "preregistered_not_executed",
+  "experiment": "C05 matched-seat promotion of the v6 candidate policy against shipped v5",
+  "supersedes": "promotion-v2.json",
+  "supersedes_sha256": "89ec1ce2e45591b06285ed384262a14a82937fd7b3076d5f2d6f290fbb126d01",
+  "promotion_v1_sha256": "020047cd9c88b08a72efc95eac30d7f018022c10084d1135e4287dcb8e036d7f",
+  "baseline_sha": "01f01d3c5f9c00a046edd43707db75ce1426c0e8",
+  "accepted_c01a_sha": "b81541c226dd5aeeacbe9ed79df927853a4b8954",
+  "authored_at_checkpoint": "C05-prep",
+  "amendment_justification": {
+    "calibration_gates": "v2 predates the player-calibration amendment; v3 incorporates the reviewer-frozen player-calibration gates (player-calibration-v1.json, byte-identical copy in this directory) as hard promotion preconditions.",
+    "ci_method": "v2 named thresholds but froze no CI construction; v3 freezes a deterministic seat-clustered paired bootstrap so two independent runs of the analysis are byte-identical.",
+    "seed_derivation": "v2 froze base seeds and the draft stream offset but not the per-slice evaluation seed; v3 freezes the exact derivation formula.",
+    "limits_and_slices": "v2 had no runtime/memory limits, no explicit mandatory high-risk slice list, no hidden-regression rule, and no n_seasons freeze; v3 adds all four.",
+    "versioning_note": "The C01 scope amendment reserves promotion-v3.json for the calibration additions; this file is that version, authored during C05 preparation. If the C02 session independently authors a promotion-v3, the later-integrated one is renumbered v4 at integration; versions are append-only and nothing here overwrites v1/v2."
+  },
+  "hypotheses": [
+    "The v6 candidate policy improves locked-lineup started points versus shipped v5 without deterministic, mandatory-slice, H2H, or playoff/championship regression.",
+    "The improvement survives held-out season confirmation and is not an artifact of the fit seasons.",
+    "Player-value calibration corrections do not degrade any mandatory cohort or format slice."
+  ],
+  "arms": {
+    "control": {
+      "name": "v5_shipped",
+      "policy_identity": "engine + frontend policy code at baseline_sha 01f01d3c5f9c00a046edd43707db75ce1426c0e8, policy mix static_proxy/vorp_adp/engine_msv, shipped coefficients unmodified"
+    },
+    "candidate": {
+      "name": "v6_candidate",
+      "policy_identity": "engine + frontend policy code at the frozen combined candidate SHA (C02, C03, C04 each independently PASSed and merged), same policy mix, no coefficients tuned after freeze",
+      "combined_candidate_sha": null,
+      "sha_freeze_rule": "combined_candidate_sha MUST be recorded in a versioned execution addendum (promotion-v3-exec-v1.json) before the authoritative run; a null SHA makes any authoritative result invalid"
+    }
+  },
+  "pairing": ["board", "seat", "season", "seed"],
+  "pairing_rule": "Both arms evaluate the identical (year, league_id, base_seed) slice with the identical board, identical seat-policy permutation, and identical eval seed. Pair key = (year, league_id, base_seed, seat). Seat-policy assignment: policies cycled over seats then shuffled by the seeded draft rng exactly as season_eval.draft_league; the permutation is a pure function of the eval seed and team count, hence identical in both arms (common random numbers). Any pairing-field mismatch aborts before analysis.",
+  "common_random_numbers": "One eval seed drives draft seats (+303), injury paths (+101+s), availability draws (+202+s), and waiver order in both arms; arms may differ only in policy code.",
+  "seed_derivation": {
+    "base_seeds": [2026082601, 2026082602, 2026082603, 2026082604],
+    "eval_seed_formula": "eval_seed = base_seed + (zlib.crc32(f\"{year}/{league_id}\".encode()) % 1000000)",
+    "stream_offsets": {"injury": 101, "availability": 202, "draft": 303},
+    "bootstrap_seed_formula": "boot_seed = (base_seed_sum + zlib.crc32(slice_key.encode())) % 2**32 where base_seed_sum = sum(base_seeds)"
+  },
+  "board_corpus": {
+    "definition": "per (corpus_year, league_id): player pool = blitz_engine.simulation.season_eval.build_players(year, league_id) over fixtures/seasons/<year>.json; initial draft board = players sorted by (-projection, player_id); both arms draft from the identical board (CRN).",
+    "files": {
+      "fixtures/seasons/2018.json": "5a819045a106f31ab4335ccfb392949da49a7bc6ee8cd591ba428959246b1e51",
+      "fixtures/seasons/2021.json": "2dd49957ecabb2942296162ace290953abbd00a271f8dcc636e87159156923af",
+      "fixtures/seasons/2024.json": "cb1e284af33b4ef0d081eef764eac0418affa895ce3bd014244cba8ba53a5b95",
+      "fixtures/league_matrix.json": "6b9b0f9a3a96c9a9b8fb37bee2fbb2c8e0ad01e0d26e5f3d294103c018d0c868"
+    }
+  },
+  "league_configurations": {
+    "mandatory_league_ids": "identical to the 216-id list frozen in promotion-v2.json (sha256 89ec1ce2e45591b06285ed384262a14a82937fd7b3076d5f2d6f290fbb126d01): the cartesian product teams {10,12,14} x qb_mode {1qb,superflex,2qb} x scoring {std,half,ppr} x te_premium {0.0,0.5} x bench {4,8} x ir {0,1}, ids as encoded in fixtures/league_matrix.json",
+    "mandatory_league_id_count": 216,
+    "scoring_configs": "as encoded per row in fixtures/league_matrix.json (frozen by hash above)"
+  },
+  "seasons": [2021, 2024],
+  "held_out_seasons": [2018],
+  "held_out_rule": "Held-out 2018 data may not be read during fitting, tuning, selection, or any pre-confirmation analysis. The runner's HeldOutGuard denies access unless the analysis stage is 'confirm', and every access is logged into the receipts. The confirm stage runs once, after the fit-season verdict, with no candidate modification afterwards.",
+  "evaluator": {
+    "entry_point": "blitz_engine.simulation.season_eval.evaluate_season",
+    "n_seasons": 8,
+    "waivers": true,
+    "waiver_moves_per_week": 1,
+    "metric_definition": "SeasonEvalResult.started_points: mean locked-lineup regular-season points per seat, averaged over n_seasons sampled trajectories"
+  },
+  "primary_metric": "started_points_paired_delta",
+  "secondary_metrics": [
+    "h2h_win_rate_paired_delta",
+    "playoff_proxy_paired_delta",
+    "championship_proxy_paired_delta"
+  ],
+  "ci_method": {
+    "name": "seat-clustered paired percentile bootstrap",
+    "unit": "per-seat mean paired delta (per-season draws within a seat are averaged first; seats are the independent resampling unit)",
+    "n_boot": 10000,
+    "interval": "percentile CI95 [2.5%, 97.5%]",
+    "seed": "bootstrap_seed_formula above; fully deterministic",
+    "p_value": "blitz_engine.backtest.ablation.paired_permutation_p on the seat-level deltas, reported alongside (not a gate)"
+  },
+  "thresholds": {
+    "started_points_ci95_lower": 0.0,
+    "mandatory_slice_no_regression_tolerance": 0.0,
+    "h2h_ci95_lower": -0.005,
+    "playoff_or_championship_ci95_lower": -0.002
+  },
+  "mandatory_high_risk_slices": [
+    "t14-2qb-std-te0.5-b4-ir1",
+    "t14-2qb-std-te0.5-b4-ir0",
+    "t14-2qb-std-te0.0-b4-ir1",
+    "t14-2qb-std-te0.0-b4-ir0",
+    "t14-2qb-half-te0.5-b4-ir1",
+    "t14-2qb-half-te0.5-b4-ir0",
+    "t14-2qb-half-te0.0-b4-ir1",
+    "t14-2qb-half-te0.0-b4-ir0",
+    "t14-2qb-ppr-te0.5-b4-ir1",
+    "t14-2qb-ppr-te0.5-b4-ir0",
+    "t14-2qb-ppr-te0.0-b4-ir1",
+    "t14-2qb-ppr-te0.0-b4-ir0",
+    "t14-superflex-std-te0.5-b4-ir1",
+    "t14-superflex-std-te0.5-b4-ir0",
+    "t14-superflex-std-te0.0-b4-ir1",
+    "t14-superflex-std-te0.0-b4-ir0",
+    "t14-superflex-half-te0.5-b4-ir1",
+    "t14-superflex-half-te0.5-b4-ir0",
+    "t14-superflex-half-te0.0-b4-ir1",
+    "t14-superflex-half-te0.0-b4-ir0",
+    "t14-superflex-ppr-te0.5-b4-ir1",
+    "t14-superflex-ppr-te0.5-b4-ir0",
+    "t14-superflex-ppr-te0.0-b4-ir1",
+    "t14-superflex-ppr-te0.0-b4-ir0"
+  ],
+  "mandatory_high_risk_slice_rationale": "every 14-team, multi-QB, 4-bench configuration: the family containing the known v5 regression t14-2qb-std-te0.5-b4-ir1 (-25.3 pts/season, p=0.0025) plus the superflex QB-replacement risk surfaced by the player-value audit; smallest bench = least room to absorb a policy mistake",
+  "blocked_slice": "t14-2qb-std-te0.5-b4-ir1",
+  "slice_gate": "each mandatory high-risk slice passes no_regression semantics with tolerance 0.0: seat-level mean paired started-points delta >= 0.0 on fit seasons; identical rule on held-out confirmation",
+  "hidden_regression_rule": "per-league-id paired deltas are reported for all 216 mandatory ids across all seasons; any id whose started-points CI95 upper bound < 0 (a significant regression anywhere) fails promotion regardless of the aggregate; aggregate averaging can never absolve a slice",
+  "mandatory_slice_reports": [
+    "per mandatory high-risk slice (24 ids x fit seasons, and x held-out season at confirm)",
+    "per league id (all 216) aggregated over seasons",
+    "per teams {10,12,14}",
+    "per qb_mode {1qb,superflex,2qb}",
+    "per scoring {std,half,ppr}",
+    "per bench {4,8}",
+    "per te_premium {0.0,0.5}",
+    "per ir {0,1}",
+    "held-out season aggregate and held-out mandatory high-risk slices"
+  ],
+  "calibration_gates": {
+    "source_manifest": "player-calibration-v1.json",
+    "source_manifest_sha256": "c4a695080cb0544fbdc205b5b4f57f87000f464639356b2c9f105984a0ac1301",
+    "source_amendment": "player-calibration-v1.md",
+    "source_amendment_sha256": "2718a30b42a916d30183e4a720f92cedcdab504c93fe7727cd83a9053055c8e5",
+    "requirement": "C05 promotion requires an executed C02 calibration report satisfying every player-calibration-v1 threshold: benchmark source identity and snapshots frozen (retrieval UTC, content hash, match report) before execution; deterministic_unit_failures = 0; unmatched_top_100_rate <= 0.02; spearman_rho delta >= 0.0; weighted_absolute_rank_error delta <= 0.0; top-12/24/50 recall reported with no material regression; positional median bias and all cohorts (rookie, veteran_age_30_plus, injury_designation, team_change, missing_adp, missing_depth, low_availability) reported with zero material regressions; largest per-player outliers and full component decomposition reported; missing-data rows degrade explicitly and are never imputed from search popularity; held-out confirmation per that manifest",
+    "missing_report_interpretation": "no executed calibration report, or a report failing any threshold, means the candidate is not promotable (numerical_fail), never inconclusive"
+  },
+  "promotion_requirements": [
+    "all deterministic correctness and roster invariants pass",
+    "aggregate started-points CI95 lower bound > 0",
+    "every mandatory high-risk slice passes no_regression(tolerance=0.0)",
+    "H2H win-rate CI95 lower bound >= -0.005 absolute",
+    "playoff/championship-proxy CI95 lower bound >= -0.002 absolute",
+    "no known regression hidden by aggregate averaging (hidden_regression_rule)",
+    "held-out season/config confirmation",
+    "calibration_gates satisfied",
+    "runtime and memory within limits"
+  ],
+  "limits": {
+    "wall_clock_hours_max": 12,
+    "peak_rss_gib_max": 8,
+    "compute": "single local machine, free compute only, no cloud or paid data",
+    "receipt_rule": "runtime and peak RSS are recorded per arm run and for the whole experiment; exceeding a limit fails promotion (numerical_fail) and requires a new manifest version to change a limit"
+  },
+  "failure_interpretation": {
+    "deterministic": "BLOCK",
+    "leakage_or_nondeterminism": "BLOCK",
+    "pairing_mismatch": "BLOCK (seats/seeds/boards must match before any analysis)",
+    "numerical_fail": "do_not_ship_candidate",
+    "numerical_inconclusive": "preserve_v5",
+    "zero_evidence": "an all-zero or empty paired-delta primary sample is inconclusive, never a pass",
+    "dry_run": "any run against synthetic data or unchanged/baseline policies is non-authoritative and can justify nothing"
+  },
+  "execution_preconditions": [
+    "C02, C03, C04 each independently PASSed",
+    "combined candidate SHA frozen in promotion-v3-exec-v1.json",
+    "C02 calibration report executed and archived with input hashes",
+    "playoff/championship proxy metrics present in SeasonEvalResult (C02 deliverable)"
+  ]
+}
