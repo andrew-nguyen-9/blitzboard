@@ -42,21 +42,24 @@ from __future__ import annotations
 import os
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
 
 from blitz_engine.backtest.harness import detect_leakage
-from blitz_engine.lineup.feasibility import InjuryDynamics
 from blitz_engine.survival.availability import (
     AvailabilityModel,
     is_effectively_unavailable,
 )
 
-# `blitz_engine.value` imports `simulation.league`, so importing it at module scope here would
-# close the cycle `simulation.__init__ -> season_eval -> value -> simulation.league`. Both helpers
-# are therefore imported lazily inside the two functions that use them.
+if TYPE_CHECKING:
+    from blitz_engine.lineup.feasibility import InjuryDynamics
+
+# `blitz_engine.lineup.feasibility` (via `blitz_engine.value`) imports `simulation.league`, so
+# importing `InjuryDynamics` at module scope here would close the cycle
+# `simulation.__init__ -> season_eval -> lineup.feasibility -> value -> simulation.league`. It is
+# therefore imported lazily inside the two functions that use it, same as the helpers below.
 
 __all__ = [
     "DEFAULT_POLICY_MIX",
@@ -279,6 +282,8 @@ def draft_league(
 
 def _injury_rates() -> dict[str, float]:
     """e3's published per-position clinical-injury rate — READ, never hard-coded here."""
+    from blitz_engine.lineup.feasibility import InjuryDynamics
+
     dyn = InjuryDynamics.load()
     return {pos: float(v) for pos, v in dyn.rate.items()}
 
@@ -424,6 +429,8 @@ def evaluate_rosters(
     byes = np.array([p.bye_week for p in players], dtype=np.int64)
     season_proj = np.array([p.projection for p in players], dtype=np.float64)
     if_plays = np.array([p.points_if_plays for p in players], dtype=np.float64)
+    from blitz_engine.lineup.feasibility import InjuryDynamics
+
     dyn = config.injury or InjuryDynamics.load()
     p_avail = _availability(players)
     dead = np.array([is_effectively_unavailable(v) for v in p_avail])
