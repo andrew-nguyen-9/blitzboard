@@ -1,27 +1,28 @@
 {
   "calibration": {
-    "calibration_error": 0.08869100784124168,
+    "calibration_error": 0.0551757242109947,
     "n": 180,
-    "overdispersion": 2.124422354679265,
+    "overdispersion": 1.626724966712988,
     "passed": true,
-    "summary": "[PASS] cal_err=0.089 log_loss=2.721 crps=2.203 sharpness=3.366 discrimination=0.736 top12=0.58 (n=180)",
+    "summary": "[PASS] cal_err=0.055 log_loss=2.439 crps=1.661 sharpness=2.901 discrimination=0.958 top12=0.83 (n=180)",
     "threshold": 0.1,
     "unit": "players absent per (position, season, week)"
   },
   "entry_point": "blitz_engine.survival.hazard.fit_injury_model",
+  "event": "clinical injury \u2014 the club's own designation (injuries.report_status in ('Out', 'Doubtful'), or weekly_rosters.status in ('RES', 'PUP', 'NFI')). NOT snap-presence unavailability: multiply safely by e2a's availability.",
   "expected_games_missed": {
-    "K": 2.433,
-    "QB": 3.127,
-    "RB": 2.346,
-    "TE": 2.32,
-    "WR": 2.091
+    "K": 9.565,
+    "QB": 6.938,
+    "RB": 6.721,
+    "TE": 7.61,
+    "WR": 6.75
   },
   "games_missed_variance": {
-    "K": 36.529,
-    "QB": 20.98,
-    "RB": 10.51,
-    "TE": 12.716,
-    "WR": 7.906
+    "K": 46.993,
+    "QB": 40.349,
+    "RB": 38.798,
+    "TE": 44.945,
+    "WR": 40.441
   },
   "holdout_seasons": [
     2024,
@@ -29,73 +30,71 @@
   ],
   "injuryRate": {
     "DST": 0.0,
-    "K": 0.1188,
-    "QB": 0.2162,
-    "RB": 0.1664,
-    "TE": 0.1545,
-    "WR": 0.1549
+    "K": 0.0847,
+    "QB": 0.0953,
+    "RB": 0.1588,
+    "TE": 0.1725,
+    "WR": 0.162
   },
-  "n_player_weeks": 49716,
-  "n_spells": 3632,
+  "n_player_weeks": 97375,
+  "n_spells": 2670,
   "onset_hazard_per_week": {
     "DST": 0.0,
-    "K": 0.07935,
-    "QB": 0.12054,
-    "RB": 0.11123,
-    "TE": 0.10033,
-    "WR": 0.10747
+    "K": 0.01715,
+    "QB": 0.02457,
+    "RB": 0.04431,
+    "TE": 0.04356,
+    "WR": 0.04524
   },
   "pooled_positions": [],
   "reinjury": {
-    "baseline_hazard": 0.17076,
-    "decay_weeks": 1.0,
-    "elevation": 0.0
+    "baseline_hazard": 0.03778,
+    "decay_weeks": 8.0,
+    "elevation": 0.6155
   },
   "return_curve": {
     "K": [
-      0.9615,
-      0.9828,
-      0.9888,
-      0.9967,
+      0.8919,
+      0.9476,
+      1.0,
+      1.0,
       1.0,
       1.0
     ],
     "QB": [
-      0.9445,
-      1.0,
-      1.0,
+      0.9885,
+      0.9885,
+      0.9885,
       1.0,
       1.0,
       1.0
     ],
     "RB": [
-      0.9814,
-      1.0,
-      1.0,
-      1.0,
-      1.0,
-      1.0
+      0.9083,
+      0.9083,
+      0.9528,
+      0.9528,
+      0.9528,
+      0.999
     ],
     "TE": [
-      0.9662,
-      0.9977,
-      0.9977,
-      0.9982,
-      0.9982,
+      0.9245,
+      0.9632,
+      0.9956,
+      0.9956,
+      0.9956,
       1.0
     ],
     "WR": [
-      0.9696,
-      1.0,
-      1.0,
-      1.0,
-      1.0,
-      1.0
+      0.8751,
+      0.9366,
+      0.9486,
+      0.9706,
+      0.9706,
+      0.9706
     ]
   },
   "seasons": [
-    2014,
-    2015,
     2016,
     2017,
     2018,
