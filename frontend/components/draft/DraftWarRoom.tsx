@@ -38,6 +38,14 @@ import { isConsequential } from "./consequential";
 import LiveRecommendations, { type Recommendation } from "./LiveRecommendations";
 import RosterHealthPanel from "./RosterHealthPanel";
 import PreDraftPlan from "./PreDraftPlan";
+import {
+  availablePlayerIds,
+  deserializeManualDraft,
+  manualDraftKey,
+  replacePick,
+  serializeManualDraft,
+  type ManualDraftState,
+} from "./manualDraftState";
 
 type Mode = "manual" | "sleeper" | "espn";
 type View = "board" | "teams" | "log" | "analysis";
@@ -74,10 +82,15 @@ export default function DraftWarRoom({
 
   const [mySlot, setMySlot] = useState(6);
   const [manualPicks, setManualPicks] = useState<MappedPick[]>([]);
+  const [keepers, setKeepers] = useState<PlayerWithValue[]>([]);
+  const [pendingRestore, setPendingRestore] = useState<ManualDraftState | null>(null);
+  const [storageReady, setStorageReady] = useState(false);
+  const [editingPickNo, setEditingPickNo] = useState<number | null>(null);
   const [q, setQ] = useState("");
   const [pos, setPos] = useState<(typeof POSITIONS)[number]>("ALL");
   const [view, setView] = useState<View>("board");
   const [endDismissed, setEndDismissed] = useState(false);
+  const storageLeagueId = leagueId || config.leagueId || config.name;
 
   // ── live sync ──────────────────────────────────────────────────────────────
   const [mode, setMode] = useState<Mode>("manual");
@@ -99,7 +112,7 @@ export default function DraftWarRoom({
 
   const picks = mode === "manual" ? manualPicks : syncedPicks;
 
-  const draftedIds = useMemo(() => new Set(picks.map((p) => p.player.id)), [picks]);
+  const availableIds = useMemo(() => new Set(availablePlayerIds(players, picks, keepers)), [players, picks, keepers]);
   const currentPickNo = picks.length + 1;
   const onClock = teamOnClock(currentPickNo, numTeams);
   const round = Math.ceil(currentPickNo / numTeams);
@@ -108,7 +121,7 @@ export default function DraftWarRoom({
   const isMyPick = onClock === mySlot;
   const complete = picks.length >= totalSpots;
 
-  const available = useMemo(() => players.filter((p) => !draftedIds.has(p.id)), [players, draftedIds]);
+  const available = useMemo(() => players.filter((p) => availableIds.has(p.id)), [players, availableIds]);
   const myTeamPicks = useMemo(() => picks.filter((p) => p.team === mySlot).map((p) => p.player), [picks, mySlot]);
   const myRoster = useMemo(() => fillRoster(myTeamPicks, roster), [myTeamPicks, roster]);
   const scarce = useMemo(() => scarcity(available), [available]);
@@ -209,15 +222,73 @@ export default function DraftWarRoom({
     saveSnapshot({ config, picks, mySlot });
   }, [config, picks, mySlot]);
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(manualDraftKey(storageLeagueId));
+      const restored = saved && deserializeManualDraft(saved);
+      if (restored) setPendingRestore(restored);
+      else setStorageReady(true);
+    } catch {
+      setStorageReady(true);
+    }
+    // Restore is intentionally offered once for the initially selected league.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!storageReady || mode !== "manual") return;
+    try {
+      localStorage.setItem(
+        manualDraftKey(storageLeagueId),
+        serializeManualDraft({ leagueId, config, mySlot, picks: manualPicks, keepers }),
+      );
+    } catch {
+      // Storage can be disabled or full; manual drafting must remain usable.
+    }
+  }, [storageReady, mode, storageLeagueId, leagueId, config, mySlot, manualPicks, keepers]);
+  useEffect(() => {
     if (!complete) setEndDismissed(false);
   }, [complete]);
 
   // ── actions ──────────────────────────────────────────────────────────────
   function draft(player: PlayerWithValue, team = onClock) {
+    if (editingPickNo != null) {
+      setManualPicks((cur) => replacePick(cur, editingPickNo, player));
+      setEditingPickNo(null);
+      return;
+    }
     setManualPicks((cur) => [...cur, { pickNo: cur.length + 1, team, player }]);
   }
-  const undo = () => setManualPicks((cur) => cur.slice(0, -1));
-  const reset = () => setManualPicks([]);
+  function undo() {
+    setEditingPickNo(null);
+    setManualPicks((cur) => cur.slice(0, -1));
+  }
+  function reset() {
+    setEditingPickNo(null);
+    setManualPicks([]);
+  }
+
+  function restoreDraft() {
+    if (!pendingRestore) return;
+    setLeagueId(pendingRestore.leagueId);
+    setConfig(pendingRestore.config);
+    setMySlot(pendingRestore.mySlot);
+    setManualPicks(pendingRestore.picks);
+    setKeepers(pendingRestore.keepers);
+    setPendingRestore(null);
+    setStorageReady(true);
+  }
+
+  function startFresh() {
+    if (!window.confirm("Discard today’s saved draft and start fresh?")) return;
+    setManualPicks([]);
+    setKeepers([]);
+    setPendingRestore(null);
+    setStorageReady(true);
+  }
+
+  function markKeeper(player: PlayerWithValue) {
+    if (manualPicks.length) return;
+    setKeepers((cur) => [...cur, player]);
+  }
 
   function nextPickAfter(team: number, fromPick: number): number {
     let n = fromPick + 1;
@@ -286,12 +357,31 @@ export default function DraftWarRoom({
     setLeagueId(id);
     setConfig(lg.config);
     setManualPicks([]);
+    setKeepers([]);
+    setEditingPickNo(null);
   }
 
   const teamName = (slot: number) => config.teams.find((t) => t.slot === slot)?.name ?? `Team ${slot}`;
 
   return (
     <div>
+      {pendingRestore && (
+        <div className="glass mb-4 flex flex-wrap items-center gap-3 border border-accent/40 p-4" role="alert">
+          <div className="mr-auto">
+            <div className="font-display text-heading">Saved draft found</div>
+            <div className="text-label text-ink-muted">
+              Restore {pendingRestore.picks.length} picks and {pendingRestore.keepers.length} keepers from today.
+            </div>
+          </div>
+          <button onClick={restoreDraft} className="rounded-full bg-accent px-4 py-2 text-label text-bg transition hover:opacity-90 motion-reduce:transition-none">
+            Restore draft
+          </button>
+          <button onClick={startFresh} className="rounded-full border border-hairline px-4 py-2 text-label transition hover:bg-surface-elevated motion-reduce:transition-none">
+            Start fresh
+          </button>
+        </div>
+      )}
+
       {/* league bar */}
       <div className="glass mb-4 flex flex-wrap items-center gap-3 p-3">
         <div className="text-body">
@@ -397,6 +487,22 @@ export default function DraftWarRoom({
               )}
             </div>
 
+            {mode === "manual" && keepers.length > 0 && (
+              <div className="glass mb-4 p-3">
+                <div className="mb-2 text-label text-ink-muted">KEEPERS · OFF BOARD</div>
+                <div className="flex flex-wrap gap-2">
+                  {keepers.map((player) => (
+                    <button key={player.id} onClick={() => setKeepers((cur) => cur.filter((p) => p.id !== player.id))}
+                      disabled={manualPicks.length > 0}
+                      className="rounded-full border border-hairline px-3 py-1 text-label transition hover:bg-surface-elevated disabled:opacity-60 motion-reduce:transition-none"
+                      title={manualPicks.length ? "Keepers lock after pick 1" : "Remove keeper"}>
+                      {player.full_name} {manualPicks.length ? "· kept" : "×"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* controls */}
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…"
@@ -405,6 +511,12 @@ export default function DraftWarRoom({
                 <button key={p} onClick={() => setPos(p)}
                   className={`rounded-full px-3 py-1.5 text-label transition ${pos === p ? "bg-accent text-bg" : "border border-hairline text-ink-muted hover:text-ink"}`}>{p}</button>
               ))}
+              {editingPickNo != null && (
+                <div className="ml-auto flex items-center gap-2 text-label">
+                  <span className="text-accent">Choose replacement for pick {editingPickNo}</span>
+                  <button onClick={() => setEditingPickNo(null)} className="rounded-full border border-hairline px-3 py-1.5 transition hover:bg-surface-elevated motion-reduce:transition-none">Cancel</button>
+                </div>
+              )}
             </div>
 
             {/* best available */}
@@ -428,10 +540,15 @@ export default function DraftWarRoom({
                       <td className="px-2 py-2 text-right font-mono text-label">{projPoints(p) > 0 ? projPoints(p).toFixed(0) : "—"}</td>
                       <td className="px-3 py-2 text-right">
                         {mode === "manual" ? (
-                          <button onClick={() => draft(p)} disabled={complete}
-                            className={`rounded-full px-3 py-1 text-label transition disabled:opacity-40 ${isMyPick ? "bg-accent text-bg" : "border border-hairline text-ink hover:bg-surface"}`}>
-                            {isMyPick ? "Draft" : `→ ${teamName(onClock).slice(0, 6)}`}
-                          </button>
+                          <div className="flex justify-end gap-1">
+                            {!manualPicks.length && editingPickNo == null && (
+                              <button onClick={() => markKeeper(p)} className="rounded-full border border-hairline px-3 py-1 text-label transition hover:bg-surface motion-reduce:transition-none">Keep</button>
+                            )}
+                            <button onClick={() => draft(p)} disabled={complete && editingPickNo == null}
+                              className={`rounded-full px-3 py-1 text-label transition disabled:opacity-40 motion-reduce:transition-none ${isMyPick || editingPickNo != null ? "bg-accent text-bg" : "border border-hairline text-ink hover:bg-surface"}`}>
+                              {editingPickNo != null ? "Replace" : isMyPick ? "Draft" : `→ ${teamName(onClock).slice(0, 6)}`}
+                            </button>
+                          </div>
                         ) : (
                           <span className="text-label text-ink-muted/60">feed</span>
                         )}
@@ -488,12 +605,17 @@ export default function DraftWarRoom({
 
             <div className="glass p-4">
               <h3 className="mb-3 text-label text-ink-muted">RECENT PICKS</h3>
-              <div className="space-y-1 text-label">
-                {picks.slice(-8).reverse().map((p) => (
+              <div className="max-h-72 space-y-1 overflow-y-auto text-label">
+                {[...picks].reverse().map((p) => (
                   <div key={p.pickNo} className="flex items-center gap-2">
                     <span className="font-mono text-ink-muted">{Math.ceil(p.pickNo / numTeams)}.{((p.pickNo - 1) % numTeams) + 1}</span>
                     <span className="flex-1 truncate">{p.player.full_name}</span>
                     <span className={p.team === mySlot ? "text-accent" : "text-ink-muted"}>{teamName(p.team).slice(0, 8)}</span>
+                    {mode === "manual" && (
+                      <button onClick={() => { setEditingPickNo(p.pickNo); setView("board"); }}
+                        className="rounded px-1 text-ink-muted transition hover:text-accent motion-reduce:transition-none"
+                        aria-label={`Edit pick ${p.pickNo}, ${p.player.full_name}`}>Edit</button>
+                    )}
                   </div>
                 ))}
                 {!picks.length && <div className="text-ink-muted">No picks yet.</div>}
