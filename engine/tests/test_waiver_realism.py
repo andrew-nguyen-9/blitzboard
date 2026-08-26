@@ -164,3 +164,107 @@ def test_leak_guard_stays_live_under_realism(certain: None) -> None:
     se.evaluate_rosters(pool, rosters, _row(), config=_cfg())  # clean
     with pytest.raises(LeakageError):
         se.evaluate_rosters(pool, rosters, _row(), config=_cfg(), leak={"week": 2})
+
+
+# ── C02A: preregistered decision-rule corrections (waiver-realism-v1) ─────────
+
+
+def test_cross_position_flex_substitution_direct() -> None:
+    # A started FLEX RB at 2 ppw is the lowest opportunity cost in the free TE's role
+    # space (both FLEX-eligible); nominal positions differ and the swap must still fire.
+    positions = ["QB", "RB", "RB", "TE"]
+    proj = np.array([20.0, 12.0, 2.0, 10.0])
+    swap = se._best_upgrade(
+        squad=[0, 1, 2], free=[3], positions=positions, proj=proj,
+        known_out=np.zeros(4, dtype=bool), margin=0.15,
+        slots={"QB": 1, "RB": 1, "FLEX": 1},
+    )
+    assert swap == (2, 3)
+
+
+def test_cross_position_flex_substitution_end_to_end(certain: None) -> None:
+    a = [_mk("a_qb", "QB", 20), _mk("a_rb", "RB", 15), _mk("a_wr", "WR", 12),
+         _mk("a_bench", "RB", 2)]
+    b = [_mk("b_qb", "QB", 18), _mk("b_rb", "RB", 14), _mk("b_wr", "WR", 11),
+         _mk("b_bench", "RB", 9)]
+    pool = [*a, *b, _mk("f_te", "TE", 10)]
+    row = {"id": "flex-sub", "teams": 2, "bench_slots": 1,
+           "starting_slots": {"QB": 1, "RB": 1, "WR": 1, "FLEX": 1}}
+    res = se.evaluate_rosters(pool, [a, b], row, config=_cfg())
+    # seat 0's 2-ppw bench RB is the league's lowest FLEX-space nonstarter; the free TE
+    # replaces it across nominal positions (b_bench at 9 fails b's own margin gate)
+    assert res.upside_adds[0] >= 1
+    assert res.emergency_adds.sum() == 0
+
+
+def test_infeasible_position_never_claims(certain: None) -> None:
+    # No lineup slot can ever use an RB in a QB-only league: the add is infeasible no
+    # matter how large its projection edge is.
+    a = [_mk("a_qb", "QB", 20), _mk("a_rb", "RB", 2)]
+    b = [_mk("b_qb", "QB", 18), _mk("b_rb", "RB", 2)]
+    pool = [*a, *b, _mk("f_rb", "RB", 30)]
+    row = {"id": "no-slot", "teams": 2, "bench_slots": 1, "starting_slots": {"QB": 1}}
+    res = se.evaluate_rosters(pool, [a, b], row, config=_cfg(upgrade_margin=0.0))
+    assert res.waiver_adds.sum() == 0
+
+
+def test_transaction_cost_boundary_semantics() -> None:
+    # gain = (10 − 5) ppw × weeks_left 3 = 15 points of expected remaining-horizon
+    # improvement. Just-below cost executes; equal and just-above must not (strict '>').
+    positions = ["RB", "RB"]
+    proj = np.array([5.0, 10.0])
+    kw = dict(squad=[0], free=[1], positions=positions, proj=proj,
+              known_out=np.zeros(2, dtype=bool), margin=0.0,
+              slots={"RB": 1}, weeks_left=3)
+    assert se._best_upgrade(**kw, cost=14.9) == (0, 1)
+    assert se._best_upgrade(**kw, cost=15.0) is None
+    assert se._best_upgrade(**kw, cost=15.1) is None
+
+
+def test_emergency_claim_is_also_cost_gated(certain: None) -> None:
+    # An unfillable RB slot would normally force a claim; a cost above the hole's
+    # remaining-horizon value vetoes it.
+    a = [_mk("a_qb", "QB", 20), _mk("a_rb", "RB", 15, bye=2), _mk("a_k", "K", 5)]
+    b = [_mk("b_qb", "QB", 18), _mk("b_rb", "RB", 14), _mk("b_k", "K", 6)]
+    pool = [*a, *b, _mk("f_rb", "RB", 1)]
+    cheap = se.evaluate_rosters(pool, [a, b], _row(bench=0),
+                                config=_cfg(proactive_moves_per_week=0))
+    veto = se.evaluate_rosters(pool, [a, b], _row(bench=0),
+                               config=_cfg(proactive_moves_per_week=0, waiver_cost=10_000.0))
+    assert cheap.emergency_adds[0] >= 1
+    assert veto.waiver_adds.sum() == 0
+
+
+def _breakout_fixture(weeks: int, breakout_ppw: float):
+    def mk(pid: str, pos: str, ppw: float, *, proj: float | None = None) -> se.SeasonPlayer:
+        return se.SeasonPlayer(
+            player_id=pid, position=pos, nfl_team="AAA", bye_week=0,
+            points_if_plays=tuple([float(ppw)] * weeks),
+            projection=float(proj if proj is not None else ppw * weeks), depth_rank=1,
+        )
+
+    a = [mk("a_qb", "QB", 20), mk("a_rb", "RB", 8), mk("a_bench", "RB", 6)]
+    b = [mk("b_qb", "QB", 18), mk("b_rb", "RB", 7), mk("b_bench", "RB", 5)]
+    # the breakout: preseason prior of 1 ppw — BELOW every incumbent — with high
+    # realized weeks that only point-in-time observation can surface
+    br = mk("f_break", "RB", breakout_ppw, proj=1.0 * weeks)
+    row = {"id": "breakout", "teams": 2, "bench_slots": 1,
+           "starting_slots": {"QB": 1, "RB": 1}}
+    return [*a, *b, br], [a, b], row
+
+
+def test_in_season_breakout_is_acquired_from_a_low_prior(certain: None) -> None:
+    pool, rosters, row = _breakout_fixture(weeks=6, breakout_ppw=30.0)
+    res = se.evaluate_rosters(pool, rosters, row, config=_cfg())
+    assert res.upside_adds.sum() >= 1  # observations made the low prior actionable
+
+    # trajectory proof 1: with only the preseason prior visible (single waiver window,
+    # decided before any observation of the breakout reaches the forecast), no claim
+    short_pool, short_rosters, short_row = _breakout_fixture(weeks=2, breakout_ppw=30.0)
+    short = se.evaluate_rosters(short_pool, short_rosters, short_row, config=_cfg())
+    assert short.upside_adds.sum() == 0
+
+    # trajectory proof 2: the no-breakout control (same prior, mediocre weeks) never claims
+    ctl_pool, ctl_rosters, ctl_row = _breakout_fixture(weeks=6, breakout_ppw=1.0)
+    ctl = se.evaluate_rosters(ctl_pool, ctl_rosters, ctl_row, config=_cfg())
+    assert ctl.upside_adds.sum() == 0

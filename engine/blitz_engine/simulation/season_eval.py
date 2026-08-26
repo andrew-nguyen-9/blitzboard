@@ -318,13 +318,17 @@ def round_robin(teams: int, weeks: int) -> list[list[tuple[int, int]]]:
 class EvalConfig:
     """Knobs for one evaluation. `n_seasons` is the only accuracy/cost dial.
 
-    C02 realism knobs: `proactive_moves_per_week` bounds point-in-time UPSIDE claims (a
-    believed-projection upgrade over a team's worst same-position body — K/DST streaming
-    falls out of the same rule); `upgrade_margin` is the edge such a claim must clear;
-    `waiver_cost` is a per-claim started-points friction charged at season aggregation
-    (H2H weeks are decided on the field, so weekly scores are not touched);
-    `season_moves_cap` hard-bounds total claims per team-season; `playoff_slots` sizes
-    the playoff proxy (top seats by wins, season points as tiebreak).
+    C02 realism knobs (decision semantics preregistered in
+    `.orchestrator-v6/experiments/waiver-realism-v1.json`): `proactive_moves_per_week`
+    bounds point-in-time UPSIDE claims — roster-wide feasible (drop, add) swaps under
+    actual slot eligibility, cross-position through FLEX/OP role space, K/DST streaming
+    included; `upgrade_margin` is the relative anti-churn gate such a claim must clear.
+    `waiver_cost` (fantasy points per claim) is BOTH a decision gate — a claim whose
+    per-week believed gain × remaining weeks does not strictly exceed it never executes —
+    and a single accounting charge at season aggregation (H2H weeks are decided on the
+    field, so weekly scores are not touched). `season_moves_cap` hard-bounds total claims
+    per team-season; `playoff_slots` sizes the playoff proxy (top seats by wins, season
+    points as tiebreak).
     """
 
     n_seasons: int = 8
@@ -545,6 +549,7 @@ def evaluate_rosters(
                     limit=config.waiver_moves_per_week, cap=bench_cap,
                     proactive_limit=config.proactive_moves_per_week,
                     upgrade_margin=config.upgrade_margin, moves_left=moves_left,
+                    cost=config.waiver_cost, weeks_left=weeks - 1 - w,
                 )
                 season_emerg += e
                 season_upside += u
@@ -608,23 +613,32 @@ def _run_waivers(
     proactive_limit: int = 0,
     upgrade_margin: float = 0.15,
     moves_left: np.ndarray | None = None,
+    cost: float = 0.0,
+    weeks_left: int = 1,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Contested waivers: worst record claims first from ONE shared pool. Bounded fidelity.
 
-    Two claim kinds, both point-in-time (they read only the believed projection built from
-    weeks already observed) and both charged against `moves_left` (the season cap):
+    Decision semantics are preregistered in
+    `.orchestrator-v6/experiments/waiver-realism-v1.json`. Two claim kinds, both
+    point-in-time (they read only the believed projection built from weeks already
+    observed), both charged against `moves_left` (the season cap), and both gated by the
+    transaction cost: a claim executes only when its expected remaining-horizon
+    improvement (per-week believed gain × `weeks_left`) STRICTLY exceeds `cost` — an
+    equal-or-below-cost claim never transacts. `cost` is also charged once per executed
+    claim at season aggregation (accounting), which is a separate, single charge, not a
+    second gate.
 
-    - EMERGENCY (up to `limit`): a team whose believed-usable roster can no longer fill its
-      starting slots claims the best free agent at the position it cannot fill.
-    - UPSIDE (up to `proactive_limit`): a team claims the free agent with the largest
-      believed edge over its own worst same-position body, when that edge clears
-      `upgrade_margin`; the worst body is dropped. A K/DST with a better free alternative
-      streams through this same rule — no special case.
+    - EMERGENCY (up to `limit`): an unfillable starting slot claims the best free agent
+      at the missing position; its per-week gain is the added projection (the
+      alternative is a 0-point hole).
+    - UPSIDE (up to `proactive_limit`): the roster-wide feasible (drop, add) swap chosen
+      by `_best_upgrade` — slot-eligibility aware, cross-position through FLEX/OP role
+      space, lowest forward-looking nonstarter preferred as the drop, `upgrade_margin`
+      retained as the relative anti-churn gate. K/DST streams through the same rule.
 
     Priority is reverse standings and the pool is shared, so two teams wanting the same
     player is a real contest. Deliberately OMITTED: FAAB budgets, trades, multi-week
-    speculative stashes, and hoarding a handcuff. That is enough for a bench slot to carry
-    a real opportunity cost without pretending to model a manager's whole in-season game.
+    speculative stashes, and hoarding a handcuff.
 
     Returns `(emergency_adds, upside_adds)` per team for this week.
     """
@@ -648,6 +662,8 @@ def _run_waivers(
             )
             if best is None:
                 break
+            if float(proj[best]) * weeks_left <= cost:
+                break  # filling the hole cannot repay the transaction cost
             if len(squads[t]) >= cap:
                 droppable = [i for i in squads[t] if i not in set(filled)]
                 if not droppable:
@@ -663,7 +679,10 @@ def _run_waivers(
         for _ in range(proactive_limit):
             if moves_left[t] <= 0:
                 break
-            swap = _best_upgrade(squads[t], free, positions, proj, known_out, upgrade_margin)
+            swap = _best_upgrade(
+                squads[t], free, positions, proj, known_out, upgrade_margin,
+                slots=slots, cost=cost, weeks_left=weeks_left,
+            )
             if swap is None:
                 break
             drop, best = swap
@@ -683,30 +702,60 @@ def _best_upgrade(
     proj: np.ndarray,
     known_out: np.ndarray,
     margin: float,
+    slots: Mapping[str, int] | None = None,
+    cost: float = 0.0,
+    weeks_left: int = 1,
 ) -> tuple[int, int] | None:
-    """The (drop, add) swap with the largest believed edge clearing `margin`, else None.
+    """The feasible roster-wide (drop, add) swap with the largest believed edge, else None.
 
-    For every free agent not known out, the drop candidate is the squad's worst-believed
-    body at the same position; the claim must clear `proj[add] > proj[drop] × (1+margin)`.
-    A started body may be replaced (its higher-projected replacement starts instead) —
-    that is exactly K/DST streaming when the position carries one body.
+    Preregistered rule (waiver-realism-v1): for every free agent not known out and
+    eligible for at least one actual lineup slot, the drop candidates are the squad
+    bodies sharing at least one eligible slot with it (its ROLE SPACE — FLEX/OP overlap
+    makes cross-position swaps legal; identical nominal positions are NOT required).
+    Nonstarters in the role space are preferred, lowest believed projection first (the
+    lowest forward-looking nonstarter opportunity cost); only a role space with no
+    nonstarter may replace a started body — exactly K/DST streaming. A swap executes
+    only if it clears BOTH gates, strictly:
+
+      proj[add] > proj[drop] × (1 + margin)          (relative anti-churn margin)
+      (proj[add] − proj[drop]) × weeks_left > cost   (remaining-horizon cost gate)
+
+    With `slots=None` the role space is unconstrained and the drop candidate is the
+    lowest-believed-projection body (the manifest's no-slots fallback).
     """
-    worst_at: dict[str, int] = {}
-    for i in squad:
-        pos = positions[i]
-        if pos not in worst_at or proj[i] < proj[worst_at[pos]]:
-            worst_at[pos] = i
+    if slots is not None:
+        eligible = {
+            pos: frozenset(s for s in slots if pos in slot_positions(s))
+            for pos in set(positions[i] for i in [*squad, *free])
+        }
+        started = set(_fill(squad, slots, positions, proj, ~known_out))
+    else:
+        eligible = None
+        started = set()
+
     best: tuple[int, int] | None = None
     best_edge = 0.0
     for f in free:
         if known_out[f]:
             continue
-        drop = worst_at.get(positions[f])
-        if drop is None:
+        if eligible is not None:
+            f_slots = eligible[positions[f]]
+            if not f_slots:
+                continue  # no lineup slot can ever use this body — infeasible add
+            cands = [i for i in squad if eligible[positions[i]] & f_slots]
+        else:
+            cands = list(squad)
+        if not cands:
             continue
-        edge = float(proj[f] - proj[drop] * (1.0 + margin))
-        if edge > best_edge:
-            best_edge = edge
+        bench_cands = [i for i in cands if i not in started]
+        drop = min(bench_cands or cands, key=lambda i: (float(proj[i]), i))
+        gain = float(proj[f] - proj[drop])
+        if proj[f] <= proj[drop] * (1.0 + margin):
+            continue
+        if gain * weeks_left <= cost:
+            continue
+        if gain > best_edge:
+            best_edge = gain
             best = (drop, f)
     return best
 
