@@ -90,8 +90,9 @@ module using this pattern (F2 does not implement source-specific adapters).
 
 ## News auto-refresh (E6)
 
-`news_sentiment.py` refreshes the feed at **$0** every 30 min (08:00–01:00, waiver
-days) via the `Refresh news feed + trending (E6/news)` step in `etl_daily.yml`. It
+`news_sentiment.py` refreshes the feed at **$0** once daily via the
+`Refresh news feed + trending (E6/news)` step in `etl_daily.yml`. There is no separate
+high-frequency news workflow, so an earlier failure in the daily job blocks this step. It
 reuses the F2 **adapter shape** without a full `Adapter` subclass: each source is a
 `NewsSource(name, fetch)` whose `fetch()` returns already-normalized article dicts,
 run through `collect()`, which enforces a **stale-fallback** degrade contract — a
