@@ -199,3 +199,8 @@ Ordered by expected value; (1) subsumes most of the others.
 10. **Week-1 absences are under-predicted** (~8 predicted vs ~22 actual WRs) because training-camp
     injuries have no preseason exposure anywhere in the store. Survives the gate; biases the
     published rate very slightly low.
+
+---
+
+cost: wave-1 actual ~685k subagent tok (e1 130k, e7a 164k incl. resume, e9 270k incl. resume, integration 121k across 3 stints) vs est 456k = 1.5x. Recalibrated per-unit: default ~165k, hard ~200k — the prd `effort` heuristic under-estimates both tiers here. Remaining 13 units re-est ~2.8M. NOTE: ccusage `totalTokens` (31.5M active) counts cache reads and is ~45x the real subagent burn; comparable only to other ccusage blocks.
+process: the 40-turn agent cap was the binding constraint, not code defects — 2 of 3 wave-1 units hit it. If a unit hits it twice, SPLIT the unit (re-run B scoped to it) rather than burning a 3rd resume. Also: never pass `isolation:"worktree"` to the integration-agent — the harness worktree puts it on its own branch and `integration` is already checked out in the main checkout, so wave 1's merge landed on `worktree-agent-<id>` instead of on `integration`.

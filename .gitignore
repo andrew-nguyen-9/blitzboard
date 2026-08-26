@@ -47,3 +47,11 @@ pipeline/.news_cache.json
 pipeline/artifacts/
 .gstack/
 .orchestrator/
+
+# Cleaning baseline
+.benchmarks/
+.orchestrator.stale-*/
+.worktrees/
+
+# repo-local orchestrating wishlists (template lives in dotfiles)
+wishlist*.md
