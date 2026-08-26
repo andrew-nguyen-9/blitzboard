@@ -1,0 +1,306 @@
+{
+  "elapsed_seconds": 4.010411,
+  "kind": "synthetic_not_promotion_evidence",
+  "position_order": [
+    "QB",
+    "RB",
+    "WR",
+    "TE",
+    "K",
+    "DST"
+  ],
+  "process_peak_rss_mib": 24.890625,
+  "prototype": "scripts/v6BenchPortfolioPrototype.py",
+  "receipt_schema_version": 1,
+  "rows": [
+    {
+      "best_complete_vector": {
+        "DST": 0,
+        "K": 0,
+        "QB": 0,
+        "RB": 1,
+        "TE": 1,
+        "WR": 2
+      },
+      "best_synthetic_score": 23.8808,
+      "enumerated_vectors": 126,
+      "evidence_status": "synthetic_only",
+      "league": {
+        "bench_slots": 4,
+        "flex_slots": 1,
+        "ir_slots": 0,
+        "key": "t10-1qb-half-te0.0-b4-ir0",
+        "qb_mode": "1qb",
+        "te_premium": 0.0,
+        "teams": 10
+      },
+      "old_budget_total": 24,
+      "old_independent_vector": {
+        "DST": 4,
+        "K": 4,
+        "QB": 4,
+        "RB": 4,
+        "TE": 4,
+        "WR": 4
+      },
+      "old_is_feasible": false
+    },
+    {
+      "best_complete_vector": {
+        "DST": 0,
+        "K": 0,
+        "QB": 2,
+        "RB": 2,
+        "TE": 2,
+        "WR": 2
+      },
+      "best_synthetic_score": 38.408,
+      "enumerated_vectors": 1287,
+      "evidence_status": "synthetic_only",
+      "league": {
+        "bench_slots": 8,
+        "flex_slots": 1,
+        "ir_slots": 1,
+        "key": "t10-superflex-half-te0.5-b8-ir1",
+        "qb_mode": "superflex",
+        "te_premium": 0.5,
+        "teams": 10
+      },
+      "old_budget_total": 39,
+      "old_independent_vector": {
+        "DST": 8,
+        "K": 8,
+        "QB": 6,
+        "RB": 6,
+        "TE": 5,
+        "WR": 6
+      },
+      "old_is_feasible": false
+    },
+    {
+      "best_complete_vector": {
+        "DST": 0,
+        "K": 0,
+        "QB": 3,
+        "RB": 2,
+        "TE": 1,
+        "WR": 2
+      },
+      "best_synthetic_score": 43.0553366667,
+      "enumerated_vectors": 1287,
+      "evidence_status": "synthetic_only",
+      "league": {
+        "bench_slots": 8,
+        "flex_slots": 1,
+        "ir_slots": 0,
+        "key": "t10-2qb-ppr-te0.0-b8-ir0",
+        "qb_mode": "2qb",
+        "te_premium": 0.0,
+        "teams": 10
+      },
+      "old_budget_total": 39,
+      "old_independent_vector": {
+        "DST": 8,
+        "K": 8,
+        "QB": 7,
+        "RB": 6,
+        "TE": 4,
+        "WR": 6
+      },
+      "old_is_feasible": false
+    },
+    {
+      "best_complete_vector": {
+        "DST": 0,
+        "K": 0,
+        "QB": 1,
+        "RB": 2,
+        "TE": 2,
+        "WR": 3
+      },
+      "best_synthetic_score": 38.777225,
+      "enumerated_vectors": 1287,
+      "evidence_status": "synthetic_only",
+      "league": {
+        "bench_slots": 8,
+        "flex_slots": 1,
+        "ir_slots": 0,
+        "key": "t12-1qb-ppr-te0.5-b8-ir0",
+        "qb_mode": "1qb",
+        "te_premium": 0.5,
+        "teams": 12
+      },
+      "old_budget_total": 37,
+      "old_independent_vector": {
+        "DST": 8,
+        "K": 8,
+        "QB": 4,
+        "RB": 6,
+        "TE": 5,
+        "WR": 6
+      },
+      "old_is_feasible": false
+    },
+    {
+      "best_complete_vector": {
+        "DST": 0,
+        "K": 0,
+        "QB": 1,
+        "RB": 1,
+        "TE": 1,
+        "WR": 1
+      },
+      "best_synthetic_score": 24.526,
+      "enumerated_vectors": 126,
+      "evidence_status": "synthetic_only",
+      "league": {
+        "bench_slots": 4,
+        "flex_slots": 1,
+        "ir_slots": 1,
+        "key": "t12-superflex-std-te0.0-b4-ir1",
+        "qb_mode": "superflex",
+        "te_premium": 0.0,
+        "teams": 12
+      },
+      "old_budget_total": 24,
+      "old_independent_vector": {
+        "DST": 4,
+        "K": 4,
+        "QB": 4,
+        "RB": 4,
+        "TE": 4,
+        "WR": 4
+      },
+      "old_is_feasible": false
+    },
+    {
+      "best_complete_vector": {
+        "DST": 0,
+        "K": 0,
+        "QB": 2,
+        "RB": 2,
+        "TE": 2,
+        "WR": 2
+      },
+      "best_synthetic_score": 39.881,
+      "enumerated_vectors": 1287,
+      "evidence_status": "synthetic_only",
+      "league": {
+        "bench_slots": 8,
+        "flex_slots": 1,
+        "ir_slots": 1,
+        "key": "t12-2qb-half-te0.5-b8-ir1",
+        "qb_mode": "2qb",
+        "te_premium": 0.5,
+        "teams": 12
+      },
+      "old_budget_total": 39,
+      "old_independent_vector": {
+        "DST": 8,
+        "K": 8,
+        "QB": 6,
+        "RB": 6,
+        "TE": 5,
+        "WR": 6
+      },
+      "old_is_feasible": false
+    },
+    {
+      "best_complete_vector": {
+        "DST": 0,
+        "K": 0,
+        "QB": 1,
+        "RB": 1,
+        "TE": 1,
+        "WR": 1
+      },
+      "best_synthetic_score": 21.585,
+      "enumerated_vectors": 126,
+      "evidence_status": "synthetic_only",
+      "league": {
+        "bench_slots": 4,
+        "flex_slots": 1,
+        "ir_slots": 1,
+        "key": "t14-1qb-half-te0.0-b4-ir1",
+        "qb_mode": "1qb",
+        "te_premium": 0.0,
+        "teams": 14
+      },
+      "old_budget_total": 24,
+      "old_independent_vector": {
+        "DST": 4,
+        "K": 4,
+        "QB": 4,
+        "RB": 4,
+        "TE": 4,
+        "WR": 4
+      },
+      "old_is_feasible": false
+    },
+    {
+      "best_complete_vector": {
+        "DST": 0,
+        "K": 0,
+        "QB": 2,
+        "RB": 2,
+        "TE": 2,
+        "WR": 2
+      },
+      "best_synthetic_score": 45.56552,
+      "enumerated_vectors": 1287,
+      "evidence_status": "synthetic_only",
+      "league": {
+        "bench_slots": 8,
+        "flex_slots": 1,
+        "ir_slots": 0,
+        "key": "t14-superflex-ppr-te0.5-b8-ir0",
+        "qb_mode": "superflex",
+        "te_premium": 0.5,
+        "teams": 14
+      },
+      "old_budget_total": 39,
+      "old_independent_vector": {
+        "DST": 8,
+        "K": 8,
+        "QB": 6,
+        "RB": 6,
+        "TE": 5,
+        "WR": 6
+      },
+      "old_is_feasible": false
+    },
+    {
+      "best_complete_vector": {
+        "DST": 0,
+        "K": 0,
+        "QB": 1,
+        "RB": 1,
+        "TE": 1,
+        "WR": 1
+      },
+      "best_synthetic_score": 26.934,
+      "enumerated_vectors": 126,
+      "evidence_status": "unsupported",
+      "league": {
+        "bench_slots": 4,
+        "flex_slots": 1,
+        "ir_slots": 1,
+        "key": "t14-2qb-std-te0.5-b4-ir1",
+        "qb_mode": "2qb",
+        "te_premium": 0.5,
+        "teams": 14
+      },
+      "old_budget_total": 24,
+      "old_independent_vector": {
+        "DST": 4,
+        "K": 4,
+        "QB": 4,
+        "RB": 4,
+        "TE": 4,
+        "WR": 4
+      },
+      "old_is_feasible": false
+    }
+  ],
+  "tracemalloc_peak_mib": 0.63419
+}
