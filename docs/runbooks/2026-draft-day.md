@@ -85,6 +85,10 @@ the discard before entering real keepers.
 - **Wrong past pick:** select **Edit** on that pick, search the correct player, then **Replace**.
 - **Next server exits:** rerun `npx next start -p 3100` from the already-built `frontend` directory;
   do not rebuild during the draft unless `.next` is missing.
+- **Laptop dies:** switch to the standalone Excel war room at
+  `artifacts/Smores_2026_Live_Draft_Backup_12-Team.xlsx` (11-team variant beside it) on any
+  machine with a spreadsheet app; it carries the same August 26 expert board, pick log, and
+  suggested-picks formulas, fully offline.
 - **Port 3100 busy:** find and stop only the stale BlitzBoard process, then restart on 3100. Do not
   change the bookmarked URL under pressure.
 - **Network loss:** the local server and manual pick persistence continue to work. Avoid refreshing
