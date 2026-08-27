@@ -403,8 +403,8 @@ def validate_fit_analysis_receipt(
 
 
 def write_fit_verdict(
-    out_dir: str | Path, *, effective: dict[str, Any], measurement_paths: Any,
-    fit_analysis: dict[str, Any],
+    out_dir: str | Path, *, effective: dict[str, Any], measurement_paths: Any = None,
+    fit_analysis: dict[str, Any] | None = None, fit_measure_paths: Any = None,
 ) -> Path:
     """Write the write-once fit verdict. `pass` is emitted ONLY when the complete frame validates,
     every receipt validates, and the hash-pinned fit-analysis report's verdict is `promote`.
@@ -412,12 +412,14 @@ def write_fit_verdict(
     missing or failed evidence is NEVER turned into a pass (reviewer req 1/5/6)."""
     from blitz_engine.promotion.manifest import sha256_file
 
-    paths = sorted(str(p) for p in measurement_paths)
+    if measurement_paths is not None and fit_measure_paths is not None:
+        raise ExecutionError("fit frame: provide only one measurement-path set")
+    paths = sorted(str(p) for p in (measurement_paths or fit_measure_paths or ()))
     docs = [json.loads(Path(p).read_text()) for p in paths]
     assert_complete_fit_frame(docs, effective)  # validates every receipt + exact coverage
     pins = {p: sha256_file(p) for p in paths}
     report_verdict = validate_fit_analysis_receipt(
-        fit_analysis, effective, measurement_shas=set(pins.values())
+        fit_analysis or {}, effective, measurement_shas=set(pins.values())
     )
     verdict = "pass" if report_verdict == "promote" else report_verdict
     doc = {
@@ -428,7 +430,7 @@ def write_fit_verdict(
         "exec_addendum_sha256": EXEC_V2_SHA256,
         "effective_v4_manifest_sha256": effective_v4_manifest_sha256(effective),
         "fit_receipt_sha256": pins,
-        "fit_analysis_report_sha256": fit_analysis["report_sha256"],
+        "fit_analysis_report_sha256": (fit_analysis or {})["report_sha256"],
         "fit_analysis": fit_analysis,
     }
     return _write_once(Path(out_dir) / "fit-verdict.json", doc)
