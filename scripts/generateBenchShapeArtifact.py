@@ -9,12 +9,24 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE = ROOT / ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
+DEFAULT_SOURCE = ROOT / ".orchestrator-v6/experiments/bench-portfolio-c03-source-v2.json"
 DEFAULT_FIXTURE = ROOT / "fixtures/bench_shape.json"
 DEFAULT_TS = ROOT / "frontend/lib/generated/benchShape.generated.ts"
 MATRIX = ROOT / "fixtures/league_matrix.json"
 POSITIONS = ("QB", "RB", "WR", "TE", "K", "DST")
 BLOCKED = "t14-2qb-std-te0.5-b4-ir1"
+
+
+def _fallback_selection(bench: int) -> dict[str, Any]:
+    composition = {position: 0 for position in POSITIONS}
+    order = ("RB", "WR", "QB", "TE", "K", "DST")
+    for index in range(bench):
+        composition[order[index % len(order)]] += 1
+    costs = {
+        position: [round(0.25 * depth, 6) for depth in range(bench + 1)]
+        for position in POSITIONS
+    }
+    return {"composition": composition, "soft_marginal_costs": costs}
 
 
 def _features(row: dict[str, Any]) -> tuple[float, ...]:
@@ -45,14 +57,32 @@ def build(source_path: Path) -> dict[str, Any]:
     ]
     by_id = {row["id"]: row for row in supported_rows}
     source_rows = source["rows"]
-    measured_keys = [key for key, rec in source_rows.items() if rec["evidence_status"] == "measured"]
-    if not measured_keys:
+    measured_keys = [
+        key for key, rec in source_rows.items() if rec["evidence_status"] == "measured"
+    ]
+    globally_unsupported = source.get("disposition") == "do_not_promote"
+    if globally_unsupported:
+        if measured_keys or any(
+            rec["evidence_status"] != "unsupported" for rec in source_rows.values()
+        ):
+            raise ValueError("do_not_promote source contains consumer-eligible rows")
+        if source.get("interpolation_sources"):
+            raise ValueError("do_not_promote source may not seed interpolation")
+    elif not measured_keys:
         raise ValueError("source receipt contains no measured rows")
 
     rows: dict[str, Any] = {}
     for row in supported_rows:
         key = row["id"]
-        if key in source_rows:
+        if globally_unsupported:
+            status = "unsupported"
+            selection = _fallback_selection(int(row["bench_slots"]))
+            provenance = {
+                "kind": "unsupported",
+                "reason": "authoritative candidate disposition is do_not_promote",
+                "nearest_measured_keys": [],
+            }
+        elif key in source_rows:
             rec = source_rows[key]
             status = rec["evidence_status"]
             if key == BLOCKED and status != "unsupported":

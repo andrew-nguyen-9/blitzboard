@@ -57,6 +57,24 @@ def _source(path: Path) -> Path:
     return path
 
 
+def _do_not_promote_source(path: Path) -> Path:
+    payload = {
+        "schema_version": 2,
+        "source_kind": "consumer_disposition",
+        "source_receipt": ".orchestrator-v6/experiments/test-source-v2.json",
+        "disposition": "do_not_promote",
+        "interpolation_sources": [],
+        "rows": {
+            "t10-1qb-half-te0.0-b4-ir0": {
+                "league_config_key": "t10-1qb-half-te0.0-b4-ir0",
+                "evidence_status": "unsupported",
+            }
+        },
+    }
+    path.write_text(json.dumps(payload))
+    return path
+
+
 def test_generator_builds_all_supported_keys_and_exact_hash(tmp_path: Path) -> None:
     source = _source(tmp_path / "source.json")
     artifact = generator.build(source)
@@ -64,6 +82,23 @@ def test_generator_builds_all_supported_keys_and_exact_hash(tmp_path: Path) -> N
     assert len(artifact["rows"]) == 216
     assert artifact["rows"]["t10-1qb-half-te0.0-b4-ir0"]["evidence_status"] == "measured"
     assert artifact["rows"]["t12-1qb-half-te0.0-b4-ir0"]["evidence_status"] == "interpolated"
+
+
+def test_global_do_not_promote_cannot_publish_or_interpolate_guidance(
+    tmp_path: Path,
+) -> None:
+    artifact = generator.build(_do_not_promote_source(tmp_path / "source-v2.json"))
+    assert len(artifact["rows"]) == 216
+    assert all(row["evidence_status"] == "unsupported" for row in artifact["rows"].values())
+    assert all(
+        row["provenance"]["nearest_measured_keys"] == []
+        for row in artifact["rows"].values()
+    )
+    resolution = resolve_bench_shape(
+        "t10-1qb-half-te0.0-b4-ir0", 4, artifact=artifact
+    )
+    assert resolution.degraded
+    assert resolution.degraded_reason == "unsupported_evidence"
 
 
 def test_lookup_is_soft_and_degrades_explicitly(tmp_path: Path) -> None:
