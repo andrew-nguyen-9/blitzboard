@@ -1,0 +1,24 @@
+{
+  "schema_version": 5,
+  "experiment_id": "bench-portfolio-c03-v5",
+  "status": "preregistered_disposition_amendment_not_applied",
+  "amends": ".orchestrator-v6/experiments/bench-portfolio-c03-v4.json",
+  "reason_for_amendment": "Bind the authoritative do_not_promote result to consumer eligibility before the bounded C03A correction. This amendment changes disposition handling only; it does not amend or rerun the experiment.",
+  "review_verdict_sha": "ff50f69325625fbef9c6f6ea89755e22a2e1e74c",
+  "review_gate_amendment_sha": "03be8aa313ca778956cffb8bc4379a97efea75b3",
+  "immutable_inputs": {
+    "results_v1_sha256": "3634b803859e63a1620f923b6fdc89a6b6d36ba56698882cbb07e773a9b02e5f",
+    "source_v1_sha256": "01734b796d605788bf6b6815d2484242a4c25a2fe1c0a148f173280d3efc7e2b",
+    "authoritative_disposition": "do_not_promote"
+  },
+  "consumer_eligibility_rule": {
+    "global_do_not_promote": "Every candidate row is unsupported for consumer guidance regardless of whether its historical provenance was measured.",
+    "interpolation": "An uncleared candidate row cannot be an interpolation source. With no cleared candidate rows, every canonical matrix row is unsupported.",
+    "historical_evidence": "Results-v1 and source-v1 remain immutable negative evidence and are never rewritten or reinterpreted.",
+    "canonical_source": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v2.json",
+    "fallback": "Unsupported rows degrade explicitly to finite soft marginal costs and never impose positional caps."
+  },
+  "compatibility_rule": "Preserve accepted C02C roster bounds and behavior. Schema-v2 evidence presence must not activate failed portfolio guidance or remove the accepted legacy constraints.",
+  "unchanged": "All v1-v4 hypotheses, formulas, arms, configurations, seeds, metrics, thresholds, numerical findings, adapter behavior, and frozen interface records remain unchanged.",
+  "execution_rule": "Commit this append-only amendment alone before creating source-v2 or changing generator, artifact, resolver, or compatibility behavior. Do not rerun the authoritative experiment."
+}
