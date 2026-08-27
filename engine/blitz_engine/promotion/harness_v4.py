@@ -301,7 +301,7 @@ def write_fit_verdict(
 
 def require_fit_verdict(out_dir: str | Path, effective: dict[str, Any]) -> dict[str, Any]:
     """Confirmation is refused unless a write-once passing fit verdict exists, is bound to the
-    frozen effective-v4 manifest, and every pinned fit receipt still verifies (reviewer blocker 4)."""
+    frozen effective-v4 manifest, and every pinned fit receipt verifies (reviewer blocker 4)."""
     from blitz_engine.promotion.manifest import sha256_file
 
     p = Path(out_dir) / "fit-verdict.json"
@@ -311,7 +311,7 @@ def require_fit_verdict(out_dir: str | Path, effective: dict[str, Any]) -> dict[
     if doc.get("verdict") != "pass":
         raise ExecutionError(f"confirmation blocked: fit verdict is {doc.get('verdict')!r}")
     if doc.get("effective_v4_manifest_sha256") != effective_v4_manifest_sha256(effective):
-        raise ExecutionError("confirmation blocked: fit-verdict effective-v4-manifest hash mismatch")
+        raise ExecutionError("confirmation blocked: fit-verdict effective-v4 hash mismatch")
     for rel, want in doc.get("fit_receipt_sha256", {}).items():
         if not Path(rel).is_file() or sha256_file(rel) != want:
             raise ExecutionError(f"confirmation blocked: fit-verdict pinned receipt drift: {rel}")
