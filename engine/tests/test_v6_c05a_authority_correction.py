@@ -19,9 +19,11 @@ from blitz_engine.promotion.harness_v4 import (
     mandatory_league_ids,
     measure_arm,
     recompute_seat_policy,
+    require_fit_verdict,
     validate_authoritative_draft_receipt,
+    write_fit_verdict,
 )
-from blitz_engine.promotion.runner import HeldOutGuard
+from blitz_engine.promotion.runner import HeldOutGuard, derive_eval_seed
 from blitz_engine.testing import matrix
 
 REPO = Path(__file__).resolve().parents[2]
@@ -160,3 +162,50 @@ def test_authoritative_validator_refuses_wrong_effective_hash():
     r["effective_v4_manifest_sha256"] = "0" * 64
     with pytest.raises(ExecutionError, match="effective-v4"):
         validate_authoritative_draft_receipt(r, _row(r), _board(r), EFFECTIVE, stage="fit")
+
+
+# ── req 5: write-once hash-pinned passing fit-verdict gate before confirmation ─────────
+
+
+def test_require_fit_verdict_refuses_when_absent(tmp_path):
+    with pytest.raises(ExecutionError, match="no passing fit-verdict"):
+        require_fit_verdict(tmp_path, EFFECTIVE)
+
+
+def test_write_then_require_fit_verdict_roundtrip(tmp_path):
+    pinned = tmp_path / "measure" / "fit" / "m.json"
+    pinned.parent.mkdir(parents=True)
+    pinned.write_text(json.dumps({"kind": "measurement"}))
+    write_fit_verdict(tmp_path, effective=EFFECTIVE, fit_measure_paths=[pinned])
+    assert require_fit_verdict(tmp_path, EFFECTIVE)["verdict"] == "pass"
+
+
+def test_require_fit_verdict_refuses_failed_verdict(tmp_path):
+    (tmp_path / "fit-verdict.json").write_text(json.dumps({"verdict": "fail"}))
+    with pytest.raises(ExecutionError, match="fit verdict is"):
+        require_fit_verdict(tmp_path, EFFECTIVE)
+
+
+def test_require_fit_verdict_refuses_pinned_receipt_drift(tmp_path):
+    pinned = tmp_path / "measure" / "fit" / "m.json"
+    pinned.parent.mkdir(parents=True)
+    pinned.write_text(json.dumps({"kind": "measurement"}))
+    write_fit_verdict(tmp_path, effective=EFFECTIVE, fit_measure_paths=[pinned])
+    pinned.write_text(json.dumps({"kind": "measurement", "tampered": True}))  # drift
+    with pytest.raises(ExecutionError, match="pinned receipt drift"):
+        require_fit_verdict(tmp_path, EFFECTIVE)
+
+
+def test_measure_confirm_refuses_without_fit_verdict(tmp_path):
+    r = _real_receipt()  # non-authoritative confirm receipt on the held-out year
+    r["stage"] = "confirm"
+    r["year"] = 2018
+    r["eval_seed"] = derive_eval_seed(r["base_seed"], 2018, r["league_id"])
+    p = tmp_path / "draft" / "confirm" / "c.json"
+    p.parent.mkdir(parents=True)
+    p.write_text(json.dumps(r))
+    with pytest.raises(ExecutionError, match="fit-verdict"):
+        measure_arm(
+            p, REPO, effective=EFFECTIVE, n_seasons=8, guard=_guard(),
+            out_dir=tmp_path, tooling_root=REPO, authoritative=False,
+        )

@@ -57,8 +57,10 @@ __all__ = [
     "measure_arm",
     "recompute_seat_policy",
     "rehearse_v4",
+    "require_fit_verdict",
     "validate_authoritative_draft_receipt",
     "validate_draft_receipt",
+    "write_fit_verdict",
     "verify_measurement_checkout",
 ]
 
@@ -278,6 +280,44 @@ def validate_authoritative_draft_receipt(
     _require_v4_binding(receipt, effective)
 
 
+def write_fit_verdict(
+    out_dir: str | Path, *, effective: dict[str, Any], fit_measure_paths: Any
+) -> Path:
+    """Write the write-once, hash-pinned passing fit verdict that authorises the confirm stage.
+    Pins each fit-stage measurement receipt by sha256 so later drift is detectable."""
+    from blitz_engine.promotion.manifest import sha256_file
+
+    pins = {p: sha256_file(p) for p in sorted(str(x) for x in fit_measure_paths)}
+    doc = {
+        "kind": "fit_verdict",
+        "verdict": "pass",
+        "manifest_sha256": V4_MANIFEST_SHA256,
+        "exec_addendum_sha256": EXEC_V2_SHA256,
+        "effective_v4_manifest_sha256": effective_v4_manifest_sha256(effective),
+        "fit_receipt_sha256": pins,
+    }
+    return _write_once(Path(out_dir) / "fit-verdict.json", doc)
+
+
+def require_fit_verdict(out_dir: str | Path, effective: dict[str, Any]) -> dict[str, Any]:
+    """Confirmation is refused unless a write-once passing fit verdict exists, is bound to the
+    frozen effective-v4 manifest, and every pinned fit receipt still verifies (reviewer blocker 4)."""
+    from blitz_engine.promotion.manifest import sha256_file
+
+    p = Path(out_dir) / "fit-verdict.json"
+    if not p.is_file():
+        raise ExecutionError("confirmation blocked: no passing fit-verdict receipt exists")
+    doc = json.loads(p.read_text())
+    if doc.get("verdict") != "pass":
+        raise ExecutionError(f"confirmation blocked: fit verdict is {doc.get('verdict')!r}")
+    if doc.get("effective_v4_manifest_sha256") != effective_v4_manifest_sha256(effective):
+        raise ExecutionError("confirmation blocked: fit-verdict effective-v4-manifest hash mismatch")
+    for rel, want in doc.get("fit_receipt_sha256", {}).items():
+        if not Path(rel).is_file() or sha256_file(rel) != want:
+            raise ExecutionError(f"confirmation blocked: fit-verdict pinned receipt drift: {rel}")
+    return doc
+
+
 def _receipt_path(out_dir: str | Path, kind: str, stage: str, arm: str, r: dict[str, Any]) -> Path:
     return (
         Path(out_dir) / kind / stage
@@ -415,6 +455,8 @@ def draft_arm(
         )
     provenance = tooling_provenance(tooling_root)
     guard.check(year, stage=stage)
+    if stage == "confirm":
+        require_fit_verdict(out_dir, effective)
     head = verify_arm_checkout(checkout, expected_sha)
     eval_seed = derive_eval_seed(base_seed, year, league_id)
     payload = _run_payload(
@@ -473,6 +515,8 @@ def measure_arm(
             expected_sha=receipt["policy_sha"], stage=stage, n_seasons=n_seasons,
         )
     guard.check(receipt["year"], stage=stage)
+    if stage == "confirm":
+        require_fit_verdict(out_dir, effective)
     measured_by = verify_measurement_checkout(measurement_checkout, effective)
 
     from blitz_engine.testing import matrix
