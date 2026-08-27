@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import subprocess
 import sys
@@ -54,6 +55,8 @@ __all__ = [
     "draft_arm",
     "effective_v4_manifest_sha256",
     "expected_fit_cells",
+    "fit_frame_sha256",
+    "validate_auxiliary",
     "validate_fit_analysis_receipt",
     "validate_fit_measurement_receipt",
     "load_execution_manifest_v4",
@@ -466,6 +469,77 @@ def _run_fit_analysis(
     )
 
 
+def fit_frame_sha256(measurement_pins: dict[str, str]) -> str:
+    """A deterministic fingerprint of the exact fit frame — the sorted measurement receipt hashes.
+    Every auxiliary receipt must bind to this so evidence from another run cannot be substituted."""
+    payload = json.dumps(sorted(measurement_pins.values()), separators=(",", ":"))
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+def _finite_nonneg(x: Any) -> bool:
+    return (
+        isinstance(x, (int, float)) and not isinstance(x, bool)
+        and math.isfinite(x) and x >= 0
+    )
+
+
+def _aux_bound(effective: dict[str, Any], frame_sha: str, doc: Any, kind: str) -> bool:
+    """Common authority: a well-formed receipt of the right kind, bound to the frozen protocol and
+    to THIS exact fit frame, carrying mechanical tooling provenance."""
+    return (
+        isinstance(doc, dict)
+        and doc.get("kind") == kind
+        and doc.get("effective_v4_manifest_sha256") == effective_v4_manifest_sha256(effective)
+        and doc.get("fit_frame_sha256") == frame_sha
+        and bool(doc.get("produced_by_tooling"))
+    )
+
+
+def validate_auxiliary(
+    effective: dict[str, Any], frame_sha: str, *,
+    deterministic: Any, calibration: Any, runtime: Any,
+) -> dict[str, Any]:
+    """Return only the auxiliary evidence that is mechanically authoritative for THIS frame; any
+    receipt that is malformed, unbound, or unauthoritative is dropped to None so the frozen gates
+    treat it as ABSENT evidence — which can never promote. Shared by writing and confirmation
+    (reviewer C05D). Byte-hash pinning proves retention, never authority — hence this validator.
+
+    Calibration is deliberately never admitted from a caller document: the frozen manifest freezes
+    the calibration SOURCE identity but no accepted calibration REPORT identity (the C02 report
+    failed, and `missing_report_interpretation` is numerical_fail). Until a new accepted report is
+    frozen, no auxiliary dictionary can prove acceptance, so calibration stays absent and promotion
+    is blocked. ponytail: when an accepted-report identity is frozen in calibration_gates, bind and
+    admit it here — the source-identity checks below are already in place for that day.
+    """
+    out: dict[str, Any] = {"deterministic": None, "calibration": None, "runtime": None}
+
+    d = deterministic
+    if (_aux_bound(effective, frame_sha, d, "deterministic_receipt")
+            and d.get("invariants_pass") is True
+            and d.get("leakage_detected") is False
+            and d.get("nondeterminism_detected") is False):
+        out["deterministic"] = d
+
+    r = runtime
+    if (_aux_bound(effective, frame_sha, r, "runtime_receipt")
+            and _finite_nonneg(r.get("wall_clock_hours"))
+            and _finite_nonneg(r.get("peak_rss_gib"))):
+        out["runtime"] = r
+
+    cg = effective["calibration_gates"]
+    accepted_report = cg.get("accepted_report_sha256")  # not frozen today ⇒ nothing is admissible
+    c = calibration
+    if (accepted_report
+            and _aux_bound(effective, frame_sha, c, "calibration_receipt")
+            and c.get("accepted") is True
+            and c.get("accepted_report_sha256") == accepted_report
+            and c.get("source_manifest_sha256") == cg.get("source_manifest_sha256")
+            and c.get("source_amendment_sha256") == cg.get("source_amendment_sha256")):
+        out["calibration"] = c.get("report")
+
+    return out
+
+
 def write_fit_verdict(
     out_dir: str | Path, *, effective: dict[str, Any], measurement_paths: Any = None,
     fit_measure_paths: Any = None,
@@ -489,17 +563,23 @@ def write_fit_verdict(
     docs = [json.loads(Path(p).read_text()) for p in paths]
     assert_complete_fit_frame(docs, effective)  # validates every receipt + exact coverage
 
+    measurement_pins = {p: sha256_file(p) for p in paths}
+    frame_sha = fit_frame_sha256(measurement_pins)
+
     aux_paths = dict(zip(_AUX, (deterministic_receipt_path, calibration_report_path,
                                 runtime_receipt_path), strict=True))
-    aux_docs = {k: (json.loads(Path(v).read_text()) if v is not None else None)
-                for k, v in aux_paths.items()}
+    raw_aux = {k: (json.loads(Path(v).read_text()) if v is not None else None)
+               for k, v in aux_paths.items()}
     aux_pins = {k: sha256_file(v) for k, v in aux_paths.items() if v is not None}
+    validated = validate_auxiliary(  # authority + schema + frame binding; unauthoritative ⇒ absent
+        effective, frame_sha, deterministic=raw_aux["deterministic"],
+        calibration=raw_aux["calibration"], runtime=raw_aux["runtime"],
+    )
 
-    report = _run_fit_analysis(effective, docs, aux_docs)
+    report = _run_fit_analysis(effective, docs, validated)
     report_verdict = report["verdict"]
     verdict = "pass" if report_verdict == "promote" else report_verdict
 
-    measurement_pins = {p: sha256_file(p) for p in paths}
     report_sha = report_hash(report)
     fit_analysis = {
         "kind": "fit_analysis",
@@ -515,6 +595,7 @@ def write_fit_verdict(
         "manifest_sha256": V4_MANIFEST_SHA256,
         "exec_addendum_sha256": EXEC_V2_SHA256,
         "effective_v4_manifest_sha256": effective_v4_manifest_sha256(effective),
+        "fit_frame_sha256": frame_sha,
         "fit_receipt_sha256": measurement_pins,
         "auxiliary_sha256": aux_pins,
         "auxiliary_receipt_paths": {k: str(v) for k, v in aux_paths.items() if v is not None},
@@ -548,16 +629,23 @@ def require_fit_verdict(out_dir: str | Path, effective: dict[str, Any]) -> dict[
             raise ExecutionError(f"confirmation blocked: pinned measurement drift: {rel}")
         docs.append(json.loads(Path(rel).read_text()))
     assert_complete_fit_frame(docs, effective)  # the exact complete frame, re-proved
+    frame_sha = fit_frame_sha256(pins)
+    if doc.get("fit_frame_sha256") != frame_sha:
+        raise ExecutionError("confirmation blocked: fit-frame fingerprint drift")
 
     aux_pins = doc.get("auxiliary_sha256", {})
     aux_paths = doc.get("auxiliary_receipt_paths", {})
-    aux_docs = {k: None for k in _AUX}
+    raw_aux = {k: None for k in _AUX}
     for label, rel in aux_paths.items():
         if not Path(rel).is_file() or sha256_file(rel) != aux_pins.get(label):
             raise ExecutionError(f"confirmation blocked: auxiliary receipt drift: {label}")
-        aux_docs[label] = json.loads(Path(rel).read_text())
+        raw_aux[label] = json.loads(Path(rel).read_text())
+    validated = validate_auxiliary(  # re-prove authority before replay, not just byte identity
+        effective, frame_sha, deterministic=raw_aux["deterministic"],
+        calibration=raw_aux["calibration"], runtime=raw_aux["runtime"],
+    )
 
-    report = _run_fit_analysis(effective, docs, aux_docs)  # rerun from pinned inputs
+    report = _run_fit_analysis(effective, docs, validated)  # rerun from pinned, revalidated inputs
     if report_hash(report) != doc.get("fit_analysis_report_sha256"):
         raise ExecutionError("confirmation blocked: recomputed report hash != recorded")
     if report["verdict"] != "promote":

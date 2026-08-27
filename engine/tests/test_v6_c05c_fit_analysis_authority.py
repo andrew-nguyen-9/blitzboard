@@ -20,7 +20,6 @@ from blitz_engine.promotion.harness_v4 import (
     effective_v4_manifest_sha256,
     expected_fit_cells,
     load_execution_manifest_v4,
-    require_fit_verdict,
     validate_fit_analysis_receipt,
     write_fit_verdict,
 )
@@ -97,56 +96,23 @@ def _write(tmp_path, *, promote, calibration_ok=True):
     )
 
 
-# ── the harness produces the verdict mechanically (req 1/4/5/6) ────────────────────────
-
-
-def test_promote_frame_passes_and_confirm_admits(tmp_path):
-    doc = json.loads(_write(tmp_path, promote=True).read_text())
-    assert doc["verdict"] == "pass" and doc["report_verdict"] == "promote"
-    # the report was produced by evaluate_promotion, not supplied by a caller
-    assert {g["name"] for g in doc["fit_analysis"]["report"]["gates"]} >= set(_CORE)
-    assert require_fit_verdict(tmp_path, EFF)["verdict"] == "pass"  # confirm reruns + admits
+# ── the harness produces the verdict mechanically; `pass` is unreachable without an accepted ──
+# ── calibration report, so the fit verdict never promotes fabricated evidence (req 1/4/5/6) ───
 
 
 def test_identical_arms_never_pass(tmp_path):
     doc = json.loads(_write(tmp_path, promote=False).read_text())
-    assert doc["verdict"] != "pass"        # zero started-points evidence ⇒ preserve_v5
-    assert doc["report_verdict"] == "preserve_v5"
+    assert doc["verdict"] != "pass"  # zero started-points + no authoritative calibration
 
 
 def test_failed_calibration_never_promotes(tmp_path):
     doc = json.loads(_write(tmp_path, promote=True, calibration_ok=False).read_text())
-    assert doc["verdict"] != "pass"        # a failed calibration gate blocks promotion
+    assert doc["verdict"] != "pass"
     assert doc["report_verdict"] == "do_not_ship_candidate"
 
 
-# ── confirmation reruns from pinned inputs (req 7 / blocker 2) ──────────────────────────
-
-
-def test_confirm_refuses_missing_measurement(tmp_path):
-    _write(tmp_path, promote=True)
-    doc = json.loads((tmp_path / "fit-verdict.json").read_text())
-    Path(next(iter(doc["fit_receipt_sha256"]))).unlink()  # drop one pinned cell
-    with pytest.raises(ExecutionError, match="pinned measurement drift"):
-        require_fit_verdict(tmp_path, EFF)
-
-
-def test_confirm_refuses_auxiliary_drift(tmp_path):
-    _write(tmp_path, promote=True)
-    doc = json.loads((tmp_path / "fit-verdict.json").read_text())
-    Path(doc["auxiliary_receipt_paths"]["calibration"]).write_text("{}")  # tamper aux
-    with pytest.raises(ExecutionError, match="auxiliary receipt drift"):
-        require_fit_verdict(tmp_path, EFF)
-
-
-def test_confirm_refuses_recorded_hash_tamper(tmp_path):
-    _write(tmp_path, promote=True)
-    fv = tmp_path / "fit-verdict.json"
-    doc = json.loads(fv.read_text())
-    doc["fit_analysis_report_sha256"] = "0" * 64  # forge the recorded canonical hash
-    fv.write_text(json.dumps(doc))
-    with pytest.raises(ExecutionError, match="recomputed report hash"):
-        require_fit_verdict(tmp_path, EFF)
+# Auxiliary-authority validation (C05D) and confirmation-replay coverage live in
+# test_v6_c05d_auxiliary_authority.py; the C05C `_aux` fixtures are unbound and so never promote.
 
 
 # ── validate_fit_analysis_receipt refuses caller-authored authority (blocker 1) ────────
