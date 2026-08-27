@@ -45,9 +45,13 @@ compares the canonical report hash, and requires `promote`. Tests: reviewer
 
 ## Verification
 
-- Focused C05 harness suite: **106 passed** (`C05_PROD_ROOT` set) — promotion + adapter + execution +
-  harness_v4 + C05A-accepted + C05B integrity + both C05B reviewer probes + C05C authority + the three
-  C05 freeze-adversarial probes.
+- Focused C05 harness suite: **107 passed** (`C05_PROD_ROOT` set, every `test_v6_c05*` file) —
+  promotion + adapter + execution + harness_v4 + C05A-accepted + C05B integrity + all three reviewer
+  probes (`test_v6_c05_harness_authority_adversarial`, `test_v6_c05b_fit_analysis_adversarial`,
+  `test_v6_c05a_fit_verdict_adversarial`) + C05C authority + the three C05 freeze-adversarial probes.
+- Accepted C05B reviewer probe `test_v6_c05a_fit_verdict_adversarial.py` (dummy receipt) kept green:
+  `write_fit_verdict` retains the C05B `fit_measure_paths` alias. The full engine regression, not the
+  focused subset, caught the missed file — fixed and re-verified.
 - Frozen files byte-for-byte preserved (`shasum -c` OK): manifests, `execution.py`, `runner.py`,
   `manifest.py`, `gates.py`, `stats.py`, `season_eval.py`. Frozen diff empty. Accepted C05A/C05B
   behaviour intact.
