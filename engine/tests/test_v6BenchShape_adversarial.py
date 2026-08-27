@@ -95,7 +95,6 @@ def test_generated_typescript_artifact_has_exact_hash_and_no_node_runtime() -> N
     assert not any(token in text for token in ("node:", "readFile", "createHash", "process."))
 
 
-@pytest.mark.xfail(strict=True, reason="C03 unimplemented: exact generation drift gate absent")
 def test_generation_check_mode_exists_and_is_documented() -> None:
     generator = ROOT / "scripts/generateBenchShapeArtifact.py"
     text = generator.read_text()

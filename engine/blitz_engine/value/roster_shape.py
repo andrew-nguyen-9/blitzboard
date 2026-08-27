@@ -502,6 +502,20 @@ def bench_bounds(row: Mapping[str, Any]) -> BenchBounds:
     row's bench budget. `BenchBounds.measured` says which you got.
     """
     data = _load_fixture()
+    if data.get("schema_version") == 2:
+        # C03 shapes are soft portfolio opportunity costs, never positional caps. Keep the
+        # legacy return type permissive for callers that have not migrated yet.
+        from blitz_engine.value.bench_shape import resolve_bench_shape
+
+        resolution = resolve_bench_shape(str(row["id"]), int(row["bench_slots"]))
+        bench = int(row["bench_slots"])
+        return BenchBounds(
+            row_id=str(row["id"]),
+            bench_slots=bench,
+            lo={p: 0 for p in BENCH_POSITIONS},
+            hi={p: bench for p in BENCH_POSITIONS},
+            measured=resolution.evidence_status == "measured",
+        )
     rows = data.get("rows", {})
     rid = str(row["id"])
     if rid in rows:
@@ -559,6 +573,15 @@ def kdst_timing(row: Mapping[str, Any]) -> KdstTiming:
     roster size (`starters + bench`) and league size.
     """
     data = _load_fixture()
+    if data.get("schema_version") == 2:
+        # K/DST are priced by the shared soft curves. Preserve the accepted late-round default
+        # for legacy callers without manufacturing timing evidence in the schema-v2 artifact.
+        return KdstTiming(
+            cap_rounds_from_end=V4_KDST_CAP_ROUNDS_FROM_END,
+            soft_penalty=0.0,
+            measured=False,
+            confidence="low",
+        )
     rows = data.get("rows", {})
     rid = str(row["id"])
     if rid in rows and rows[rid].get("kdst"):
@@ -635,11 +658,13 @@ def to_requirements(
     """
     bnd = bounds if bounds is not None else bench_bounds(row)
     timing = kdst_timing(row)
+    data = _load_fixture()
     return RosterRequirements(
         starters=starters_tuple(row),
         bench_size=int(row["bench_slots"]),
         final_rounds=int(timing.cap_rounds_from_end),
-        bench_bounds=bnd.as_pairs(),
+        # Schema-v2 shapes are ranking costs, not CP-SAT feasibility constraints.
+        bench_bounds=() if data.get("schema_version") == 2 else bnd.as_pairs(),
     )
 
 
