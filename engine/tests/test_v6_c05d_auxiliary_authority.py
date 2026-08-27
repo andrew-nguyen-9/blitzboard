@@ -133,7 +133,7 @@ def _measurement(arm, year, lid, seed):
 
 def _hand_written_pass(tmp_path):
     """Forge a fit-verdict.json that RECORDS verdict `pass` with a complete valid frame + bound
-    auxiliary files. Confirmation must still refuse it, because it re-derives authority + verdict."""
+    auxiliary files. Confirmation must still refuse it: it re-derives authority + verdict."""
     pins = {}
     for i, cell in enumerate(sorted(expected_fit_cells(EFF))):
         p = tmp_path / "measure" / "fit" / f"{i}.json"
