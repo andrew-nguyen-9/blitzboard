@@ -51,6 +51,7 @@ __all__ = [
     "V4_MANIFEST_SHA256",
     "draft_arm",
     "load_execution_manifest_v4",
+    "mandatory_league_ids",
     "measure_arm",
     "rehearse_v4",
     "validate_draft_receipt",
@@ -108,6 +109,10 @@ def load_execution_manifest_v4(root: str | Path) -> dict[str, Any]:
         "measurement_file_hashes": dict(v4["measurement_evaluator"]["file_hashes"]),
         "pairing_keys": list(v4["pairing_keys"]),
         "roster_rules": list(exec_v2["blocker_2_roster_validation"]["rules"]),
+        "arm_shas": {
+            a["name"]: a.get("policy_sha") or a.get("combined_candidate_sha")
+            for a in exec_v2["arms"].values()
+        },
     }
     return effective
 
@@ -170,6 +175,51 @@ def validate_draft_receipt(
         raise ExecutionError("draft receipt league_id does not match the league row")
     # The undrafted board complement IS the shared initial free-agent pool; nothing to store —
     # evaluate_rosters constructs exactly board-minus-drafted, which the measurement stage uses.
+
+
+def mandatory_league_ids(effective: dict[str, Any]) -> frozenset[str]:
+    """The frozen 216-mandatory league-id set, derived from the matrix and tied to the manifest's
+    frozen count (teams {10,12,14} x bench {4,8}); a drift in either refuses."""
+    from blitz_engine.testing import matrix
+
+    ids = frozenset(
+        r["id"] for r in matrix.all()
+        if int(r["teams"]) in (10, 12, 14) and int(r["bench_slots"]) in (4, 8)
+    )
+    want = int(effective["league_configurations"]["mandatory_league_id_count"])
+    if len(ids) != want:
+        raise ExecutionError(f"derived {len(ids)} mandatory league ids != frozen {want}")
+    return ids
+
+
+def _check_authoritative_frame(
+    effective: dict[str, Any], *, year: int, league_id: str, base_seed: int, arm: str,
+    expected_sha: str, stage: str, n_seasons: int | None = None,
+) -> None:
+    """Every authoritative parameter must come from the frozen effective manifest; a caller
+    override of any of them is refused (reviewer blocker 2)."""
+    if int(base_seed) not in [int(s) for s in effective["seed_derivation"]["base_seeds"]]:
+        raise ExecutionError(f"authoritative base_seed {base_seed} is not a frozen base seed")
+    allowed_years = (
+        set(effective["seasons"]) if stage == "fit" else set(effective["held_out_seasons"])
+    )
+    if int(year) not in allowed_years:
+        raise ExecutionError(f"authoritative year {year} is not frozen for stage {stage!r}")
+    if str(league_id) not in mandatory_league_ids(effective):
+        raise ExecutionError(
+            f"authoritative league_id {league_id} is not in the frozen 216-mandatory set"
+        )
+    arm_shas = effective["_v4"]["arm_shas"]
+    if arm not in arm_shas:
+        raise ExecutionError(f"authoritative arm {arm!r} is not a frozen arm name")
+    if expected_sha != arm_shas[arm]:
+        raise ExecutionError(
+            f"authoritative arm {arm!r} SHA {expected_sha} != frozen {arm_shas[arm]}"
+        )
+    if n_seasons is not None and int(n_seasons) != int(effective["evaluator"]["n_seasons"]):
+        raise ExecutionError(
+            f"authoritative n_seasons {n_seasons} != frozen {effective['evaluator']['n_seasons']}"
+        )
 
 
 def _receipt_path(out_dir: str | Path, kind: str, stage: str, arm: str, r: dict[str, Any]) -> Path:
@@ -302,6 +352,11 @@ def draft_arm(
     """Stage 1: verified arm checkout drafts one slice; write-once draft receipt."""
     if stage not in ("fit", "confirm"):
         raise ExecutionError(f"unknown stage {stage!r}")
+    if authoritative:
+        _check_authoritative_frame(
+            effective, year=year, league_id=league_id, base_seed=base_seed,
+            arm=arm, expected_sha=expected_sha, stage=stage,
+        )
     provenance = tooling_provenance(tooling_root)
     guard.check(year, stage=stage)
     head = verify_arm_checkout(checkout, expected_sha)
@@ -351,6 +406,12 @@ def measure_arm(
             f"authority mismatch: draft receipt authoritative={receipt.get('authoritative')} "
             f"but measurement authoritative={authoritative}; draft and measurement authority must "
             "match and an authoritative run refuses non-authoritative input"
+        )
+    if authoritative:
+        _check_authoritative_frame(
+            effective, year=receipt["year"], league_id=receipt["league_id"],
+            base_seed=receipt["base_seed"], arm=receipt["arm"],
+            expected_sha=receipt["policy_sha"], stage=stage, n_seasons=n_seasons,
         )
     guard.check(receipt["year"], stage=stage)
     measured_by = verify_measurement_checkout(measurement_checkout, effective)

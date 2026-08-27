@@ -13,6 +13,7 @@ import pytest
 from blitz_engine.promotion.execution import ExecutionError
 from blitz_engine.promotion.harness_v4 import (
     load_execution_manifest_v4,
+    mandatory_league_ids,
     measure_arm,
 )
 from blitz_engine.promotion.runner import HeldOutGuard
@@ -55,3 +56,48 @@ def test_measure_refuses_authoritative_on_nonauthoritative_draft(tmp_path):
             p, REPO, effective=EFFECTIVE, n_seasons=8, guard=_guard(),
             out_dir=tmp_path, tooling_root=REPO, authoritative=True,
         )
+
+
+# ── req 2: authoritative frame derived exclusively from the frozen manifest ────────────
+
+
+def _authoritative_receipt(tmp_path, name="a.json", **over) -> Path:
+    r = _real_receipt()
+    r["authoritative"] = True
+    r.update(over)
+    p = tmp_path / "draft" / "fit" / name
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(r))
+    return p
+
+
+def _measure_auth(path, n_seasons=8):
+    return measure_arm(
+        path, REPO, effective=EFFECTIVE, n_seasons=n_seasons, guard=_guard(),
+        out_dir=path.parent.parent.parent, tooling_root=REPO, authoritative=True,
+    )
+
+
+def test_mandatory_league_ids_is_the_frozen_216():
+    ids = mandatory_league_ids(EFFECTIVE)
+    assert len(ids) == 216
+    assert "t10-1qb-std-te0.0-b4-ir0" in ids
+    assert "t8-1qb-std-te0.0-b4-ir0" not in ids  # t8 is not mandatory
+
+
+def test_authoritative_measure_refuses_n_seasons_override(tmp_path):
+    p = _authoritative_receipt(tmp_path)
+    with pytest.raises(ExecutionError, match="n_seasons"):
+        _measure_auth(p, n_seasons=1)
+
+
+def test_authoritative_refuses_nonframe_base_seed(tmp_path):
+    p = _authoritative_receipt(tmp_path, base_seed=999999999)
+    with pytest.raises(ExecutionError, match="base_seed"):
+        _measure_auth(p)
+
+
+def test_authoritative_refuses_nonmandatory_league(tmp_path):
+    p = _authoritative_receipt(tmp_path, league_id="t8-1qb-std-te0.0-b4-ir0")
+    with pytest.raises(ExecutionError, match="mandatory"):
+        _measure_auth(p)
