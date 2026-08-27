@@ -47,7 +47,7 @@ def slot_accepts(slot: str, position: str) -> bool:
     """True if a player at ``position`` may fill starter ``slot``."""
     if slot == "FLEX":
         return position in FLEX_ELIGIBLE
-    if slot in ("SUPERFLEX", "SFLX"):
+    if slot in ("SUPERFLEX", "OP", "SFLX"):
         return position in SUPERFLEX_ELIGIBLE
     return slot == position
 

@@ -45,8 +45,9 @@ def _pool() -> list[Player]:
 def test_flex_and_superflex_eligibility() -> None:
     assert slot_accepts("FLEX", "RB") and slot_accepts("FLEX", "WR") and slot_accepts("FLEX", "TE")
     assert not slot_accepts("FLEX", "QB") and not slot_accepts("FLEX", "K")
-    assert slot_accepts("SUPERFLEX", "QB") and slot_accepts("SUPERFLEX", "RB")
-    assert not slot_accepts("SUPERFLEX", "K") and not slot_accepts("SUPERFLEX", "DST")
+    for slot in ("SUPERFLEX", "OP", "SFLX"):
+        assert all(slot_accepts(slot, pos) for pos in ("QB", "RB", "WR", "TE"))
+        assert not slot_accepts(slot, "K") and not slot_accepts(slot, "DST")
     assert slot_accepts("QB", "QB") and not slot_accepts("QB", "RB")
 
 

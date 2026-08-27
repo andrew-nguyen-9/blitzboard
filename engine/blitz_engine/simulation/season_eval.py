@@ -88,8 +88,8 @@ _INJURY_STREAM = 101
 _AVAIL_STREAM = 202
 _DRAFT_STREAM = 303
 
-#: Greedy fill order — most specific slot first, so FLEX/SUPERFLEX absorb the leftovers.
-_SLOT_ORDER = ("QB", "RB", "WR", "TE", "K", "DST", "FLEX", "SUPERFLEX")
+#: Greedy fill order — every dedicated slot first, then flexible slots and aliases.
+_SLOT_ORDER = ("QB", "RB", "WR", "TE", "K", "DST", "FLEX", "SUPERFLEX", "OP", "SFLX")
 
 #: The documented policy mix. `static_proxy` stands in for `frontend/lib/draftAI.ts` (e10 replaces
 #: it with the real TypeScript policy over the v5-architecture §5 node bridge — see gotchas).

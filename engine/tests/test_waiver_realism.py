@@ -368,3 +368,44 @@ def test_combined_weekly_cap_production_equivalent(certain: None) -> None:
     )
     assert (emergency + upside).tolist() == [1.0]
     assert emergency.tolist() == [1.0]  # the emergency won the shared allowance
+
+
+# ── C02C: canonical offensive-player slot aliases (waiver-realism-v5) ────────
+
+
+@pytest.mark.parametrize("slot", ["SUPERFLEX", "OP", "SFLX"])
+@pytest.mark.parametrize("add_position", ["QB", "RB", "WR", "TE"])
+def test_offensive_player_slot_aliases_accept_every_offensive_position(
+    slot: str, add_position: str
+) -> None:
+    positions = ["QB", "WR", add_position]
+    swap = se._best_upgrade(
+        squad=[0, 1], free=[2], positions=positions,
+        proj=np.array([20.0, 1.0, 10.0]), known_out=np.zeros(3, dtype=bool),
+        margin=0.15, slots={slot: 1},
+    )
+    assert swap == (1, 2)
+
+
+@pytest.mark.parametrize("slot", ["SUPERFLEX", "OP", "SFLX"])
+@pytest.mark.parametrize("add_position", ["K", "DST"])
+def test_offensive_player_slot_aliases_reject_k_and_dst(
+    slot: str, add_position: str
+) -> None:
+    positions = ["QB", "WR", add_position]
+    assert se._best_upgrade(
+        squad=[0, 1], free=[2], positions=positions,
+        proj=np.array([20.0, 1.0, 100.0]), known_out=np.zeros(3, dtype=bool),
+        margin=0.0, slots={slot: 1},
+    ) is None
+
+
+@pytest.mark.parametrize("slot", ["SUPERFLEX", "OP", "SFLX"])
+def test_offensive_player_slot_aliases_fill_after_dedicated_slots(slot: str) -> None:
+    # The stronger QB must occupy the dedicated QB slot, leaving the RB for the
+    # flexible slot. Filling the flexible alias first would strand the RB.
+    filled = se._fill(
+        ids=[0, 1], slots={slot: 1, "QB": 1}, positions=["QB", "RB"],
+        proj=np.array([20.0, 10.0]), usable=np.ones(2, dtype=bool),
+    )
+    assert filled == [0, 1]
