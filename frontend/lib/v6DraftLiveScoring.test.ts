@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { RosterSlot } from "./draft";
-import type { AIContext } from "./draftAI";
+import { scoreBoard, type AIContext } from "./draftAI";
+import { defaultTeams, type LeagueConfig } from "./leagueConfig";
 import { formatDraftExplanation, type ReplacementChurnEvidence } from "./v6DraftExplanation";
-import { scoreBoardWithExplanations } from "./v6DraftLiveScoring";
+import { deriveBenchShapeLeagueKey, scoreBoardWithExplanations } from "./v6DraftLiveScoring";
 import type { PlayerWithValue } from "./types";
 
 function player(id: string, position: string, projection: number, options: {
@@ -68,6 +69,16 @@ function context(): AIContext {
 }
 
 describe("C04 live scoring and explanation integration", () => {
+  it("preserves shipped ranking and numeric scores exactly", () => {
+    const ctx = context();
+    const shipped = scoreBoard(ctx);
+    const explained = scoreBoardWithExplanations(ctx, {
+      leagueConfigKey: "t12-superflex-half-te0.0-b4-ir0",
+    });
+    expect(explained.map((pick) => pick.player.id)).toEqual(shipped.map((pick) => pick.player.id));
+    expect(explained.map((pick) => pick.score)).toEqual(shipped.map((pick) => pick.score));
+  });
+
   it("decorates every shipped score with six structured components and an exact reconciliation", () => {
     const picks = scoreBoardWithExplanations(context(), {
       leagueConfigKey: "t12-superflex-half-te0.0-b4-ir0",
@@ -159,3 +170,44 @@ describe("C04 live scoring and explanation integration", () => {
   });
 });
 
+describe("deriveBenchShapeLeagueKey", () => {
+  function config(overrides: Partial<LeagueConfig> = {}): LeagueConfig {
+    return {
+      source: "manual",
+      leagueId: null,
+      name: "test",
+      numTeams: 12,
+      rosterSlots: SLOTS,
+      benchSize: 4,
+      tePremium: 0.5,
+      irSlots: 1,
+      scoringLabel: "Half-PPR · Superflex",
+      teams: defaultTeams(12),
+      ...overrides,
+    };
+  }
+
+  it("derives every frozen factor from the actual normalized configuration", () => {
+    expect(deriveBenchShapeLeagueKey(config())).toBe("t12-superflex-half-te0.5-b4-ir1");
+    expect(deriveBenchShapeLeagueKey(config({
+      rosterSlots: SLOTS.filter((slot) => slot.slot !== "OP"),
+      scoringLabel: "Standard",
+      tePremium: 0,
+      irSlots: 0,
+    }))).toBe("t12-1qb-std-te0.0-b4-ir0");
+    expect(deriveBenchShapeLeagueKey(config({
+      rosterSlots: [{ slot: "QB", eligible: ["QB"] }, { slot: "QB", eligible: ["QB"] }],
+      scoringLabel: "PPR",
+    }))).toBe("t12-2qb-ppr-te0.5-b4-ir1");
+  });
+
+  it.each([
+    ["unsupported teams", { numTeams: 8 }],
+    ["unsupported bench", { benchSize: 6 }],
+    ["missing TE evidence", { tePremium: undefined }],
+    ["missing IR evidence", { irSlots: undefined }],
+    ["custom scoring", { scoringLabel: "Custom" }],
+  ] as const)("falls back explicitly for %s", (_label, override) => {
+    expect(deriveBenchShapeLeagueKey(config(override))).toMatch(/^custom:/);
+  });
+});

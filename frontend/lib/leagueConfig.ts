@@ -23,6 +23,9 @@ export interface LeagueConfig {
   numTeams: number;
   rosterSlots: RosterSlot[]; // starting lineup
   benchSize: number;
+  /** Normalized C03 factors when the source proves them; absent means custom/unknown. */
+  tePremium?: 0 | 0.5;
+  irSlots?: 0 | 1;
   scoringLabel: string; // human summary e.g. "PPR · Superflex"
   teams: LeagueTeam[];
   draftId?: string | null;
@@ -38,6 +41,8 @@ export function defaultConfig(numTeams = 12): LeagueConfig {
     numTeams,
     rosterSlots: SUPERFLEX_ROSTER,
     benchSize: BENCH_SIZE,
+    tePremium: 0,
+    irSlots: 0,
     scoringLabel: "Custom · Superflex",
     teams: defaultTeams(numTeams),
   };

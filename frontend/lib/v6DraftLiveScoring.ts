@@ -22,6 +22,7 @@ import {
 } from "./draftAI";
 import { contingentValuation, weeklyByeCoverage } from "./contingency";
 import { projectionCeiling } from "./valueUnits";
+import type { LeagueConfig } from "./leagueConfig";
 import {
   buildDraftExplanation,
   type DraftExplanationPayload,
@@ -43,6 +44,31 @@ export interface LiveDraftExplanationContext {
 export interface ExplainedScoredPick extends ScoredPick {
   readonly explanation: DraftExplanationPayload;
   readonly trace: DraftTrace;
+}
+
+const CANONICAL_TEAMS = new Set([10, 12, 14]);
+
+/** Derives the C03 key only when every frozen factor is represented by the live config.
+ * Anything else remains a descriptive custom key and reaches the resolver's explicit fallback. */
+export function deriveBenchShapeLeagueKey(config: LeagueConfig): LeagueConfigKey | string {
+  const qbDedicated = config.rosterSlots.filter((slot) => slot.slot === "QB" && slot.eligible.length === 1).length;
+  const qbFlex = config.rosterSlots.some((slot) => slot.slot !== "QB" && slot.eligible.includes("QB"));
+  const qbMode = qbFlex ? "superflex" : qbDedicated >= 2 ? "2qb" : qbDedicated === 1 ? "1qb" : null;
+  const label = config.scoringLabel.toLowerCase();
+  const scoring = label.includes("half") ? "half"
+    : label.includes("ppr") ? "ppr"
+    : label.includes("standard") || /\bstd\b/.test(label) ? "std"
+    : null;
+  const tePremium = config.tePremium;
+  const irSlots = config.irSlots;
+  const canonical = CANONICAL_TEAMS.has(config.numTeams) && qbMode && scoring &&
+    (config.benchSize === 4 || config.benchSize === 8) &&
+    (tePremium === 0 || tePremium === 0.5) &&
+    (irSlots === 0 || irSlots === 1);
+  if (!canonical) {
+    return `custom:t${config.numTeams}:b${config.benchSize}:${qbMode ?? "qb-unknown"}:${scoring ?? "scoring-unknown"}:te${config.tePremium ?? "unknown"}:ir${config.irSlots ?? "unknown"}`;
+  }
+  return `t${config.numTeams}-${qbMode}-${scoring}-te${tePremium.toFixed(1)}-b${config.benchSize}-ir${irSlots}` as LeagueConfigKey;
 }
 
 function shapePosition(position: string | null | undefined): BenchShapePosition {
