@@ -78,15 +78,11 @@ def test_hash_is_exact_and_canonicalization_is_stable() -> None:
     assert c03.canonical_json_hash({"z": 2}) != c03.canonical_json_hash(a)
 
 
-@pytest.mark.xfail(strict=True, reason="C03 unimplemented: canonical fixture is legacy schema v1")
 def test_canonical_fixture_satisfies_c03_schema() -> None:
     errors = c03.validate_shape_artifact(json.loads(CANONICAL.read_text()))
     assert errors == []
 
 
-@pytest.mark.xfail(
-    strict=True, reason="C03 unimplemented: browser-safe generated shape artifact absent"
-)
 def test_generated_typescript_artifact_has_exact_hash_and_no_node_runtime() -> None:
     generated = ROOT / "frontend/lib/generated/benchShape.generated.ts"
     text = generated.read_text()
@@ -101,9 +97,6 @@ def test_generation_check_mode_exists_and_is_documented() -> None:
     assert "--check" in text and "canonical_source_hash" in text
 
 
-@pytest.mark.xfail(
-    strict=True, reason="known regression remains blocked until C03 evidence clears it"
-)
 def test_blocked_slice_is_explicitly_unsupported_in_canonical_shape() -> None:
     canonical = json.loads(CANONICAL.read_text())
     row = canonical["rows"][c03.BLOCKED_SLICE]
