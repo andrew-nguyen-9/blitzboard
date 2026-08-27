@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
+import { resolveBenchShape, type LeagueConfigKey } from "./benchShape";
+import {
+  BENCH_SHAPE_CANONICAL_SOURCE_HASH,
+  BENCH_SHAPE_ROWS,
+} from "./generated/benchShape.generated";
 
 interface TraceSpec {
   fixture_status: string;
   schema_version: number;
   cases: {
     id: string;
-    league: { qb_mode: string; bench_slots: number; ir_slots: number; te_premium: number };
+    league: { teams: number; qb_mode: string; bench_slots: number; ir_slots: number; te_premium: number };
     starting_slots: Record<string, number>;
     required: string[];
     dependency: string;
@@ -39,9 +44,33 @@ describe("C04 producer-blind trace specifications", () => {
   });
 });
 
-describe.skip("C04 golden live traces — intentionally blocked on canonical C03 schema", () => {
-  it.each(fixture.cases)("produces the canonical structured trace for $id", () => {});
-  it("matches canonical and browser-safe shape source hashes byte-for-byte", () => {});
-  it("treats soft bench-shape costs as nonbinding and never as positional caps", () => {});
-});
+describe("C04 accepted C03 trace resolutions", () => {
+  it.each(fixture.cases)("resolves $id without measured-evidence overclaim", (spec) => {
+    const canonical = spec.league.qb_mode !== "custom" && [10, 12, 14].includes(spec.league.teams) &&
+      [4, 8].includes(spec.league.bench_slots);
+    const key = canonical
+      ? `t${spec.league.teams}-${spec.league.qb_mode}-half-te${spec.league.te_premium.toFixed(1)}-b${spec.league.bench_slots}-ir${spec.league.ir_slots}`
+      : `unsupported:${spec.id}`;
+    const shape = resolveBenchShape(key as LeagueConfigKey, spec.league.bench_slots);
+    expect(shape.evidenceStatus).toBe("unsupported");
+    expect(shape.degraded).toBe(true);
+    expect(shape.hardCaps).toBeNull();
+    expect(Object.values(shape.softMarginalCosts).flat().every(Number.isFinite)).toBe(true);
+    expect(shape.degradedReason).toBe(canonical ? "unsupported_evidence" : "missing_league_key");
+  });
 
+  it("matches canonical and browser-safe shape source hashes byte-for-byte", () => {
+    const canonical = JSON.parse(
+      readFileSync(new URL("../../fixtures/bench_shape.json", import.meta.url), "utf8"),
+    ) as { canonical_source_hash: string; rows: Record<string, unknown> };
+    expect(BENCH_SHAPE_CANONICAL_SOURCE_HASH).toBe(canonical.canonical_source_hash);
+    expect(Object.keys(BENCH_SHAPE_ROWS).sort()).toEqual(Object.keys(canonical.rows).sort());
+  });
+
+  it("treats soft bench-shape costs as nonbinding and never as positional caps", () => {
+    const shape = resolveBenchShape("t14-2qb-std-te0.5-b4-ir1", 4);
+    expect(shape.hardCaps).toBeNull();
+    expect(shape.softMarginalCosts.QB.at(-1)).toBeTypeOf("number");
+    expect(shape.degraded).toBe(true);
+  });
+});

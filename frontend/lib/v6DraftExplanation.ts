@@ -35,6 +35,8 @@ export interface ImmediateLineupEvidence {
 
 export interface CoverageEvidence {
   readonly expectedStarts: number;
+  /** Scoring-unit contribution when available; expectedStarts remains the evidence quantity. */
+  readonly value?: number;
   readonly covered: readonly CoveredAssignmentEvidence[];
   readonly degraded: boolean;
   readonly degradedInputs?: readonly string[];
@@ -102,6 +104,8 @@ export interface DraftExplanationInput {
   readonly contingent: ContingentEvidence;
   readonly breakout: BreakoutEvidence;
   readonly replacement: ReplacementChurnEvidence;
+  /** The live policy score, when this payload decorates an existing scored pick. */
+  readonly scoredTotal?: number;
 }
 
 export interface DraftScoreComponent {
@@ -126,6 +130,8 @@ export interface DraftExplanationPayload {
   readonly candidateId: string;
   readonly score: number;
   readonly components: readonly DraftScoreComponent[];
+  readonly componentTotal: number;
+  readonly legacyPolicyResidual: number;
   readonly leagueEvidence: LeagueEvidencePresentation;
   readonly coveredAssignments: readonly CoveredAssignmentEvidence[];
   readonly contingent: ContingentEvidence;
@@ -209,7 +215,7 @@ export function buildDraftExplanation(input: DraftExplanationInput): DraftExplan
     ),
     component(
       "bye_absence_coverage",
-      input.coverage.expectedStarts,
+      input.coverage.value ?? input.coverage.expectedStarts,
       input.coverage.degraded ? "fallback" : "measured",
       input.coverage.covered.map((item) => `week:${item.week}:slot:${item.slot}:starter:${item.starterId}`),
       input.coverage.degradedInputs,
@@ -234,12 +240,15 @@ export function buildDraftExplanation(input: DraftExplanationInput): DraftExplan
     component("redundancy_cost", -marginalCost, shapeState, [], shapeDegraded),
   ];
   const degradedInputs = [...new Set(components.flatMap((item) => item.degradedInputs))];
-  const score = components.reduce((sum, item) => sum + (item.value ?? 0), 0);
+  const componentTotal = components.reduce((sum, item) => sum + (item.value ?? 0), 0);
+  const score = finite(input.scoredTotal ?? null) ? input.scoredTotal! : componentTotal;
 
   return {
     candidateId: input.candidateId,
     score,
     components,
+    componentTotal,
+    legacyPolicyResidual: score - componentTotal,
     leagueEvidence: {
       leagueConfigKey: shape.leagueConfigKey,
       artifactEvidenceStatus: shape.evidenceStatus,
@@ -280,9 +289,10 @@ export function formatDraftExplanation(payload: DraftExplanationPayload): readon
     lines.push(`Replacement/churn value: ${payload.replacementChurn.netValue.toFixed(2)}.`);
   }
   const redundancy = payload.components.find((item) => item.name === "redundancy_cost");
-  if (redundancy?.value != null) lines.push(`Soft redundancy cost: ${Math.abs(redundancy.value).toFixed(2)}.`);
+  if (redundancy?.value != null) {
+    lines.push(`Soft redundancy cost (${redundancy.state}): ${Math.abs(redundancy.value).toFixed(2)}.`);
+  }
   lines.push(`League evidence: ${payload.leagueEvidence.presentationState}.`);
   if (payload.degradedInputs.length) lines.push(`Degraded inputs: ${payload.degradedInputs.join(", ")}.`);
   return lines;
 }
-

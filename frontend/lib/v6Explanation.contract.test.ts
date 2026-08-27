@@ -183,9 +183,7 @@ describe("C04 explanation payload contract (producer-independent)", () => {
   });
 });
 
-describe.skip("C04 production explanation adapter — C02 accepted, awaiting C03 freeze", () => {
-  it("maps the future live scorer payload into the producer-independent contract", () => {});
-  it("carries candidate-level replacement/churn evidence without reconstructing it in the browser", () => {});
+describe.skip("C04 producer-issued C02 outcome identifiers — absent from accepted C02/C03", () => {
   it.each([
     "per_season",
     "per_season_h2h",

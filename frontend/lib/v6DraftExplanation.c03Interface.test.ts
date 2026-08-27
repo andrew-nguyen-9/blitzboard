@@ -13,6 +13,11 @@ import {
   type DraftExplanationInput,
 } from "./v6DraftExplanation";
 import { serializeDraftTrace, toDraftTrace } from "./v6DraftTrace";
+import { resolveBenchShape } from "./benchShape";
+import {
+  BENCH_SHAPE_CANONICAL_SOURCE_HASH,
+  BENCH_SHAPE_ROWS,
+} from "./generated/benchShape.generated";
 
 const KEY: LeagueConfigKey = "t12-superflex-half-te0.0-b4-ir0";
 const POSITIONS: readonly BenchShapePosition[] = ["QB", "RB", "WR", "TE", "K", "DST"];
@@ -188,8 +193,30 @@ describe("C04 consumer of frozen C03 ResolveBenchShape", () => {
   });
 });
 
-describe.skip("C04 measured C03 artifact acceptance — waiting for producer and C03 PASS", () => {
-  it("consumes a canonical measured row and presents measured provenance", () => {});
-  it("consumes an interpolated row without presenting it as measured", () => {});
-  it("matches canonical and browser-safe artifact trace results", () => {});
+describe("C04 accepted all-unsupported C03 artifact acceptance", () => {
+  it("consumes canonical rows with explicit unsupported provenance", () => {
+    const payload = buildDraftExplanation(input(resolveBenchShape as unknown as ResolveBenchShape));
+    expect(payload.leagueEvidence).toMatchObject({
+      artifactEvidenceStatus: "unsupported",
+      presentationState: "unsupported",
+      degraded: true,
+      degradedReason: "unsupported_evidence",
+    });
+    expect(payload.leagueEvidence.provenance).toMatchObject({
+      kind: "unsupported",
+      reason: "authoritative candidate disposition is do_not_promote",
+    });
+  });
+
+  it("contains no measured or interpolated rows to overclaim", () => {
+    const statuses = new Set(Object.values(BENCH_SHAPE_ROWS).map((row) => row.evidence_status));
+    expect(statuses).toEqual(new Set(["unsupported"]));
+  });
+
+  it("matches canonical and browser-safe artifact source hashes", () => {
+    const canonical = JSON.parse(
+      readFileSync(new URL("../../fixtures/bench_shape.json", import.meta.url), "utf8"),
+    ) as { canonical_source_hash: string };
+    expect(BENCH_SHAPE_CANONICAL_SOURCE_HASH).toBe(canonical.canonical_source_hash);
+  });
 });
