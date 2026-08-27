@@ -1,0 +1,18 @@
+{
+  "schema_version": 3,
+  "experiment_id": "bench-portfolio-c03-v3",
+  "status": "preregistered_not_executed",
+  "amends": ".orchestrator-v6/experiments/bench-portfolio-c03-v2.json",
+  "reason_for_amendment": "Correct the v2 adapter entry-point list so separate preregistered board and season seeds can both be honored. No hypothesis, formula, arm, configuration, seed, metric, threshold, evidence rule, or failure disposition changes.",
+  "replaces_v2_adapter_fields": {
+    "entry_points": [
+      "blitz_engine.simulation.season_eval.build_players",
+      "blitz_engine.simulation.season_eval.draft_league",
+      "blitz_engine.simulation.season_eval.evaluate_rosters"
+    ],
+    "pairing_reduction": "For each season, config, board_seed, season_seed and seat, subtract the control outcome in the mirrored run from the candidate outcome in the other run. Reduce the resulting raw paired vectors directly with mean and normal-approximation CI95. paired_ci is not applicable because candidate and control occupy complementary seats in two result objects.",
+    "seed_mapping": "draft_league(seed=board_seed) creates each mirrored roster set; evaluate_rosters(config=EvalConfig(n_seasons=1, seed=season_seed, frozen C02C waiver knobs)) evaluates it. Both parity runs receive identical player pool, row, board seed, and season seed."
+  },
+  "private_imports_forbidden": true,
+  "execution_rule": "Commit v3 alone before production behavior edits. Read v1, v2, and v3 cumulatively, with only the named v2 adapter fields replaced."
+}
