@@ -6,7 +6,6 @@ available; these are the producer-side completeness/duplicate/pairing/numerical/
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -176,6 +175,5 @@ def test_fit_analysis_refuses_mismatched_pinned_set():
         validate_fit_analysis_receipt(fa, EFF, measurement_shas={"a" * 64, "c" * 64})
 
 
-# write_fit_verdict / require_fit_verdict now MECHANICALLY run evaluate_promotion (no caller report);
-# their integration + the C05C authority adversarial coverage live in
-# test_v6_c05c_fit_analysis_authority.py.
+# write_fit_verdict / require_fit_verdict now run evaluate_promotion mechanically (no caller
+# report); integration + C05C authority coverage live in test_v6_c05c_fit_analysis_authority.py.

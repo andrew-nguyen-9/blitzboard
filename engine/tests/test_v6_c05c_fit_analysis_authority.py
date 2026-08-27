@@ -24,7 +24,6 @@ from blitz_engine.promotion.harness_v4 import (
     validate_fit_analysis_receipt,
     write_fit_verdict,
 )
-from blitz_engine.promotion.manifest import sha256_file
 from blitz_engine.promotion.runner import derive_eval_seed
 
 REPO = Path(__file__).resolve().parents[2]

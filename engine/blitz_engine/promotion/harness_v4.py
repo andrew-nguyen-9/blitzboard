@@ -407,10 +407,10 @@ def _reconstruct_pairs(docs: list[dict[str, Any]]) -> list[tuple[Any, Any]]:
 def validate_fit_analysis_receipt(
     fit_analysis: dict[str, Any], effective: dict[str, Any], *, measurement_shas: set[str]
 ) -> str:
-    """Validate a fit-analysis receipt WITHOUT trusting caller-authored content. Beyond structure and
-    the complete pinned input set, the embedded report must carry the complete frozen gate schema and
-    a verdict the frozen rule re-derives from those gate statuses; a self-hashed report with empty or
-    partial gates, or a verdict inconsistent with its gates, is refused (reviewer C05C blocker 1)."""
+    """Validate a fit-analysis receipt WITHOUT trusting caller-authored content. Beyond structure
+    and the pinned input set, the embedded report must carry the complete frozen gate schema and a
+    verdict the frozen rule re-derives from those gate statuses; a self-hashed report with empty or
+    partial gates, or a verdict inconsistent with its gates, is refused (C05C blocker 1)."""
     from blitz_engine.promotion.gates import report_hash
 
     if fit_analysis.get("kind") != "fit_analysis":
@@ -455,7 +455,7 @@ def _run_fit_analysis(
     effective: dict[str, Any], docs: list[dict[str, Any]], aux_docs: dict[str, Any]
 ) -> Any:
     """Mechanically produce the authoritative fit analysis: rebuild the frozen pairs and call the
-    frozen `evaluate_promotion` with the consumed auxiliary evidence. No caller report is trusted."""
+    frozen `evaluate_promotion` with the consumed auxiliary evidence. No caller report trusted."""
     from blitz_engine.promotion.gates import evaluate_promotion
 
     return evaluate_promotion(
@@ -520,9 +520,9 @@ def write_fit_verdict(
 
 def require_fit_verdict(out_dir: str | Path, effective: dict[str, Any]) -> dict[str, Any]:
     """Confirmation reloads EVERY pinned measurement, revalidates the exact complete frame, reloads
-    and re-verifies the pinned auxiliary receipts, RERUNS the frozen analysis from all pinned inputs,
-    compares the canonical report hash to the recorded one, and requires `promote`. No caller-authored
-    verdict, hash, or partial input set can unlock confirmation (reviewer C05C blocker 2 / req 7)."""
+    and re-verifies the pinned auxiliary receipts, RERUNS the frozen analysis from all pinned
+    inputs, compares the canonical report hash to the recorded one, and requires `promote`. No
+    caller-authored verdict, hash, or partial input set unlocks confirmation (C05C blocker 2)."""
     from blitz_engine.promotion.gates import report_hash
     from blitz_engine.promotion.manifest import sha256_file
 
