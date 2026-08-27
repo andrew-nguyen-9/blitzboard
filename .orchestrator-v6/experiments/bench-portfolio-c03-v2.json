@@ -1,0 +1,86 @@
+{
+  "schema_version": 2,
+  "experiment_id": "bench-portfolio-c03-v2",
+  "status": "preregistered_not_executed",
+  "amends": ".orchestrator-v6/experiments/bench-portfolio-c03-v1.json",
+  "reason_for_amendment": "Bind accepted C02C and the frozen C03 v1 public interface; specify exact vector selection, arm construction, seed mapping, and receipt rules before production behavior or authoritative execution.",
+  "accepted_c02c_sha": "417af276dd4438d8a35f38d08bfc26206044925e",
+  "accepted_c02c_review_sha": "f2a1537dbae7a0a5419fb39ad4aa1ea184f850ac",
+  "frozen_c03_interface_sha": "a3394b0af8fbb6bb731d51ac0515aba345a094e2",
+  "immutable_inputs": {
+    "league_matrix": "fixtures/league_matrix.json",
+    "legacy_shape": "fixtures/bench_shape.json at accepted C02C",
+    "seasons": [2018, 2021, 2024]
+  },
+  "vector_space": {
+    "positions": ["QB", "RB", "WR", "TE", "K", "DST"],
+    "definition": "Every non-negative integer vector whose six counts sum exactly to bench_slots.",
+    "expected_counts": {"4": 126, "8": 1287},
+    "tie_break": "highest score, then lexicographically smallest counts in QB,RB,WR,TE,K,DST order"
+  },
+  "selection_score": {
+    "name": "whole_portfolio_v1",
+    "units": "dimensionless preregistered selection score; never a season-outcome claim",
+    "formula": "coverage + scarcity + fragility + contingency + replacement - correlation - specialist",
+    "coverage": "0.55 times maximum bipartite matching of bench bodies to representative simultaneous QB,RB,WR,TE,FLEX and format-specific SUPERFLEX/QB2 holes",
+    "scarcity": "sum over each body depth d: (starter_need[position]*2.2 + replaceability[position]*league_scarcity)/d",
+    "starter_need": {"QB": 1.0, "RB": 2.0, "WR": 2.0, "TE": 1.0, "K": 0.15, "DST": 0.15},
+    "format_adjustments": "superflex QB +0.9; 2QB QB +1.15; FLEX RB +0.35, WR +0.40, TE +0.10; TE adds 0.9*te_premium",
+    "league_scarcity": "1 + 0.045*(teams-10) + 0.035*(bench_slots-4)",
+    "replaceability": {"QB": 0.7, "RB": 0.9, "WR": 1.0, "TE": 0.65, "K": 0.12, "DST": 0.12},
+    "format_replaceability": "multi-QB adds 1.15 to QB; TE adds 0.8*te_premium",
+    "fragility": "skill/QB marginal multiplied by 1.18 in no-IR and otherwise 1.0; IR adds 0.12/d stash value",
+    "correlation": "subtract 0.22*n*(n-1)/2 for same-position QB/RB/WR/TE counts",
+    "specialist": "no hard K/DST cap; their low starter need and replaceability create soft opportunity cost"
+  },
+  "soft_marginal_costs": "For each position and depth 0..bench_slots, cost is max(0, selected_score - best score among exact-budget vectors constrained to that position count), rounded to 6 decimals; all entries finite and soft.",
+  "arms": {
+    "control": "accepted C02C legacy e6 independent bounds preset and K/DST timing resolved from the accepted schema-v1 fixture",
+    "candidate": "exact selected complete vector: demand and ceiling both equal the selected count vector; K/DST timing remains the accepted control timing so only whole-bench composition changes"
+  },
+  "adapter": {
+    "entry_points": ["blitz_engine.simulation.season_eval.evaluate_season", "blitz_engine.simulation.season_eval.paired_ci"],
+    "private_imports_forbidden": true,
+    "design": "Two mirrored mixed-policy leagues per arm comparison; parity swaps control/candidate across alternating seats; same player pool, row, draft seed, season seed, and C02C EvalConfig in both runs.",
+    "board_seed_mapping": "draft seed = board_seed",
+    "season_seed_mapping": "EvalConfig.seed = season_seed; because evaluate_season also drafts, adapter drafts explicitly with board_seed then calls public evaluate_rosters with EvalConfig.seed=season_seed",
+    "n_seasons_per_seed": 1,
+    "pairing_unit": "season_seed x board_seed x season x seat",
+    "waiver_config": {"waivers": true, "waiver_moves_per_week": 1, "proactive_moves_per_week": 1, "upgrade_margin": 0.15, "waiver_cost": 0.0, "season_moves_cap": 25, "playoff_slots": 4}
+  },
+  "mandatory_configs": [
+    "t10-1qb-half-te0.0-b4-ir0",
+    "t10-superflex-half-te0.5-b8-ir1",
+    "t10-2qb-ppr-te0.0-b8-ir0",
+    "t12-1qb-ppr-te0.5-b8-ir0",
+    "t12-superflex-std-te0.0-b4-ir1",
+    "t12-2qb-half-te0.5-b8-ir1",
+    "t14-1qb-half-te0.0-b4-ir1",
+    "t14-superflex-ppr-te0.5-b8-ir0",
+    "t14-2qb-std-te0.5-b4-ir1"
+  ],
+  "fit_seasons": [2021, 2024],
+  "held_out_seasons": [2018],
+  "board_seeds": [2026082501, 2026082502, 2026082503, 2026082504],
+  "season_seeds": [2026082601, 2026082602, 2026082603, 2026082604],
+  "metrics_and_thresholds": "Inherited unchanged from bench-portfolio-c03-v1.json.",
+  "evidence_status_rule": {
+    "measured": "authoritative row executed with all preregistered pairs and deterministic/budget/legality gates pass",
+    "interpolated": "non-mandatory key resolves from nearest measured mandatory keys using deterministic normalized feature distance; never carries n_pairs or seeds",
+    "unsupported": "blocked key, incomplete execution, deterministic failure, malformed evidence, or extrapolation without support",
+    "blocked_slice": "t14-2qb-std-te0.5-b4-ir1 remains unsupported unless its own held-out and aggregate thresholds all clear"
+  },
+  "receipts": {
+    "authoritative": ".orchestrator-v6/experiments/bench-portfolio-c03-results-v1.json",
+    "canonical_source": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json",
+    "runtime": "wall seconds and ru_maxrss MiB for selection, evaluator, generation, and total",
+    "immutability": "Results and source receipts are write-once. Any rerun uses v2 filenames."
+  },
+  "failure_interpretation": {
+    "deterministic_or_parity_failure": "BLOCK_C03",
+    "candidate_below_any_v1_numerical_threshold": "DO_NOT_PROMOTE_PRESERVE_C02C_BEHAVIOR",
+    "blocked_slice_not_individually_cleared": "KEEP_UNSUPPORTED",
+    "inconclusive": "PRESERVE_C02C_BEHAVIOR"
+  },
+  "execution_rule": "Commit this v2 manifest alone before editing production behavior. Run the authoritative experiment once only after deterministic implementation gates pass."
+}
