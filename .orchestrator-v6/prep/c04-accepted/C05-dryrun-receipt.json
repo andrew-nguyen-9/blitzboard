@@ -1,0 +1,796 @@
+{
+  "authoritative": false,
+  "board_corpus_mismatches": [],
+  "board_corpus_verified": true,
+  "label": "SYNTHETIC / NON-AUTHORITATIVE \u2014 cannot justify shipping",
+  "manifest": "promotion-v3.json",
+  "manifest_sha256": "bbb241603a33697bff376b21a2e57e7e066c3c85186eaaab120485ec6bd941ab",
+  "null": {
+    "base_seed": 2026082601,
+    "board_hashes": {
+      "t10-1qb-std-te0.0-b4-ir0": "d5a2eca5570920e9b509216aadb51c3fa896b165b9cfd7ca606fda36d6645803",
+      "t14-2qb-std-te0.5-b4-ir1": "62454b3a25c79c855bf46148a72a787c904965da4ede2f8c8e32fb46de9720da"
+    },
+    "crn_deltas_all_zero": true,
+    "determinism_check": "passed (one arm executed twice, byte-identical)",
+    "expected_verdict": "preserve_v5",
+    "mode": "null (real evaluator, identical arms, common random numbers)",
+    "n_seasons_deviation": 2,
+    "report": {
+      "aggregate": null,
+      "authoritative": false,
+      "gates": [
+        {
+          "detail": "invariants pass; no leakage; deterministic",
+          "name": "deterministic_checks",
+          "status": "pass"
+        },
+        {
+          "detail": "zero started-points evidence \u2014 does not promote",
+          "name": "started_points_aggregate",
+          "status": "inconclusive"
+        },
+        {
+          "detail": "2 league ids, no significant regression",
+          "name": "hidden_regression_rule",
+          "status": "pass"
+        },
+        {
+          "detail": "mean +0.0000, CI95 [+0.0000, +0.0000], lower >= -0.005",
+          "name": "h2h_win_rate",
+          "status": "pass"
+        },
+        {
+          "detail": "metric unavailable (C02 paired-proxy dependency)",
+          "name": "playoff_proxy",
+          "status": "inconclusive"
+        },
+        {
+          "detail": "metric unavailable (C02 paired-proxy dependency)",
+          "name": "championship_proxy",
+          "status": "inconclusive"
+        },
+        {
+          "detail": "1 frozen benchmarks, all thresholds met",
+          "name": "calibration_gates",
+          "status": "pass"
+        },
+        {
+          "detail": "within limits",
+          "name": "limits",
+          "status": "pass"
+        }
+      ],
+      "held_out_access_log": [
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        }
+      ],
+      "label": "SYNTHETIC / NON-AUTHORITATIVE \u2014 cannot justify shipping",
+      "manifest_sha256": "bbb241603a33697bff376b21a2e57e7e066c3c85186eaaab120485ec6bd941ab",
+      "n_pairs": 2,
+      "schema_version": 3,
+      "slices": {
+        "t14-2qb-half-te0.0-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-2qb-half-te0.0-b4-ir1": {
+          "status": "missing"
+        },
+        "t14-2qb-half-te0.5-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-2qb-half-te0.5-b4-ir1": {
+          "status": "missing"
+        },
+        "t14-2qb-ppr-te0.0-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-2qb-ppr-te0.0-b4-ir1": {
+          "status": "missing"
+        },
+        "t14-2qb-ppr-te0.5-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-2qb-ppr-te0.5-b4-ir1": {
+          "status": "missing"
+        },
+        "t14-2qb-std-te0.0-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-2qb-std-te0.0-b4-ir1": {
+          "status": "missing"
+        },
+        "t14-2qb-std-te0.5-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-2qb-std-te0.5-b4-ir1": {
+          "mean": 0.0,
+          "status": "pass"
+        },
+        "t14-superflex-half-te0.0-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-superflex-half-te0.0-b4-ir1": {
+          "status": "missing"
+        },
+        "t14-superflex-half-te0.5-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-superflex-half-te0.5-b4-ir1": {
+          "status": "missing"
+        },
+        "t14-superflex-ppr-te0.0-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-superflex-ppr-te0.0-b4-ir1": {
+          "status": "missing"
+        },
+        "t14-superflex-ppr-te0.5-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-superflex-ppr-te0.5-b4-ir1": {
+          "status": "missing"
+        },
+        "t14-superflex-std-te0.0-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-superflex-std-te0.0-b4-ir1": {
+          "status": "missing"
+        },
+        "t14-superflex-std-te0.5-b4-ir0": {
+          "status": "missing"
+        },
+        "t14-superflex-std-te0.5-b4-ir1": {
+          "status": "missing"
+        }
+      },
+      "stage": "fit",
+      "synthetic": false,
+      "verdict": "preserve_v5"
+    },
+    "report_sha256": "d937873ac0f99463e4670be06dbf3b41deadd0b07747d09eed13a4bc009ff34c",
+    "rows": [
+      "t14-2qb-std-te0.5-b4-ir1",
+      "t10-1qb-std-te0.0-b4-ir0"
+    ],
+    "runtime_receipt": {
+      "peak_rss_gib": 0.268368,
+      "wall_clock_hours": 0.00107405866884316
+    },
+    "verdict": "preserve_v5",
+    "year": 2021
+  },
+  "synthetic": {
+    "byte_stable": true,
+    "confirm_report": {
+      "aggregate": {
+        "ci95": [
+          4.988834717012338,
+          5.1010219617078505
+        ],
+        "mean": 5.044396066075543,
+        "n_seats": 96
+      },
+      "authoritative": false,
+      "gates": [
+        {
+          "detail": "invariants pass; no leakage; deterministic",
+          "name": "deterministic_checks",
+          "status": "pass"
+        },
+        {
+          "detail": "mean +5.044, CI95 [+4.989, +5.101], lower bound must exceed 0.0",
+          "name": "started_points_aggregate",
+          "status": "pass"
+        },
+        {
+          "detail": "24 slices, none regressed",
+          "name": "mandatory_high_risk_slices",
+          "status": "pass"
+        },
+        {
+          "detail": "24 league ids, no significant regression",
+          "name": "hidden_regression_rule",
+          "status": "pass"
+        },
+        {
+          "detail": "mean +0.0100, CI95 [+0.0100, +0.0100], lower >= -0.005",
+          "name": "h2h_win_rate",
+          "status": "pass"
+        },
+        {
+          "detail": "mean +0.0100, CI95 [+0.0100, +0.0100], lower >= -0.002",
+          "name": "playoff_proxy",
+          "status": "pass"
+        },
+        {
+          "detail": "mean +0.0100, CI95 [+0.0100, +0.0100], lower >= -0.002",
+          "name": "championship_proxy",
+          "status": "pass"
+        },
+        {
+          "detail": "1 frozen benchmarks, all thresholds met",
+          "name": "calibration_gates",
+          "status": "pass"
+        },
+        {
+          "detail": "within limits",
+          "name": "limits",
+          "status": "pass"
+        }
+      ],
+      "held_out_access_log": [
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        },
+        {
+          "stage": "confirm",
+          "year": 2018
+        }
+      ],
+      "label": "SYNTHETIC / NON-AUTHORITATIVE \u2014 cannot justify shipping",
+      "manifest_sha256": "bbb241603a33697bff376b21a2e57e7e066c3c85186eaaab120485ec6bd941ab",
+      "n_pairs": 24,
+      "schema_version": 3,
+      "slices": {
+        "t14-2qb-half-te0.0-b4-ir0": {
+          "mean": 5.070396420546359,
+          "status": "pass"
+        },
+        "t14-2qb-half-te0.0-b4-ir1": {
+          "mean": 5.3439469516746865,
+          "status": "pass"
+        },
+        "t14-2qb-half-te0.5-b4-ir0": {
+          "mean": 4.930773403746192,
+          "status": "pass"
+        },
+        "t14-2qb-half-te0.5-b4-ir1": {
+          "mean": 4.917952141285714,
+          "status": "pass"
+        },
+        "t14-2qb-ppr-te0.0-b4-ir0": {
+          "mean": 5.150190451528545,
+          "status": "pass"
+        },
+        "t14-2qb-ppr-te0.0-b4-ir1": {
+          "mean": 5.221603980681427,
+          "status": "pass"
+        },
+        "t14-2qb-ppr-te0.5-b4-ir0": {
+          "mean": 5.088027791551923,
+          "status": "pass"
+        },
+        "t14-2qb-ppr-te0.5-b4-ir1": {
+          "mean": 5.0287076367420696,
+          "status": "pass"
+        },
+        "t14-2qb-std-te0.0-b4-ir0": {
+          "mean": 5.080397381946909,
+          "status": "pass"
+        },
+        "t14-2qb-std-te0.0-b4-ir1": {
+          "mean": 4.935621013962002,
+          "status": "pass"
+        },
+        "t14-2qb-std-te0.5-b4-ir0": {
+          "mean": 4.949086644560661,
+          "status": "pass"
+        },
+        "t14-2qb-std-te0.5-b4-ir1": {
+          "mean": 4.921862385432936,
+          "status": "pass"
+        },
+        "t14-superflex-half-te0.0-b4-ir0": {
+          "mean": 5.17105734309763,
+          "status": "pass"
+        },
+        "t14-superflex-half-te0.0-b4-ir1": {
+          "mean": 4.907011128010548,
+          "status": "pass"
+        },
+        "t14-superflex-half-te0.5-b4-ir0": {
+          "mean": 4.963471055096268,
+          "status": "pass"
+        },
+        "t14-superflex-half-te0.5-b4-ir1": {
+          "mean": 4.908156789558944,
+          "status": "pass"
+        },
+        "t14-superflex-ppr-te0.0-b4-ir0": {
+          "mean": 4.996428593615747,
+          "status": "pass"
+        },
+        "t14-superflex-ppr-te0.0-b4-ir1": {
+          "mean": 5.085195639831738,
+          "status": "pass"
+        },
+        "t14-superflex-ppr-te0.5-b4-ir0": {
+          "mean": 5.285686570065498,
+          "status": "pass"
+        },
+        "t14-superflex-ppr-te0.5-b4-ir1": {
+          "mean": 5.042818935350027,
+          "status": "pass"
+        },
+        "t14-superflex-std-te0.0-b4-ir0": {
+          "mean": 4.96039183249628,
+          "status": "pass"
+        },
+        "t14-superflex-std-te0.0-b4-ir1": {
+          "mean": 5.039503897976317,
+          "status": "pass"
+        },
+        "t14-superflex-std-te0.5-b4-ir0": {
+          "mean": 5.097015108207046,
+          "status": "pass"
+        },
+        "t14-superflex-std-te0.5-b4-ir1": {
+          "mean": 4.970202488847575,
+          "status": "pass"
+        }
+      },
+      "stage": "confirm",
+      "synthetic": true,
+      "verdict": "promote"
+    },
+    "confirm_report_sha256": "271dc1c3914f6cb13ea9d83ac1263ae59d55660b5826b036c3e08cfde2f4a53f",
+    "confirm_verdict": "promote",
+    "final_verdict": "promote",
+    "fit_report": {
+      "aggregate": {
+        "ci95": [
+          4.899470121326524,
+          4.980681770394845
+        ],
+        "mean": 4.939924935590021,
+        "n_seats": 192
+      },
+      "authoritative": false,
+      "gates": [
+        {
+          "detail": "invariants pass; no leakage; deterministic",
+          "name": "deterministic_checks",
+          "status": "pass"
+        },
+        {
+          "detail": "mean +4.940, CI95 [+4.899, +4.981], lower bound must exceed 0.0",
+          "name": "started_points_aggregate",
+          "status": "pass"
+        },
+        {
+          "detail": "24 slices, none regressed",
+          "name": "mandatory_high_risk_slices",
+          "status": "pass"
+        },
+        {
+          "detail": "24 league ids, no significant regression",
+          "name": "hidden_regression_rule",
+          "status": "pass"
+        },
+        {
+          "detail": "mean +0.0100, CI95 [+0.0100, +0.0100], lower >= -0.005",
+          "name": "h2h_win_rate",
+          "status": "pass"
+        },
+        {
+          "detail": "mean +0.0100, CI95 [+0.0100, +0.0100], lower >= -0.002",
+          "name": "playoff_proxy",
+          "status": "pass"
+        },
+        {
+          "detail": "mean +0.0100, CI95 [+0.0100, +0.0100], lower >= -0.002",
+          "name": "championship_proxy",
+          "status": "pass"
+        },
+        {
+          "detail": "1 frozen benchmarks, all thresholds met",
+          "name": "calibration_gates",
+          "status": "pass"
+        },
+        {
+          "detail": "within limits",
+          "name": "limits",
+          "status": "pass"
+        }
+      ],
+      "held_out_access_log": [
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        },
+        {
+          "stage": "fit",
+          "year": 2021
+        },
+        {
+          "stage": "fit",
+          "year": 2024
+        }
+      ],
+      "label": "SYNTHETIC / NON-AUTHORITATIVE \u2014 cannot justify shipping",
+      "manifest_sha256": "bbb241603a33697bff376b21a2e57e7e066c3c85186eaaab120485ec6bd941ab",
+      "n_pairs": 48,
+      "schema_version": 3,
+      "slices": {
+        "t14-2qb-half-te0.0-b4-ir0": {
+          "mean": 5.045776908649505,
+          "status": "pass"
+        },
+        "t14-2qb-half-te0.0-b4-ir1": {
+          "mean": 4.894392187947052,
+          "status": "pass"
+        },
+        "t14-2qb-half-te0.5-b4-ir0": {
+          "mean": 4.803979036523638,
+          "status": "pass"
+        },
+        "t14-2qb-half-te0.5-b4-ir1": {
+          "mean": 5.003422812932655,
+          "status": "pass"
+        },
+        "t14-2qb-ppr-te0.0-b4-ir0": {
+          "mean": 4.929358494685791,
+          "status": "pass"
+        },
+        "t14-2qb-ppr-te0.0-b4-ir1": {
+          "mean": 5.11457632110889,
+          "status": "pass"
+        },
+        "t14-2qb-ppr-te0.5-b4-ir0": {
+          "mean": 4.819885090735634,
+          "status": "pass"
+        },
+        "t14-2qb-ppr-te0.5-b4-ir1": {
+          "mean": 4.888247145884256,
+          "status": "pass"
+        },
+        "t14-2qb-std-te0.0-b4-ir0": {
+          "mean": 4.772226508257272,
+          "status": "pass"
+        },
+        "t14-2qb-std-te0.0-b4-ir1": {
+          "mean": 4.7465413609954705,
+          "status": "pass"
+        },
+        "t14-2qb-std-te0.5-b4-ir0": {
+          "mean": 5.1406586116385045,
+          "status": "pass"
+        },
+        "t14-2qb-std-te0.5-b4-ir1": {
+          "mean": 4.8542397748534825,
+          "status": "pass"
+        },
+        "t14-superflex-half-te0.0-b4-ir0": {
+          "mean": 5.26158564542078,
+          "status": "pass"
+        },
+        "t14-superflex-half-te0.0-b4-ir1": {
+          "mean": 4.787501537745631,
+          "status": "pass"
+        },
+        "t14-superflex-half-te0.5-b4-ir0": {
+          "mean": 4.907890261980924,
+          "status": "pass"
+        },
+        "t14-superflex-half-te0.5-b4-ir1": {
+          "mean": 5.274561829562666,
+          "status": "pass"
+        },
+        "t14-superflex-ppr-te0.0-b4-ir0": {
+          "mean": 5.11022153946207,
+          "status": "pass"
+        },
+        "t14-superflex-ppr-te0.0-b4-ir1": {
+          "mean": 4.898156740359856,
+          "status": "pass"
+        },
+        "t14-superflex-ppr-te0.5-b4-ir0": {
+          "mean": 4.782278292883925,
+          "status": "pass"
+        },
+        "t14-superflex-ppr-te0.5-b4-ir1": {
+          "mean": 4.824453961085898,
+          "status": "pass"
+        },
+        "t14-superflex-std-te0.0-b4-ir0": {
+          "mean": 5.0780557344682125,
+          "status": "pass"
+        },
+        "t14-superflex-std-te0.0-b4-ir1": {
+          "mean": 4.945069322524925,
+          "status": "pass"
+        },
+        "t14-superflex-std-te0.5-b4-ir0": {
+          "mean": 4.786226363519252,
+          "status": "pass"
+        },
+        "t14-superflex-std-te0.5-b4-ir1": {
+          "mean": 4.888892970934222,
+          "status": "pass"
+        }
+      },
+      "stage": "fit",
+      "synthetic": true,
+      "verdict": "promote"
+    },
+    "fit_report_sha256": "3ead87f13c2e4836e30e7f658270ea58ed3162e3e30f44a6694cc06ba3645113",
+    "fit_verdict": "promote",
+    "mode": "synthetic"
+  }
+}
