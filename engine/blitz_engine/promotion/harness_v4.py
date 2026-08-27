@@ -50,8 +50,12 @@ __all__ = [
     "EXEC_V2_SHA256",
     "MEASUREMENT_SHA",
     "V4_MANIFEST_SHA256",
+    "assert_complete_fit_frame",
     "draft_arm",
     "effective_v4_manifest_sha256",
+    "expected_fit_cells",
+    "validate_fit_analysis_receipt",
+    "validate_fit_measurement_receipt",
     "load_execution_manifest_v4",
     "mandatory_league_ids",
     "measure_arm",
@@ -280,28 +284,158 @@ def validate_authoritative_draft_receipt(
     _require_v4_binding(receipt, effective)
 
 
+#: Manifest pairing keys carried per measurement (the seat key is per-seat, implicit in per_season).
+_RECEIPT_PAIRING_KEYS = ("year", "league_id", "base_seed", "eval_seed", "board_hash", "seat_policy")
+
+
+def expected_fit_cells(effective: dict[str, Any]) -> set[tuple[str, int, str, int]]:
+    """The complete authoritative fit frame: every (arm, fit-year, mandatory-league, base-seed).
+    Two frozen arms x fit years {2021, 2024} x 216 mandatory leagues x 4 base seeds = 3456 cells."""
+    arms = tuple(effective["_v4"]["arm_shas"])
+    years = tuple(int(y) for y in effective["seasons"])
+    leagues = tuple(sorted(mandatory_league_ids(effective)))
+    seeds = tuple(int(s) for s in effective["seed_derivation"]["base_seeds"])
+    return {
+        (arm, year, lid, seed)
+        for arm in arms for year in years for lid in leagues for seed in seeds
+    }
+
+
+def _measurement_cell_key(doc: dict[str, Any]) -> tuple[str, int, str, int]:
+    ar = doc["arm_run"]
+    return (ar["arm"], int(ar["year"]), str(ar["league_id"]), int(ar["base_seed"]))
+
+
+def validate_fit_measurement_receipt(
+    doc: dict[str, Any], effective: dict[str, Any]
+) -> tuple[str, int, str, int]:
+    """Validate one authoritative fit measurement receipt against the frozen protocol; returns its
+    (arm, year, league_id, base_seed) cell key. Any violation aborts (BLOCK) — never a soft pass."""
+    if doc.get("kind") != "measurement":
+        raise ExecutionError("fit frame: not a measurement receipt")
+    if doc.get("authoritative") is not True:
+        raise ExecutionError("fit frame: non-authoritative receipt cannot enter an authoritative fit")
+    if doc.get("stage") != "fit":
+        raise ExecutionError(f"fit frame: receipt stage {doc.get('stage')!r} is not 'fit'")
+    ar = doc.get("arm_run") or {}
+    arm, year, lid, base_seed = _measurement_cell_key(doc)
+    if arm not in ARM_POLICY_SHAS:
+        raise ExecutionError(f"fit frame: receipt arm {arm!r} is not a frozen arm name")
+    if ar.get("policy_sha") != ARM_POLICY_SHAS[arm]:
+        raise ExecutionError(f"fit frame: arm {arm!r} policy_sha does not match its frozen identity")
+    if doc.get("measured_by_sha") != MEASUREMENT_SHA:
+        raise ExecutionError("fit frame: measured_by_sha is not the frozen measurement SHA")
+    if doc.get("manifest_sha256") != V4_MANIFEST_SHA256:
+        raise ExecutionError("fit frame: receipt not bound to the promotion-v4 manifest hash")
+    if doc.get("exec_addendum_sha256") != EXEC_V2_SHA256:
+        raise ExecutionError("fit frame: receipt not bound to the exec-v2 addendum hash")
+    if doc.get("effective_v4_manifest_sha256") != effective_v4_manifest_sha256(effective):
+        raise ExecutionError("fit frame: receipt effective-v4-manifest hash mismatch")
+    for key in _RECEIPT_PAIRING_KEYS:
+        if ar.get(key) in (None, ""):
+            raise ExecutionError(f"fit frame: receipt missing pairing key {key!r}")
+    if ar["eval_seed"] != derive_eval_seed(base_seed, year, lid):
+        raise ExecutionError("fit frame: receipt eval_seed does not follow the frozen derivation")
+    if not doc.get("draft_receipt_sha256"):
+        raise ExecutionError("fit frame: receipt does not pin its draft-receipt sha256")
+    if int(doc.get("n_seasons", -1)) != int(effective["evaluator"]["n_seasons"]):
+        raise ExecutionError("fit frame: receipt n_seasons is not the frozen 8")
+    _check_authoritative_frame(
+        effective, year=year, league_id=lid, base_seed=base_seed, arm=arm,
+        expected_sha=ar["policy_sha"], stage="fit",
+    )
+    return (arm, year, lid, base_seed)
+
+
+def assert_complete_fit_frame(
+    docs: list[dict[str, Any]], effective: dict[str, Any]
+) -> None:
+    """The measurement set must cover EXACTLY the frozen fit frame — one receipt per cell, no
+    missing, duplicate, or extra cells (reviewer req 2)."""
+    cells = [validate_fit_measurement_receipt(d, effective) for d in docs]
+    seen: set[tuple[str, int, str, int]] = set()
+    dupes = {c for c in cells if c in seen or seen.add(c)}
+    if dupes:
+        raise ExecutionError(f"fit frame: duplicate cells: {sorted(dupes)[:5]}")
+    expected = expected_fit_cells(effective)
+    missing = expected - seen
+    extra = seen - expected
+    if missing:
+        raise ExecutionError(f"fit frame incomplete: {len(missing)} missing cells, e.g. {sorted(missing)[:3]}")
+    if extra:
+        raise ExecutionError(f"fit frame: {len(extra)} off-frame cells, e.g. {sorted(extra)[:3]}")
+
+
+def validate_fit_analysis_receipt(
+    fit_analysis: dict[str, Any], effective: dict[str, Any], *, measurement_shas: set[str]
+) -> str:
+    """Validate the hash-pinned fit-analysis receipt (a PromotionReport produced through the frozen
+    gates) and its complete pinned input set; returns the report verdict (reviewer req 4/7)."""
+    from blitz_engine.promotion.gates import report_hash
+
+    if fit_analysis.get("kind") != "fit_analysis":
+        raise ExecutionError("fit-analysis: not a fit_analysis receipt")
+    report = fit_analysis.get("report")
+    if not isinstance(report, dict):
+        raise ExecutionError("fit-analysis: missing embedded promotion report")
+    if fit_analysis.get("report_sha256") != report_hash(report):
+        raise ExecutionError("fit-analysis: report_sha256 does not match the embedded report")
+    if report.get("stage") != "fit":
+        raise ExecutionError("fit-analysis: report is not a fit-stage report")
+    if report.get("authoritative") is not True:
+        raise ExecutionError("fit-analysis: report is not authoritative")
+    want_pairs = len(expected_fit_cells(effective)) // len(effective["_v4"]["arm_shas"])
+    if int(report.get("n_pairs", -1)) != want_pairs:
+        raise ExecutionError(
+            f"fit-analysis: report covers {report.get('n_pairs')} pairs, not the frozen {want_pairs}"
+        )
+    if fit_analysis.get("effective_v4_manifest_sha256") != effective_v4_manifest_sha256(effective):
+        raise ExecutionError("fit-analysis: effective-v4-manifest hash mismatch")
+    pinned = set((fit_analysis.get("pinned_inputs") or {}).get("measurement_sha256", {}).values())
+    if pinned != set(measurement_shas):
+        raise ExecutionError("fit-analysis: pinned measurement input set does not match the fit frame")
+    verdict = report.get("verdict")
+    if verdict not in ("BLOCK", "do_not_ship_candidate", "preserve_v5", "promote"):
+        raise ExecutionError(f"fit-analysis: report verdict {verdict!r} is not a frozen verdict")
+    return verdict
+
+
 def write_fit_verdict(
-    out_dir: str | Path, *, effective: dict[str, Any], fit_measure_paths: Any
+    out_dir: str | Path, *, effective: dict[str, Any], measurement_paths: Any,
+    fit_analysis: dict[str, Any],
 ) -> Path:
-    """Write the write-once, hash-pinned passing fit verdict that authorises the confirm stage.
-    Pins each fit-stage measurement receipt by sha256 so later drift is detectable."""
+    """Write the write-once fit verdict. `pass` is emitted ONLY when the complete fit frame validates,
+    every receipt validates, and the hash-pinned fit-analysis report's verdict is `promote`.
+    Otherwise the frozen-gate verdict (BLOCK / do_not_ship_candidate / preserve_v5) is recorded;
+    missing or failed evidence is NEVER turned into a pass (reviewer req 1/5/6)."""
     from blitz_engine.promotion.manifest import sha256_file
 
-    pins = {p: sha256_file(p) for p in sorted(str(x) for x in fit_measure_paths)}
+    paths = sorted(str(p) for p in measurement_paths)
+    docs = [json.loads(Path(p).read_text()) for p in paths]
+    assert_complete_fit_frame(docs, effective)  # validates every receipt + exact coverage
+    pins = {p: sha256_file(p) for p in paths}
+    report_verdict = validate_fit_analysis_receipt(
+        fit_analysis, effective, measurement_shas=set(pins.values())
+    )
+    verdict = "pass" if report_verdict == "promote" else report_verdict
     doc = {
         "kind": "fit_verdict",
-        "verdict": "pass",
+        "verdict": verdict,
+        "report_verdict": report_verdict,
         "manifest_sha256": V4_MANIFEST_SHA256,
         "exec_addendum_sha256": EXEC_V2_SHA256,
         "effective_v4_manifest_sha256": effective_v4_manifest_sha256(effective),
         "fit_receipt_sha256": pins,
+        "fit_analysis_report_sha256": fit_analysis["report_sha256"],
+        "fit_analysis": fit_analysis,
     }
     return _write_once(Path(out_dir) / "fit-verdict.json", doc)
 
 
 def require_fit_verdict(out_dir: str | Path, effective: dict[str, Any]) -> dict[str, Any]:
-    """Confirmation is refused unless a write-once passing fit verdict exists, is bound to the
-    frozen effective-v4 manifest, and every pinned fit receipt verifies (reviewer blocker 4)."""
+    """Confirmation is refused unless a write-once fit verdict recorded `pass`, is bound to the
+    frozen effective-v4 manifest, every pinned fit receipt still verifies, and its embedded
+    fit-analysis receipt re-validates against the complete pinned input set (reviewer req 7)."""
     from blitz_engine.promotion.manifest import sha256_file
 
     p = Path(out_dir) / "fit-verdict.json"
@@ -312,9 +446,17 @@ def require_fit_verdict(out_dir: str | Path, effective: dict[str, Any]) -> dict[
         raise ExecutionError(f"confirmation blocked: fit verdict is {doc.get('verdict')!r}")
     if doc.get("effective_v4_manifest_sha256") != effective_v4_manifest_sha256(effective):
         raise ExecutionError("confirmation blocked: fit-verdict effective-v4 hash mismatch")
-    for rel, want in doc.get("fit_receipt_sha256", {}).items():
+    pins = doc.get("fit_receipt_sha256", {})
+    for rel, want in pins.items():
         if not Path(rel).is_file() or sha256_file(rel) != want:
             raise ExecutionError(f"confirmation blocked: fit-verdict pinned receipt drift: {rel}")
+    report_verdict = validate_fit_analysis_receipt(
+        doc.get("fit_analysis") or {}, effective, measurement_shas=set(pins.values())
+    )
+    if report_verdict != "promote":
+        raise ExecutionError(
+            f"confirmation blocked: fit-analysis report verdict is {report_verdict!r}, not promote"
+        )
     return doc
 
 
@@ -573,9 +715,11 @@ def measure_arm(
         "draft_receipt_sha256": sha256_file(draft_receipt_path),
         "arm_run": run.to_dict(),
         "stage": stage,
+        "n_seasons": int(n_seasons),
         "produced_by_tooling": provenance,
         "manifest_sha256": V4_MANIFEST_SHA256,
         "exec_addendum_sha256": EXEC_V2_SHA256,
+        "effective_v4_manifest_sha256": effective_v4_manifest_sha256(effective),
         "authoritative": bool(authoritative),
         "label": None if authoritative else "NON-AUTHORITATIVE rehearsal/probe receipt",
     }

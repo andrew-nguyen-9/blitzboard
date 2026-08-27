@@ -21,7 +21,6 @@ from blitz_engine.promotion.harness_v4 import (
     recompute_seat_policy,
     require_fit_verdict,
     validate_authoritative_draft_receipt,
-    write_fit_verdict,
 )
 from blitz_engine.promotion.runner import HeldOutGuard, derive_eval_seed
 from blitz_engine.testing import matrix
@@ -172,27 +171,11 @@ def test_require_fit_verdict_refuses_when_absent(tmp_path):
         require_fit_verdict(tmp_path, EFFECTIVE)
 
 
-def test_write_then_require_fit_verdict_roundtrip(tmp_path):
-    pinned = tmp_path / "measure" / "fit" / "m.json"
-    pinned.parent.mkdir(parents=True)
-    pinned.write_text(json.dumps({"kind": "measurement"}))
-    write_fit_verdict(tmp_path, effective=EFFECTIVE, fit_measure_paths=[pinned])
-    assert require_fit_verdict(tmp_path, EFFECTIVE)["verdict"] == "pass"
-
-
 def test_require_fit_verdict_refuses_failed_verdict(tmp_path):
-    (tmp_path / "fit-verdict.json").write_text(json.dumps({"verdict": "fail"}))
+    # comprehensive fit-verdict integrity now lives in test_v6_c05b_fit_verdict_integrity.py;
+    # this keeps the confirm-gate refusal on a non-pass verdict.
+    (tmp_path / "fit-verdict.json").write_text(json.dumps({"verdict": "preserve_v5"}))
     with pytest.raises(ExecutionError, match="fit verdict is"):
-        require_fit_verdict(tmp_path, EFFECTIVE)
-
-
-def test_require_fit_verdict_refuses_pinned_receipt_drift(tmp_path):
-    pinned = tmp_path / "measure" / "fit" / "m.json"
-    pinned.parent.mkdir(parents=True)
-    pinned.write_text(json.dumps({"kind": "measurement"}))
-    write_fit_verdict(tmp_path, effective=EFFECTIVE, fit_measure_paths=[pinned])
-    pinned.write_text(json.dumps({"kind": "measurement", "tampered": True}))  # drift
-    with pytest.raises(ExecutionError, match="pinned receipt drift"):
         require_fit_verdict(tmp_path, EFFECTIVE)
 
 
