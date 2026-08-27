@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "status": "candidate_identity_frozen_not_executed",
+  "purpose": "Execution addendum for promotion-v4.json: freezes the arm and measurement identities for the v4 two-stage protocol. Authorizes NOTHING by itself; the v4 protocol is not implemented, the authoritative experiment has not run, and both await freeze review.",
+  "manifest": "promotion-v4.json",
+  "manifest_sha256": "47af290506a2aa9e66add39b62125c12341927814d3cbc660426cc767e32569a",
+  "preserved_immutable": {
+    "promotion-v3.json": "bbb241603a33697bff376b21a2e57e7e066c3c85186eaaab120485ec6bd941ab",
+    "promotion-v3-exec-v1.json": "24e5e50afdad75006ca3a1814317d9254ea98de25bbb97dba4b06bbee7c3b7ad"
+  },
+  "arms": {
+    "control": {
+      "name": "v5_shipped",
+      "policy_sha": "01f01d3c5f9c00a046edd43707db75ce1426c0e8",
+      "identity": "draft/policy code at the immutable v5 baseline; measured by the common evaluator, never by its own"
+    },
+    "candidate": {
+      "name": "v6_candidate",
+      "combined_candidate_sha": "7b3fd73578943b992402ad693259a3e92358da69",
+      "identity": "draft/policy code at the accepted combined C02-C04 head; no coefficients tuned after freeze"
+    }
+  },
+  "measurement": {
+    "sha": "7b3fd73578943b992402ad693259a3e92358da69",
+    "note": "measurement identity coincides with the candidate policy SHA because the accepted C02 evaluator lives in the combined head; the policy-versus-measurement rule in promotion-v4.json still forbids measuring either arm by any OTHER evaluator, and the seven frozen file hashes pin the measurement surface independently of the policy diff",
+    "file_hashes": "as frozen in promotion-v4.json measurement_evaluator.file_hashes"
+  },
+  "metric_binding": {
+    "waiver_cost": 0.0,
+    "rule": "unchanged from the v3 disposition: any nonzero value requires a new manifest version"
+  },
+  "tooling_provenance_at_freeze": {
+    "tooling_head": "bc11f540415a7303e9de74d81d5550553a7a2f04",
+    "note": "receipts-regeneration head at freeze time; authoritative receipts must embed their own mechanically derived provenance at run time",
+    "execution_module_sha256": "8e4c97872524b5358e4cd6c2e25b50b2588041958d878bc75b61c0cafcccbfb5",
+    "effective_manifest_sha256_v3": "61f3a70a3bee0f242cc1ffa1004e11cbd3026842cd3c47abd5a1a63465fabdc1"
+  },
+  "acceptance_evidence": {
+    "c02": "accepted at 417af276 (review f2a1537)",
+    "c03": "accepted at 8694d98 (do_not_promote; non-shipping evidence)",
+    "c04": "C04 BLOCK (2dd0839) then C04A accepted; combined head 7b3fd735",
+    "first_freeze_review": "BLOCK 03fc3d87 - three blockers corrected and accepted",
+    "second_freeze_review": "BLOCK 3905689 - this v4 pair is the required correction"
+  },
+  "calibration_evidence": "the accepted C02 calibration report FAILED the frozen thresholds and is preserved without reinterpretation; promotion under v4 requires a new passing accepted report",
+  "execution_preconditions_remaining": [
+    "promotion-v4 freeze review PASS before implementing the v4 harness",
+    "v4 harness freeze review PASS before authoritative execution",
+    "measurement file hashes verify in the measurement checkout at run time",
+    "passing accepted calibration report"
+  ],
+  "prohibited_without_new_authority": [
+    "implementing or executing the v4 protocol",
+    "running the authoritative fit or held-out confirmation",
+    "editing promotion-v3.json, promotion-v3-exec-v1.json, promotion-v4.json, or this file (amendments get promotion-v4-exec-v2.json)",
+    "push, merge, PR, release, protected-branch change"
+  ]
+}
