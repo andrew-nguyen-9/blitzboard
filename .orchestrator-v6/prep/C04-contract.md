@@ -52,8 +52,17 @@ browser-safe generated artifact. It must prove:
 4. no frontend import of the canonical engine artifact and no runtime generation/simulation;
 5. no interpretation of a soft cost as candidate ineligibility or a positional maximum.
 
-Exact filenames, serialization order, and field names remain deliberately unspecified until C03
-publishes its accepted interface.
+Exact production artifact bytes and measured rows remain deliberately unspecified until C03 passes
+with its frozen interface implemented.
+
+### Provisional frozen-interface implementation
+
+C04's disposable interface branch consumes the frozen v1 `ResolveBenchShape` declaration from C03
+commit `a3394b0a6c72174894bd8a44b33c702372903d11` by dependency injection. It does not import a
+generated artifact or implement resolution. `v6DraftExplanation.ts` uses exactly one resolver call,
+maps non-evidence failures to visible `fallback`, preserves honest `unsupported`, reads only finite
+soft marginal costs, and never turns depth into candidate ineligibility. Canonical measured,
+interpolated, and parity assertions stay skipped until C03 supplies its artifacts and passes review.
 
 ## Accepted C02 interface reconciliation
 

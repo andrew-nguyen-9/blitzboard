@@ -98,3 +98,26 @@ Accepted-interface reconciliation verification:
 focused C04 vitest: 3 files passed; 24 passed, 13 skipped
 TypeScript (`tsc --noEmit`): exit 0
 ```
+
+## Frozen C03 interface branch
+
+Base: `a3394b0a6c72174894bd8a44b33c702372903d11`. The three C04 preparation commits were
+cherry-picked in order without conflict. `frontend/npm ci` installed 426 packages locally. Before
+implementation, the frozen declaration compiled directly with strict TypeScript settings. C04 then
+added only new explanation/trace modules and interface-consumer tests; all frozen C03 files remain
+byte-identical to the base.
+
+Verification before the interface-implementation commit:
+
+```text
+frozen C03 declaration, strict standalone TypeScript compile: exit 0
+frozen C03 interface pytest: 4 passed
+focused C04 vitest: 4 files passed; 33 passed, 16 skipped
+frontend typecheck: exit 0
+full frontend vitest: 58 files passed; 525 passed, 16 skipped
+frozen C03 file diff against a3394b0: empty
+git diff --check: exit 0
+```
+
+The 16 visible skips are 13 inherited C04 preparation cases plus 3 frozen-resolver cases requiring
+canonical measured/interpolated artifacts and parity. No checkpoint verdict is implied.
