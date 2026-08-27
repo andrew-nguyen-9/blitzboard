@@ -15,6 +15,7 @@ from blitz_engine.value.bench_portfolio import BLOCKED_SLICE, measure_portfolio
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / ".orchestrator-v6/experiments/bench-portfolio-c03-v2.json"
+V4 = ROOT / ".orchestrator-v6/experiments/bench-portfolio-c03-v4.json"
 RESULTS = ROOT / ".orchestrator-v6/experiments/bench-portfolio-c03-results-v1.json"
 SOURCE = ROOT / ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
 SOURCE_ID = ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
@@ -45,6 +46,11 @@ def main() -> int:
     parser.add_argument("--execute", action="store_true", help="run the write-once authoritative job")
     args = parser.parse_args()
     manifest = json.loads(MANIFEST.read_text())
+    v4 = json.loads(V4.read_text())
+    interface_sha = v4["replaces_v2_field"]["new_value"]
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", interface_sha, "HEAD"], cwd=ROOT, check=True
+    )
     if not args.execute:
         print(json.dumps({"manifest_sha256": _sha256(MANIFEST), "configs": manifest["mandatory_configs"]}, indent=2))
         return 0
@@ -97,6 +103,8 @@ def main() -> int:
         "manifest_v1_sha256": _sha256(ROOT / ".orchestrator-v6/experiments/bench-portfolio-c03-v1.json"),
         "manifest_v2_sha256": _sha256(MANIFEST),
         "manifest_v3_sha256": _sha256(ROOT / ".orchestrator-v6/experiments/bench-portfolio-c03-v3.json"),
+        "manifest_v4_sha256": _sha256(V4),
+        "frozen_interface_sha": interface_sha,
         "producer_sha": head,
         "evaluator_sha": EVALUATOR_SHA,
         "disposition": disposition,
