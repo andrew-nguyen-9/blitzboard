@@ -81,3 +81,20 @@ cd frontend
 
 exit 0
 ```
+
+## Accepted C02 reconciliation
+
+C02 was subsequently accepted at production head
+`417af276dd4438d8a35f38d08bfc26206044925e`, review commit `f2a1537`. The C04-owned contract was
+reconciled without importing or editing production. The aggregate counters and paired field names
+survived, while the accepted transaction semantics now explicitly bind the future adapter: strict
+remaining-horizon cost gate, single net-points charge, gross on-field H2H/proxies, one shared weekly
+allowance, roster-wide feasible drops, and OP/SFLX/SUPERFLEX equivalence. Candidate transactions
+and producer-issued evidence identifiers remain absent, so their adapters stay skipped pending C03.
+
+Accepted-interface reconciliation verification:
+
+```text
+focused C04 vitest: 3 files passed; 24 passed, 13 skipped
+TypeScript (`tsc --noEmit`): exit 0
+```

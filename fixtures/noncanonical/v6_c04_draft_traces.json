@@ -7,14 +7,14 @@
       "league": { "teams": 12, "qb_mode": "1qb", "bench_slots": 4, "ir_slots": 0, "te_premium": 0.0 },
       "starting_slots": { "QB": 1, "RB": 2, "WR": 2, "TE": 1, "FLEX": 1, "K": 1, "DST": 1 },
       "required": ["legal_starters", "no_early_duplicate_k_dst", "no_backup_qb_mandate", "insurance_and_upside"],
-      "dependency": "c03_bench_shape_and_c02_provisional_missing_candidate_transactions"
+      "dependency": "c03_bench_shape_and_c02_accepted_missing_candidate_transactions"
     },
     {
       "id": "c04-1qb-tep-b8-ir",
       "league": { "teams": 10, "qb_mode": "1qb", "bench_slots": 8, "ir_slots": 1, "te_premium": 0.5 },
       "starting_slots": { "QB": 1, "RB": 2, "WR": 3, "TE": 1, "FLEX": 2, "K": 1, "DST": 1 },
       "required": ["legal_starters", "te_premium_evidence", "ir_evidence", "soft_shape_not_cap", "insurance_and_upside"],
-      "dependency": "c03_bench_shape_and_c02_provisional_missing_candidate_transactions"
+      "dependency": "c03_bench_shape_and_c02_accepted_missing_candidate_transactions"
     },
     {
       "id": "c04-superflex-b4-noir",
