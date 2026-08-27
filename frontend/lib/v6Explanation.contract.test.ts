@@ -9,23 +9,23 @@ type ComponentName =
   | "waiver_replacement_churn"
   | "redundancy_cost";
 
-// Provisional C02 interface observed at edbcc4d. This is an acceptance-side reference shape,
-// not a claim that C02 publishes a serialized identifier or a frontend-safe payload.
-type ProvisionalC02OutcomeField =
+// Accepted C02 interface at 417af276 (review f2a1537). This is an acceptance-side reference
+// shape, not a claim that C02 publishes a serialized identifier or frontend-safe payload.
+type AcceptedC02OutcomeField =
   | "per_season"
   | "per_season_h2h"
   | "per_season_playoff"
   | "per_season_champ";
 
-interface ProvisionalC02EvidenceRef {
-  producer_commit: "edbcc4d743b447ebcbbfe84a0e1210380c6250d1";
+interface AcceptedC02EvidenceRef {
+  producer_commit: "417af276dd4438d8a35f38d08bfc26206044925e";
   seed: number;
   seats: number[];
-  field: ProvisionalC02OutcomeField;
+  field: AcceptedC02OutcomeField;
   n_seasons: number;
 }
 
-interface ProvisionalC02WaiverSummary {
+interface AcceptedC02WaiverSummary {
   emergency_adds: number;
   upside_adds: number;
   waiver_adds: number;
@@ -34,6 +34,13 @@ interface ProvisionalC02WaiverSummary {
   candidate_replacement_value: null;
   degraded_state: "aggregate_only_no_candidate_transactions";
 }
+
+const ACCEPTED_C02_ACCOUNTING = {
+  per_season: "net_of_single_transaction_charge",
+  per_season_h2h: "gross_on_field",
+  per_season_playoff: "gross_on_field_proxy",
+  per_season_champ: "gross_on_field_proxy",
+} as const satisfies Record<AcceptedC02OutcomeField, string>;
 
 interface ComponentResult {
   name: ComponentName;
@@ -98,7 +105,7 @@ function completePayload(): ExplanationPayload {
   };
 }
 
-function provisionalC02EvidenceId(ref: ProvisionalC02EvidenceRef): string {
+function acceptedC02ReviewerEvidenceId(ref: AcceptedC02EvidenceRef): string {
   return [ref.producer_commit, ref.seed, ref.field, ref.seats.join(","), ref.n_seasons].join(":");
 }
 
@@ -136,24 +143,24 @@ describe("C04 explanation payload contract (producer-independent)", () => {
     expect(assignment).toEqual({ week: 8, slot: "OP", starter_id: "starter-qb" });
   });
 
-  it("defines collision-resistant provisional paired-outcome references from C02 inputs", () => {
-    const base: ProvisionalC02EvidenceRef = {
-      producer_commit: "edbcc4d743b447ebcbbfe84a0e1210380c6250d1",
+  it("defines collision-resistant reviewer paired-outcome references from accepted C02 inputs", () => {
+    const base: AcceptedC02EvidenceRef = {
+      producer_commit: "417af276dd4438d8a35f38d08bfc26206044925e",
       seed: 20260825,
       seats: [0, 1],
       field: "per_season_h2h",
       n_seasons: 8,
     };
-    expect(provisionalC02EvidenceId(base)).not.toBe(
-      provisionalC02EvidenceId({ ...base, field: "per_season_playoff" }),
+    expect(acceptedC02ReviewerEvidenceId(base)).not.toBe(
+      acceptedC02ReviewerEvidenceId({ ...base, field: "per_season_playoff" }),
     );
-    expect(provisionalC02EvidenceId(base)).not.toBe(
-      provisionalC02EvidenceId({ ...base, seed: base.seed + 1 }),
+    expect(acceptedC02ReviewerEvidenceId(base)).not.toBe(
+      acceptedC02ReviewerEvidenceId({ ...base, seed: base.seed + 1 }),
     );
   });
 
   it("labels C02's aggregate waiver counters as degraded for candidate explanations", () => {
-    const summary: ProvisionalC02WaiverSummary = {
+    const summary: AcceptedC02WaiverSummary = {
       emergency_adds: 1,
       upside_adds: 2,
       waiver_adds: 3,
@@ -165,9 +172,18 @@ describe("C04 explanation payload contract (producer-independent)", () => {
     expect(summary.candidate_replacement_value).toBeNull();
     expect(summary.degraded_state).toBe("aggregate_only_no_candidate_transactions");
   });
+
+  it("keeps accepted C02 net points separate from gross on-field paired outcomes", () => {
+    expect(ACCEPTED_C02_ACCOUNTING).toEqual({
+      per_season: "net_of_single_transaction_charge",
+      per_season_h2h: "gross_on_field",
+      per_season_playoff: "gross_on_field_proxy",
+      per_season_champ: "gross_on_field_proxy",
+    });
+  });
 });
 
-describe.skip("C04 production explanation adapter — C02 provisional, C03 absent", () => {
+describe.skip("C04 production explanation adapter — C02 accepted, awaiting C03 freeze", () => {
   it("maps the future live scorer payload into the producer-independent contract", () => {});
   it("carries candidate-level replacement/churn evidence without reconstructing it in the browser", () => {});
   it.each([
