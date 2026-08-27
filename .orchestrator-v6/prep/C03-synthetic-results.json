@@ -1,5 +1,5 @@
 {
-  "elapsed_seconds": 4.010411,
+  "elapsed_seconds": 3.827055,
   "kind": "synthetic_not_promotion_evidence",
   "position_order": [
     "QB",
@@ -9,7 +9,7 @@
     "K",
     "DST"
   ],
-  "process_peak_rss_mib": 24.890625,
+  "process_peak_rss_mib": 24.84375,
   "prototype": "scripts/v6BenchPortfolioPrototype.py",
   "receipt_schema_version": 1,
   "rows": [
