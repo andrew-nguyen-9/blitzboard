@@ -185,34 +185,35 @@ def run_arm(
     guard: HeldOutGuard,
     stage: str,
     policies: tuple[str, ...] | None = None,
+    waiver_cost: float = 0.0,
 ) -> ArmRun:
     """Execute one arm × slice through the real evaluator, with runtime/memory receipts.
 
     The caller runs this once per arm from the arm's own checkout; the pairing fields it records
-    are exactly what `validate_pair` later enforces.
+    are exactly what `validate_pair` later enforces. `waiver_cost` is bound explicitly (the C05
+    metric binding fixes it at 0.0; see `promotion.execution`). The accepted C02 paired
+    playoff/championship samples are mapped through `adapter.arm_run_from_result`, so results
+    that carry them emit real proxies and pre-C02 results map them to `None`.
     """
+    from blitz_engine.promotion.adapter import arm_run_from_result
     from blitz_engine.simulation import season_eval as se
 
     guard.check(year, stage=stage)
     eval_seed = derive_eval_seed(base_seed, year, str(row["id"]))
     t0 = time.perf_counter()
     pool = se.build_players(year, str(row["id"]))
-    cfg = se.EvalConfig(n_seasons=n_seasons, seed=eval_seed)
+    cfg = se.EvalConfig(n_seasons=n_seasons, seed=eval_seed, waiver_cost=float(waiver_cost))
     mix = tuple(policies) if policies else se.DEFAULT_POLICY_MIX
     res = se.evaluate_season(year, row, config=cfg, policies=mix)
-    return ArmRun(
-        arm=arm,
-        policy_sha=policy_sha,
+    return arm_run_from_result(
+        arm,
+        policy_sha,
+        res,
         year=year,
         league_id=str(row["id"]),
         base_seed=int(base_seed),
-        eval_seed=eval_seed,
         board_hash=board_fingerprint(pool),
-        seat_policy=tuple(res.seat_policy),
-        per_season=tuple(tuple(float(v) for v in r) for r in res.per_season),
-        h2h_win_rate=tuple(float(v) for v in res.h2h_win_rate),
-        playoff_proxy=None,  # populated once C02's paired proxies exist on SeasonEvalResult
-        championship_proxy=None,
+        synthetic=False,
         runtime_s=time.perf_counter() - t0,
         max_rss_mb=_max_rss_mb(),
     )
