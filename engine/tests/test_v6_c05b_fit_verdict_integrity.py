@@ -22,10 +22,8 @@ from blitz_engine.promotion.harness_v4 import (
     effective_v4_manifest_sha256,
     expected_fit_cells,
     load_execution_manifest_v4,
-    require_fit_verdict,
     validate_fit_analysis_receipt,
     validate_fit_measurement_receipt,
-    write_fit_verdict,
 )
 from blitz_engine.promotion.runner import derive_eval_seed
 
@@ -129,8 +127,15 @@ def test_frame_refuses_duplicate_cell():
 
 def _fit_analysis(measurement_shas, verdict="preserve_v5", **over) -> dict:
     n_pairs = len(expected_fit_cells(EFF)) // 2
+    core = ("deterministic_checks", "started_points_aggregate", "hidden_regression_rule",
+            "h2h_win_rate", "playoff_proxy", "championship_proxy", "calibration_gates", "limits")
+    worse = {"promote": "pass", "preserve_v5": "inconclusive",
+             "do_not_ship_candidate": "fail", "BLOCK": "block"}[verdict]
+    gates = [{"name": n, "status": "pass", "detail": ""} for n in core]
+    if verdict != "promote":
+        gates[0]["status"] = worse
     report = {"stage": "fit", "authoritative": True, "n_pairs": n_pairs, "verdict": verdict,
-              "gates": [], "schema_version": "v3"}
+              "gates": gates, "schema_version": "v3"}
     fa = {
         "kind": "fit_analysis", "report": report, "report_sha256": report_hash(report),
         "effective_v4_manifest_sha256": effective_v4_manifest_sha256(EFF),
@@ -171,58 +176,6 @@ def test_fit_analysis_refuses_mismatched_pinned_set():
         validate_fit_analysis_receipt(fa, EFF, measurement_shas={"a" * 64, "c" * 64})
 
 
-# ── req 1/5/6: write_fit_verdict never fabricates pass ─────────────────────────────────
-
-
-def _write_complete_frame(tmp_path) -> list[str]:
-    paths = []
-    for i, (arm, year, lid, seed) in enumerate(sorted(expected_fit_cells(EFF))):
-        p = tmp_path / "measure" / "fit" / f"{i}.json"
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps(_mrec(arm, year, lid, seed)))
-        paths.append(str(p))
-    return paths
-
-
-def test_write_fit_verdict_records_preserve_v5_not_pass(tmp_path):
-    from blitz_engine.promotion.manifest import sha256_file
-
-    paths = _write_complete_frame(tmp_path)
-    shas = {sha256_file(p) for p in paths}
-    fa = _fit_analysis(shas, verdict="preserve_v5")
-    out = write_fit_verdict(tmp_path, effective=EFF, measurement_paths=paths, fit_analysis=fa)
-    doc = json.loads(out.read_text())
-    assert doc["verdict"] == "preserve_v5"      # inconclusive is NEVER laundered into pass
-    assert doc["report_verdict"] == "preserve_v5"
-
-
-def test_write_fit_verdict_passes_only_on_promote(tmp_path):
-    from blitz_engine.promotion.manifest import sha256_file
-
-    paths = _write_complete_frame(tmp_path)
-    shas = {sha256_file(p) for p in paths}
-    fa = _fit_analysis(shas, verdict="promote")
-    out = write_fit_verdict(tmp_path, effective=EFF, measurement_paths=paths, fit_analysis=fa)
-    assert json.loads(out.read_text())["verdict"] == "pass"
-    # and the confirm gate then admits it
-    assert require_fit_verdict(tmp_path, EFF)["verdict"] == "pass"
-
-
-def test_write_fit_verdict_refuses_incomplete_frame(tmp_path):
-    arm, year, lid, seed = _a_cell()
-    p = tmp_path / "measure" / "fit" / "0.json"
-    p.parent.mkdir(parents=True)
-    p.write_text(json.dumps(_mrec(arm, year, lid, seed)))
-    with pytest.raises(ExecutionError, match="incomplete"):
-        write_fit_verdict(tmp_path, effective=EFF, measurement_paths=[str(p)], fit_analysis={})
-
-
-def test_confirm_refuses_preserve_v5_fit(tmp_path):
-    from blitz_engine.promotion.manifest import sha256_file
-
-    paths = _write_complete_frame(tmp_path)
-    shas = {sha256_file(p) for p in paths}
-    write_fit_verdict(tmp_path, effective=EFF, measurement_paths=paths,
-                      fit_analysis=_fit_analysis(shas, verdict="preserve_v5"))
-    with pytest.raises(ExecutionError, match="fit verdict is"):
-        require_fit_verdict(tmp_path, EFF)
+# write_fit_verdict / require_fit_verdict now MECHANICALLY run evaluate_promotion (no caller report);
+# their integration + the C05C authority adversarial coverage live in
+# test_v6_c05c_fit_analysis_authority.py.

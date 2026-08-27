@@ -368,11 +368,49 @@ def assert_complete_fit_frame(
         raise ExecutionError(f"fit frame: {len(extra)} off-frame cells, e.g. {sorted(extra)[:3]}")
 
 
+#: The gate names `evaluate_promotion` always emits; a trustworthy report must carry all of them.
+_CORE_GATE_NAMES = (
+    "deterministic_checks", "started_points_aggregate", "hidden_regression_rule",
+    "h2h_win_rate", "playoff_proxy", "championship_proxy", "calibration_gates", "limits",
+)
+_AUX = ("deterministic", "calibration", "runtime")
+
+
+def _verdict_from_gates(gates: list[dict[str, Any]]) -> str:
+    """The frozen failure interpretation, recomputed from a gate list (gates.py verdict rule)."""
+    statuses = [g.get("status") for g in gates]
+    if "block" in statuses:
+        return "BLOCK"
+    if "fail" in statuses:
+        return "do_not_ship_candidate"
+    if "inconclusive" in statuses:
+        return "preserve_v5"
+    return "promote"
+
+
+def _reconstruct_pairs(docs: list[dict[str, Any]]) -> list[tuple[Any, Any]]:
+    """Rebuild the frozen (candidate, control) ArmRun pairs from validated measurement receipts."""
+    from blitz_engine.promotion.runner import ArmRun
+
+    by_cell: dict[tuple[int, str, int], dict[str, Any]] = {}
+    for d in docs:
+        run = ArmRun.from_dict(d["arm_run"])
+        by_cell.setdefault((run.year, run.league_id, run.base_seed), {})[run.arm] = run
+    pairs = []
+    for cell, arms in sorted(by_cell.items()):
+        if set(arms) != set(ARM_POLICY_SHAS):
+            raise ExecutionError(f"fit frame: cell {cell} does not carry both frozen arms")
+        pairs.append((arms["v6_candidate"], arms["v5_shipped"]))
+    return pairs
+
+
 def validate_fit_analysis_receipt(
     fit_analysis: dict[str, Any], effective: dict[str, Any], *, measurement_shas: set[str]
 ) -> str:
-    """Validate the hash-pinned fit-analysis receipt (a PromotionReport produced through the frozen
-    gates) and its complete pinned input set; returns the report verdict (reviewer req 4/7)."""
+    """Validate a fit-analysis receipt WITHOUT trusting caller-authored content. Beyond structure and
+    the complete pinned input set, the embedded report must carry the complete frozen gate schema and
+    a verdict the frozen rule re-derives from those gate statuses; a self-hashed report with empty or
+    partial gates, or a verdict inconsistent with its gates, is refused (reviewer C05C blocker 1)."""
     from blitz_engine.promotion.gates import report_hash
 
     if fit_analysis.get("kind") != "fit_analysis":
@@ -396,32 +434,74 @@ def validate_fit_analysis_receipt(
     pinned = set((fit_analysis.get("pinned_inputs") or {}).get("measurement_sha256", {}).values())
     if pinned != set(measurement_shas):
         raise ExecutionError("fit-analysis: pinned measurement inputs != the fit frame")
+    gates = report.get("gates")
+    if not isinstance(gates, list) or not gates:
+        raise ExecutionError("fit-analysis: report carries no gate evidence — cannot promote")
+    names = {g.get("name") for g in gates}
+    missing = [n for n in _CORE_GATE_NAMES if n not in names]
+    if missing:
+        raise ExecutionError(f"fit-analysis: report missing frozen gate evidence: {missing}")
     verdict = report.get("verdict")
+    if verdict != _verdict_from_gates(gates):
+        raise ExecutionError("fit-analysis: report verdict is inconsistent with its gate statuses")
+    if verdict == "promote" and any(g.get("status") != "pass" for g in gates):
+        raise ExecutionError("fit-analysis: promote requires every recorded gate to pass")
     if verdict not in ("BLOCK", "do_not_ship_candidate", "preserve_v5", "promote"):
         raise ExecutionError(f"fit-analysis: report verdict {verdict!r} is not a frozen verdict")
     return verdict
 
 
+def _run_fit_analysis(
+    effective: dict[str, Any], docs: list[dict[str, Any]], aux_docs: dict[str, Any]
+) -> Any:
+    """Mechanically produce the authoritative fit analysis: rebuild the frozen pairs and call the
+    frozen `evaluate_promotion` with the consumed auxiliary evidence. No caller report is trusted."""
+    from blitz_engine.promotion.gates import evaluate_promotion
+
+    return evaluate_promotion(
+        effective, _reconstruct_pairs(docs), stage="fit", authoritative=True,
+        calibration_report=aux_docs.get("calibration"),
+        deterministic_receipt=aux_docs.get("deterministic"),
+        runtime_receipt=aux_docs.get("runtime"),
+    )
+
+
 def write_fit_verdict(
-    out_dir: str | Path, *, effective: dict[str, Any], measurement_paths: Any = None,
-    fit_analysis: dict[str, Any] | None = None, fit_measure_paths: Any = None,
+    out_dir: str | Path, *, effective: dict[str, Any], measurement_paths: Any,
+    deterministic_receipt_path: str | Path | None = None,
+    calibration_report_path: str | Path | None = None,
+    runtime_receipt_path: str | Path | None = None,
 ) -> Path:
-    """Write the write-once fit verdict. `pass` is emitted ONLY when the complete frame validates,
-    every receipt validates, and the hash-pinned fit-analysis report's verdict is `promote`.
-    Otherwise the frozen-gate verdict (BLOCK / do_not_ship_candidate / preserve_v5) is recorded;
-    missing or failed evidence is NEVER turned into a pass (reviewer req 1/5/6)."""
+    """Produce and record the write-once fit verdict. The report is computed MECHANICALLY by the
+    frozen `evaluate_promotion` over the reconstructed frame — never accepted from a caller. `pass`
+    is emitted ONLY when that verdict is `promote`; otherwise the frozen-gate verdict is recorded.
+    Missing/invalid auxiliary evidence can never promote (reviewer C05C req 1/4/5/6)."""
+    from blitz_engine.promotion.gates import report_hash
     from blitz_engine.promotion.manifest import sha256_file
 
-    if measurement_paths is not None and fit_measure_paths is not None:
-        raise ExecutionError("fit frame: provide only one measurement-path set")
-    paths = sorted(str(p) for p in (measurement_paths or fit_measure_paths or ()))
+    paths = sorted(str(p) for p in measurement_paths)
     docs = [json.loads(Path(p).read_text()) for p in paths]
     assert_complete_fit_frame(docs, effective)  # validates every receipt + exact coverage
-    pins = {p: sha256_file(p) for p in paths}
-    report_verdict = validate_fit_analysis_receipt(
-        fit_analysis or {}, effective, measurement_shas=set(pins.values())
-    )
+
+    aux_paths = dict(zip(_AUX, (deterministic_receipt_path, calibration_report_path,
+                                runtime_receipt_path), strict=True))
+    aux_docs = {k: (json.loads(Path(v).read_text()) if v is not None else None)
+                for k, v in aux_paths.items()}
+    aux_pins = {k: sha256_file(v) for k, v in aux_paths.items() if v is not None}
+
+    report = _run_fit_analysis(effective, docs, aux_docs)
+    report_verdict = report["verdict"]
     verdict = "pass" if report_verdict == "promote" else report_verdict
+
+    measurement_pins = {p: sha256_file(p) for p in paths}
+    report_sha = report_hash(report)
+    fit_analysis = {
+        "kind": "fit_analysis",
+        "report": dict(report),
+        "report_sha256": report_sha,
+        "effective_v4_manifest_sha256": effective_v4_manifest_sha256(effective),
+        "pinned_inputs": {"measurement_sha256": measurement_pins, "auxiliary_sha256": aux_pins},
+    }
     doc = {
         "kind": "fit_verdict",
         "verdict": verdict,
@@ -429,17 +509,21 @@ def write_fit_verdict(
         "manifest_sha256": V4_MANIFEST_SHA256,
         "exec_addendum_sha256": EXEC_V2_SHA256,
         "effective_v4_manifest_sha256": effective_v4_manifest_sha256(effective),
-        "fit_receipt_sha256": pins,
-        "fit_analysis_report_sha256": (fit_analysis or {})["report_sha256"],
+        "fit_receipt_sha256": measurement_pins,
+        "auxiliary_sha256": aux_pins,
+        "auxiliary_receipt_paths": {k: str(v) for k, v in aux_paths.items() if v is not None},
+        "fit_analysis_report_sha256": report_sha,
         "fit_analysis": fit_analysis,
     }
     return _write_once(Path(out_dir) / "fit-verdict.json", doc)
 
 
 def require_fit_verdict(out_dir: str | Path, effective: dict[str, Any]) -> dict[str, Any]:
-    """Confirmation is refused unless a write-once fit verdict recorded `pass`, is bound to the
-    frozen effective-v4 manifest, every pinned fit receipt still verifies, and its embedded
-    fit-analysis receipt re-validates against the complete pinned input set (reviewer req 7)."""
+    """Confirmation reloads EVERY pinned measurement, revalidates the exact complete frame, reloads
+    and re-verifies the pinned auxiliary receipts, RERUNS the frozen analysis from all pinned inputs,
+    compares the canonical report hash to the recorded one, and requires `promote`. No caller-authored
+    verdict, hash, or partial input set can unlock confirmation (reviewer C05C blocker 2 / req 7)."""
+    from blitz_engine.promotion.gates import report_hash
     from blitz_engine.promotion.manifest import sha256_file
 
     p = Path(out_dir) / "fit-verdict.json"
@@ -450,17 +534,33 @@ def require_fit_verdict(out_dir: str | Path, effective: dict[str, Any]) -> dict[
         raise ExecutionError(f"confirmation blocked: fit verdict is {doc.get('verdict')!r}")
     if doc.get("effective_v4_manifest_sha256") != effective_v4_manifest_sha256(effective):
         raise ExecutionError("confirmation blocked: fit-verdict effective-v4 hash mismatch")
+
     pins = doc.get("fit_receipt_sha256", {})
+    docs = []
     for rel, want in pins.items():
         if not Path(rel).is_file() or sha256_file(rel) != want:
-            raise ExecutionError(f"confirmation blocked: fit-verdict pinned receipt drift: {rel}")
-    report_verdict = validate_fit_analysis_receipt(
+            raise ExecutionError(f"confirmation blocked: pinned measurement drift: {rel}")
+        docs.append(json.loads(Path(rel).read_text()))
+    assert_complete_fit_frame(docs, effective)  # the exact complete frame, re-proved
+
+    aux_pins = doc.get("auxiliary_sha256", {})
+    aux_paths = doc.get("auxiliary_receipt_paths", {})
+    aux_docs = {k: None for k in _AUX}
+    for label, rel in aux_paths.items():
+        if not Path(rel).is_file() or sha256_file(rel) != aux_pins.get(label):
+            raise ExecutionError(f"confirmation blocked: auxiliary receipt drift: {label}")
+        aux_docs[label] = json.loads(Path(rel).read_text())
+
+    report = _run_fit_analysis(effective, docs, aux_docs)  # rerun from pinned inputs
+    if report_hash(report) != doc.get("fit_analysis_report_sha256"):
+        raise ExecutionError("confirmation blocked: recomputed report hash != recorded")
+    if report["verdict"] != "promote":
+        raise ExecutionError(
+            f"confirmation blocked: recomputed fit verdict is {report['verdict']!r}, not promote"
+        )
+    validate_fit_analysis_receipt(  # defence in depth: embedded receipt must also be consistent
         doc.get("fit_analysis") or {}, effective, measurement_shas=set(pins.values())
     )
-    if report_verdict != "promote":
-        raise ExecutionError(
-            f"confirmation blocked: fit-analysis report verdict is {report_verdict!r}, not promote"
-        )
     return doc
 
 
