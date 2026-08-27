@@ -53,7 +53,9 @@ __all__ = [
     "load_execution_manifest_v4",
     "mandatory_league_ids",
     "measure_arm",
+    "recompute_seat_policy",
     "rehearse_v4",
+    "validate_authoritative_draft_receipt",
     "validate_draft_receipt",
     "verify_measurement_checkout",
 ]
@@ -219,6 +221,38 @@ def _check_authoritative_frame(
     if n_seasons is not None and int(n_seasons) != int(effective["evaluator"]["n_seasons"]):
         raise ExecutionError(
             f"authoritative n_seasons {n_seasons} != frozen {effective['evaluator']['n_seasons']}"
+        )
+
+
+def recompute_seat_policy(eval_seed: int, teams: int, effective: dict[str, Any]) -> list[str]:
+    """Reproduce the frozen deterministic seat-policy assignment exactly as `draft_league` does:
+    round-robin the default policy mix across seats, then shuffle under `default_rng(eval_seed +
+    draft_stream)`. The draft stream offset is read from the frozen manifest."""
+    from blitz_engine.simulation.season_eval import DEFAULT_POLICY_MIX
+
+    draft_stream = int(effective["seed_derivation"]["stream_offsets"]["draft"])
+    rng = np.random.default_rng(int(eval_seed) + draft_stream)
+    seats = [DEFAULT_POLICY_MIX[i % len(DEFAULT_POLICY_MIX)] for i in range(int(teams))]
+    rng.shuffle(seats)
+    return seats
+
+
+def validate_authoritative_draft_receipt(
+    receipt: dict[str, Any], row: dict[str, Any], board_ids: frozenset[str],
+    effective: dict[str, Any], *, stage: str,
+) -> None:
+    """The strict authoritative validator: shape + arm<->policy identity, the frozen-manifest
+    frame, and the recomputed deterministic seat-policy. Every violation aborts (BLOCK)."""
+    validate_draft_receipt(receipt, row, board_ids)
+    _check_authoritative_frame(
+        effective, year=receipt["year"], league_id=receipt["league_id"],
+        base_seed=receipt["base_seed"], arm=receipt["arm"],
+        expected_sha=receipt["policy_sha"], stage=stage,
+    )
+    want = recompute_seat_policy(receipt["eval_seed"], int(row["teams"]), effective)
+    if list(receipt["seat_policy"]) != want:
+        raise ExecutionError(
+            "draft receipt seat_policy does not match the deterministic assignment"
         )
 
 
@@ -424,7 +458,10 @@ def measure_arm(
     board_ids = frozenset(
         p.player_id for p in se.build_players(receipt["year"], receipt["league_id"])
     )
-    validate_draft_receipt(receipt, row, board_ids)
+    if authoritative:
+        validate_authoritative_draft_receipt(receipt, row, board_ids, effective, stage=stage)
+    else:
+        validate_draft_receipt(receipt, row, board_ids)
 
     payload = _run_payload(
         _MEASURE_PAYLOAD,

@@ -15,6 +15,8 @@ from blitz_engine.promotion.harness_v4 import (
     load_execution_manifest_v4,
     mandatory_league_ids,
     measure_arm,
+    recompute_seat_policy,
+    validate_authoritative_draft_receipt,
 )
 from blitz_engine.promotion.runner import HeldOutGuard
 from blitz_engine.testing import matrix
@@ -101,3 +103,26 @@ def test_authoritative_refuses_nonmandatory_league(tmp_path):
     p = _authoritative_receipt(tmp_path, league_id="t8-1qb-std-te0.0-b4-ir0")
     with pytest.raises(ExecutionError, match="mandatory"):
         _measure_auth(p)
+
+
+# ── req 4: deterministic seat-policy assignment recomputed and enforced ────────────────
+
+
+def test_recompute_seat_policy_reproduces_the_real_receipt():
+    r = _real_receipt()
+    want = recompute_seat_policy(r["eval_seed"], int(_row(r)["teams"]), EFFECTIVE)
+    assert list(r["seat_policy"]) == want  # the harness reproduces the frozen draft assignment
+
+
+def test_authoritative_validator_passes_untampered_real_receipt():
+    r = _real_receipt()
+    r["authoritative"] = True
+    validate_authoritative_draft_receipt(r, _row(r), _board(r), EFFECTIVE, stage="fit")
+
+
+def test_authoritative_refuses_tampered_seat_policy():
+    r = _real_receipt()
+    r["authoritative"] = True
+    r["seat_policy"] = list(reversed(r["seat_policy"]))
+    with pytest.raises(ExecutionError, match="seat_policy"):
+        validate_authoritative_draft_receipt(r, _row(r), _board(r), EFFECTIVE, stage="fit")
