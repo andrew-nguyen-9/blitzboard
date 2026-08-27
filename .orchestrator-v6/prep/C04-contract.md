@@ -2,7 +2,8 @@
 
 Status: preparation only. This document does not define production implementation and is not a
 checkpoint verdict. C02 is accepted at production head
-`417af276dd4438d8a35f38d08bfc26206044925e` (review `f2a1537`); C03 is unfinished.
+`417af276dd4438d8a35f38d08bfc26206044925e` (review `f2a1537`); C03 is accepted and integrated at
+`8694d98186e5800e5439725973bb8789ebdb2979` with an intentionally all-unsupported artifact.
 Names below are semantic requirements, not proposed TypeScript field names.
 
 ## Scoring components
@@ -52,17 +53,18 @@ browser-safe generated artifact. It must prove:
 4. no frontend import of the canonical engine artifact and no runtime generation/simulation;
 5. no interpretation of a soft cost as candidate ineligibility or a positional maximum.
 
-Exact production artifact bytes and measured rows remain deliberately unspecified until C03 passes
-with its frozen interface implemented.
+Accepted production artifact bytes are authoritative. There are no measured or interpolated rows;
+C04 must preserve that absence rather than synthesizing either status.
 
 ### Provisional frozen-interface implementation
 
-C04's disposable interface branch consumes the frozen v1 `ResolveBenchShape` declaration from C03
-commit `a3394b0a6c72174894bd8a44b33c702372903d11` by dependency injection. It does not import a
-generated artifact or implement resolution. `v6DraftExplanation.ts` uses exactly one resolver call,
-maps non-evidence failures to visible `fallback`, preserves honest `unsupported`, reads only finite
-soft marginal costs, and never turns depth into candidate ineligibility. Canonical measured,
-interpolated, and parity assertions stay skipped until C03 supplies its artifacts and passes review.
+C04 consumes the accepted browser resolver through a narrow adapter satisfying the frozen v1
+`ResolveBenchShape` signature. `v6DraftExplanation.ts` uses exactly one resolver call, maps
+non-evidence failures to visible `fallback`, preserves honest `unsupported`, reads only finite soft
+marginal costs, and never turns depth into candidate ineligibility. `v6DraftLiveScoring.ts` decorates
+the shipped deterministic score with six structured components and a named legacy-policy residual;
+unsupported C03 costs do not silently alter the shipped total. Canonical/generated hash and row-key
+parity are executable. Candidate-level waiver evidence remains absent and degrades explicitly.
 
 ## Accepted C02 interface reconciliation
 

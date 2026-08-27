@@ -4,6 +4,8 @@ export interface DraftTrace {
   readonly traceVersion: 1;
   readonly candidateId: string;
   readonly score: number;
+  readonly componentTotal: number;
+  readonly legacyPolicyResidual: number;
   readonly componentValues: Readonly<Record<string, number | null>>;
   readonly leagueEvidence: DraftExplanationPayload["leagueEvidence"];
   readonly degradedInputs: readonly string[];
@@ -16,6 +18,8 @@ export function toDraftTrace(payload: DraftExplanationPayload): DraftTrace {
     traceVersion: 1,
     candidateId: payload.candidateId,
     score: payload.score,
+    componentTotal: payload.componentTotal,
+    legacyPolicyResidual: payload.legacyPolicyResidual,
     componentValues: Object.fromEntries(payload.components.map((item) => [item.name, item.value])),
     leagueEvidence: payload.leagueEvidence,
     degradedInputs: payload.degradedInputs,
@@ -26,4 +30,3 @@ export function toDraftTrace(payload: DraftExplanationPayload): DraftTrace {
 export function serializeDraftTrace(trace: DraftTrace): string {
   return `${JSON.stringify(trace, null, 2)}\n`;
 }
-

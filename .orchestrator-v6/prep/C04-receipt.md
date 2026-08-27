@@ -121,3 +121,28 @@ git diff --check: exit 0
 
 The 16 visible skips are 13 inherited C04 preparation cases plus 3 frozen-resolver cases requiring
 canonical measured/interpolated artifacts and parity. No checkpoint verdict is implied.
+
+## Accepted C03 live integration
+
+Accepted combined base: `8694d98186e5800e5439725973bb8789ebdb2979`. C04 preparation commits were
+transferred individually (no branch merge) and the accepted all-unsupported C03 resolver was wired
+through `v6DraftLiveScoring.ts`. Every C03-dependent skip now satisfiable by the accepted artifact
+is executable. Four skips remain solely because accepted C02/C03 exposes no producer-issued paired
+outcome identifier; candidate transaction value is never inferred from aggregate counters.
+
+Verification:
+
+```text
+focused frontend: 6 files passed; 51 passed, 4 skipped
+full frontend: 60 files passed; 543 passed, 4 skipped
+frontend typecheck: exit 0
+frontend lint: 0 errors, 1 pre-existing useEspnSync warning
+frontend production build: passed
+C03 generator parity check: exact
+C03 focused shape tests: 19 passed
+git diff --check: exit 0
+```
+
+No production C04 experiment was run. The shipped draft score remains authoritative; structured
+component totals reconcile to it through an explicit `legacyPolicyResidual`, and unsupported C03
+soft costs do not silently change the score.
