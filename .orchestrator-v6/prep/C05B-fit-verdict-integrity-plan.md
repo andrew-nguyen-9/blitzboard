@@ -22,9 +22,7 @@ gates. C05A corrections and all frozen files stay byte-for-byte intact.
 - Frozen frame: arms {v5_shipped, v6_candidate}; fit years {2021, 2024}; 216 mandatory league ids;
   base seeds {2026082601..04}; measurement SHA `7b3fd735…`; n_seasons 8; one measurement receipt per
   (arm, year, league_id, base_seed) cell ⇒ **3456 receipts / 1728 pairs**.
-- **DEFERRED (blocked on transfer):** req 8's "copy the reviewer dummy-receipt probe unchanged from
-  `b7de57f`" — that commit is not on origin/local/Downloads. Everything else is built now; the
-  verbatim probe copy + the final immutable checkpoint wait until `b7de57f` is pushed to origin.
+- Req 8's reviewer dummy-receipt probe is copied byte-for-byte from `b7de57f`.
 
 ## Frozen producers consumed (do not reimplement)
 
@@ -54,7 +52,7 @@ gates. C05A corrections and all frozen files stay byte-for-byte intact.
 
 - [ ] Record frozen baseline: manifests + execution.py + runner.py + manifest.py + gates.py +
       stats.py + season_eval.py + `harness_v4.py`-C05A-accepted-symbols to `/tmp/c05b-frozen-baseline.txt`.
-- [ ] (Deferred) copy reviewer probe from `b7de57f` once available.
+- [x] Copy reviewer probe byte-for-byte from `b7de57f`.
 
 ### Task 1: measurement-receipt frame key + additive receipt fields
 
@@ -109,15 +107,15 @@ gates. C05A corrections and all frozen files stay byte-for-byte intact.
 
 ### Task 7: adversarial suite + preservation + checkpoint (req 8/9)
 
-- [ ] Add completeness, duplicate, pairing, numerical-failure, calibration-failure adversarial tests
-      (mine; reviewer's dummy-receipt probe copied unchanged once `b7de57f` lands).
-- [ ] Full non-authoritative suite green; frozen ruff scope clean.
-- [ ] Prove frozen files + C05A-accepted symbols byte-for-byte (`shasum -c`); `git diff` shows only
+- [x] Add completeness, duplicate, pairing, numerical-failure, calibration-failure adversarial tests
+      and copy the reviewer dummy-receipt probe unchanged.
+- [x] Full non-authoritative suite green; frozen producer-authored Ruff scope clean.
+- [x] Prove frozen files + C05A-accepted symbols byte-for-byte (`shasum -c`); `git diff` shows only
       additive `harness_v4.py` + test files.
-- [ ] Write `.orchestrator-v6/checkpoints/C05B-fit-verdict-integrity.md`. Commit. Stop for re-review.
+- [x] Write `.orchestrator-v6/checkpoints/C05B-fit-verdict-integrity.md`. Commit. Stop for re-review.
 
 ## Self-Review
 
-- Spec coverage: req1→T5, req2→T3, req3→T2, req4→T4, req5/6→T5, req7→T6, req8→T7 (+deferred probe),
+- Spec coverage: req1→T5, req2→T3, req3→T2, req4→T4, req5/6→T5, req7→T6, req8→T7,
   req9→T7. All frozen producers consumed, not reimplemented.
-- Deferred: verbatim reviewer probe (needs `b7de57f`); final checkpoint marked provisional until then.
+- The verbatim reviewer probe is present and passes; checkpoint is final for independent re-review.
