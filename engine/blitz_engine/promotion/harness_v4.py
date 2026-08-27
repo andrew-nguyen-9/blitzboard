@@ -485,19 +485,19 @@ def validate_auxiliary(
     shortest safe path while C05 is parked (reviewer C05E).
 
     Why nothing is admitted from a caller document:
-    - A provenance-SHAPED field (`produced_by_tooling`, module/manifest hashes, clean-tree claims) is
-      just more caller bytes; it proves retention, not that the harness produced the receipt. So
+    - A provenance-SHAPED field (`produced_by_tooling`, module/manifest hashes, clean-tree claims)
+      is just more caller bytes; it proves retention, not that the harness produced the receipt. So
       deterministic and runtime receipts are not admitted on provenance fields.
-    - Calibration is never admitted: the frozen manifest freezes the calibration SOURCE identity but
-      NO accepted calibration REPORT identity (the C02 report failed; `missing_report_interpretation`
-      is numerical_fail). A caller-mutated `effective` cannot manufacture that authority either.
+    - Calibration is never admitted: the frozen manifest freezes the calibration SOURCE identity
+      but NO accepted calibration REPORT identity (the C02 report failed;
+      `missing_report_interpretation` is numerical_fail). A caller-mutated `effective` cannot
+      manufacture that authority either.
     - The `effective` argument is caller-mutable and is deliberately NOT read here as an authority
       source; nothing it can carry admits any evidence.
 
     ponytail: when a later authorized phase adds a mechanical producer (deterministic probes; a
     measured runtime receipt; a loader-bound accepted calibration-report identity), admit each here
-    against its frozen-generated identity — not against caller-shaped fields. `frame_sha` is retained
-    for that binding.
+    against its frozen-generated identity — not caller-shaped fields. `frame_sha` is kept for that.
     """
     return {"deterministic": None, "calibration": None, "runtime": None}
 
