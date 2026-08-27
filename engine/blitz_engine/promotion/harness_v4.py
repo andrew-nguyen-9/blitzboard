@@ -45,6 +45,7 @@ from blitz_engine.promotion.manifest import ManifestError, sha256_file
 from blitz_engine.promotion.runner import ArmRun, HeldOutGuard, derive_eval_seed
 
 __all__ = [
+    "ARM_POLICY_SHAS",
     "EXEC_V2_SHA256",
     "MEASUREMENT_SHA",
     "V4_MANIFEST_SHA256",
@@ -61,6 +62,10 @@ V4_MANIFEST_SHA256 = "47af290506a2aa9e66add39b62125c12341927814d3cbc660426cc767e
 EXEC_V1_V4_SHA256 = "41e33538c87cadacde3165ea05c7ceb6f42004bda8f992864c9cfa826220c208"
 EXEC_V2_SHA256 = "7e88b09087687da3cf328f4fe027df181cf2b82975e605d73519b9ce4ae16480"
 MEASUREMENT_SHA = CANDIDATE_SHA  # exec-v2: measurement lives in the accepted combined head
+
+#: Frozen arm-name -> policy SHA identity (exec-v2 `arms`). A receipt may not claim an arm label
+#: while carrying another arm's policy code (reviewer blocker 3).
+ARM_POLICY_SHAS = {"v5_shipped": BASELINE_SHA, "v6_candidate": CANDIDATE_SHA}
 
 
 def load_execution_manifest_v4(root: str | Path) -> dict[str, Any]:
@@ -134,6 +139,14 @@ def validate_draft_receipt(
     """The exec-v2 roster rules plus pairing-key sanity — every violation aborts (BLOCK)."""
     if receipt.get("kind") != "draft":
         raise ExecutionError("not a draft receipt")
+    want_sha = ARM_POLICY_SHAS.get(receipt.get("arm"))
+    if want_sha is None:
+        raise ExecutionError(f"draft receipt arm {receipt.get('arm')!r} is not a frozen arm name")
+    if receipt.get("policy_sha") != want_sha:
+        raise ExecutionError(
+            f"arm {receipt['arm']!r} bound to policy_sha {receipt.get('policy_sha')!r} "
+            f"does not match its frozen policy identity {want_sha}"
+        )
     teams = int(row["teams"])
     rosters = receipt["rosters"]
     if len(rosters) != teams or len(receipt["seat_policy"]) != teams:
