@@ -24,7 +24,6 @@ def test_execution_loader_applies_frozen_addendum_and_metric_binding() -> None:
 
 def test_arm_runner_emits_accepted_c02_proxy_metrics() -> None:
     from blitz_engine.promotion.runner import HeldOutGuard, run_arm
-
     from blitz_engine.testing import matrix
 
     row = matrix.by_id("t10-1qb-std-te0.0-b4-ir0")

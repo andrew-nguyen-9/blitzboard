@@ -79,7 +79,7 @@ def test_receipts_are_write_once_and_stage_separated(tmp_path):
     head = checkout_head(REPO)  # use this repo as its own "arm checkout" so head-verify passes
     kw = dict(
         effective=effective, year=2021, league_id="t10-1qb-std-te0.0-b4-ir0",
-        base_seed=2026082601, n_seasons=1, out_dir=tmp_path, tooling_head=head,
+        base_seed=2026082601, n_seasons=1, out_dir=tmp_path, tooling_root=REPO,
     )
     # held-out separation fires before any evaluator work
     with pytest.raises(HeldOutLeakError):
@@ -101,3 +101,22 @@ def test_frozen_pins_match_the_committed_files():
     exp = REPO / ".orchestrator-v6" / "experiments"
     assert sha256_file(exp / "promotion-v3.json") == MANIFEST_SHA256
     assert sha256_file(exp / "promotion-v3-exec-v1.json") == EXEC_V1_SHA256
+
+
+def test_tooling_provenance_is_mechanical_and_refuses_dirty_trees(monkeypatch):
+    from blitz_engine.promotion import execution
+    from blitz_engine.promotion.execution import checkout_head, tooling_provenance
+    from blitz_engine.promotion.manifest import sha256_file
+
+    # NOTE: only meaningful against a clean committed tree — the pre-commit run of this test
+    # is expected to fail, which is exactly the property the reviewer demanded.
+    prov = tooling_provenance(REPO)
+    assert prov["tooling_head"] == checkout_head(REPO)
+    assert prov["tooling_tree_clean"] is True
+    assert prov["execution_module_sha256"] == sha256_file(
+        REPO / "engine" / "blitz_engine" / "promotion" / "execution.py"
+    )
+    assert len(prov["effective_manifest_sha256"]) == 64
+    monkeypatch.setattr(execution, "_tracked_dirty", lambda root: [" M some/file.py"])
+    with pytest.raises(ExecutionError, match="committed clean tooling head"):
+        tooling_provenance(REPO)

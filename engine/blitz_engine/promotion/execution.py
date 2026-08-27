@@ -23,6 +23,7 @@ two-checkout null run, labelled non-authoritative in its receipt.
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import os
 import subprocess
@@ -51,6 +52,7 @@ __all__ = [
     "load_execution_manifest",
     "produce_arm_receipt",
     "rehearse",
+    "tooling_provenance",
     "verify_arm_checkout",
 ]
 
@@ -102,6 +104,53 @@ def checkout_head(checkout: str | Path) -> str:
         capture_output=True, text=True, check=True,
     )
     return out.stdout.strip()
+
+
+def _tracked_dirty(root: str | Path) -> list[str]:
+    """Tracked files with uncommitted changes (untracked outputs are allowed — receipts land
+    in the tree by design, but the CODE state must be exactly the committed HEAD)."""
+    out = subprocess.run(
+        ["git", "-C", str(root), "status", "--porcelain", "--untracked-files=no"],
+        capture_output=True, text=True, check=True,
+    )
+    return [line for line in out.stdout.splitlines() if line.strip()]
+
+
+_EXECUTION_MODULE = "engine/blitz_engine/promotion/execution.py"
+
+
+def tooling_provenance(root: str | Path) -> dict[str, Any]:
+    """Mechanically derived tooling identity for every receipt — never a caller-supplied string.
+
+    Requires a clean tooling tree (no uncommitted tracked changes), proves the committed HEAD
+    actually contains the execution harness, and records the sha256 of the execution module and
+    of the effective in-memory manifest.
+    """
+    root = Path(root)
+    dirty = _tracked_dirty(root)
+    if dirty:
+        raise ExecutionError(
+            f"tooling tree has uncommitted tracked changes; receipts must come from a "
+            f"committed clean tooling head: {dirty[:5]}"
+        )
+    head = checkout_head(root)
+    probe = subprocess.run(
+        ["git", "-C", str(root), "cat-file", "-e", f"{head}:{_EXECUTION_MODULE}"],
+        capture_output=True, text=True,
+    )
+    if probe.returncode != 0:
+        raise ExecutionError(f"tooling HEAD {head} does not contain {_EXECUTION_MODULE}")
+    effective = load_execution_manifest(root)
+    effective_hash = hashlib.sha256(
+        json.dumps(effective, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return {
+        "tooling_head": head,
+        "tooling_tree_clean": True,
+        "clean_definition": "git status --porcelain --untracked-files=no is empty",
+        "execution_module_sha256": sha256_file(root / _EXECUTION_MODULE),
+        "effective_manifest_sha256": effective_hash,
+    }
 
 
 def verify_arm_checkout(checkout: str | Path, expected_sha: str) -> str:
@@ -198,13 +247,14 @@ def produce_arm_receipt(
     stage: str,
     guard: HeldOutGuard,
     out_dir: str | Path,
-    tooling_head: str,
+    tooling_root: str | Path,
     python: str = sys.executable,
     authoritative: bool = False,
 ) -> Path:
     """Verify the checkout, run the arm inside it, write a write-once stage-separated receipt."""
     if stage not in ("fit", "confirm"):
         raise ExecutionError(f"unknown stage {stage!r}")
+    provenance = tooling_provenance(tooling_root)  # mechanical, clean-tree-enforced
     guard.check(year, stage=stage)
     head = verify_arm_checkout(checkout, expected_sha)
     out = Path(out_dir) / stage / f"{arm}-{year}-{league_id}-{base_seed}.json"
@@ -247,7 +297,8 @@ def produce_arm_receipt(
         "authoritative": bool(authoritative),
         "label": None if authoritative else "NON-AUTHORITATIVE rehearsal/probe receipt",
         "arm_checkout_head": head,
-        "produced_by_tooling_head": tooling_head,
+        "produced_by_tooling_head": provenance["tooling_head"],
+        "produced_by_tooling": provenance,
         "manifest_sha256": MANIFEST_SHA256,
         "exec_addendum_sha256": EXEC_V1_SHA256,
         "stage": stage,
@@ -263,7 +314,6 @@ def rehearse(
     scratch: str | Path,
     out_dir: str | Path,
     *,
-    tooling_head: str,
     league_id: str = "t10-1qb-std-te0.0-b4-ir0",
     year: int = 2021,
     base_seed: int = 2026082601,
@@ -277,6 +327,7 @@ def rehearse(
     from blitz_engine.promotion.runner import PairingError, pair_slice
 
     root, scratch = Path(repo_root), Path(scratch)
+    provenance = tooling_provenance(root)  # refuses a dirty tooling tree up front
     effective = load_execution_manifest(root)
     guard = HeldOutGuard(list(effective["seasons"]), list(effective["held_out_seasons"]))
     checkouts = {"v5_shipped": (scratch / "arm-v5", BASELINE_SHA),
@@ -292,7 +343,7 @@ def rehearse(
             path = produce_arm_receipt(
                 arm, co, sha, effective=effective, year=year, league_id=league_id,
                 base_seed=base_seed, n_seasons=1, stage="fit", guard=guard,
-                out_dir=out_dir, tooling_head=tooling_head, authoritative=False,
+                out_dir=out_dir, tooling_root=root, authoritative=False,
             )
             runs[arm] = ArmRun.from_dict(json.loads(path.read_text())["arm_run"])
         try:
@@ -315,6 +366,7 @@ def rehearse(
             )
     summary = {
         "label": "NON-AUTHORITATIVE two-checkout rehearsal — justifies nothing",
+        "produced_by_tooling": provenance,
         "slice": {"year": year, "league_id": league_id, "base_seed": base_seed, "n_seasons": 1},
         "arm_heads": {a: runs[a].policy_sha for a in runs},
         "board_hashes": {a: runs[a].board_hash for a in runs},
