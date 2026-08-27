@@ -14,6 +14,9 @@ describe("C03 bench-shape lookup", () => {
       expect(Object.values(shape.composition).reduce((a, b) => a + b, 0)).toBe(bench);
       expect(shape.hardCaps).toBeNull();
       expect(Number.isFinite(benchMarginalCost(shape, "RB", bench))).toBe(true);
+      expect(shape.evidenceStatus).toBe("unsupported");
+      expect(shape.degraded).toBe(true);
+      expect(shape.degradedReason).toBe("unsupported_evidence");
     }
   });
 
