@@ -58,8 +58,9 @@ def _va(deterministic=None, calibration=None, runtime=None, frame_sha=FRAME):
 # ── deterministic authority ────────────────────────────────────────────────────────────
 
 
-def test_deterministic_valid_is_kept():
-    assert _va(deterministic=_det())["deterministic"] is not None
+def test_deterministic_is_never_admitted_from_caller():
+    # C05E: even a fully-shaped caller receipt stays absent until mechanically generated
+    assert _va(deterministic=_det())["deterministic"] is None
 
 
 @pytest.mark.parametrize("mut", [
@@ -77,8 +78,9 @@ def test_deterministic_unauthoritative_is_dropped(mut):
 # ── runtime authority: missing/malformed/non-finite must never survive ─────────────────
 
 
-def test_runtime_valid_is_kept():
-    assert _va(runtime=_rt())["runtime"] is not None
+def test_runtime_is_never_admitted_from_caller():
+    # C05E: a well-formed caller runtime receipt is still not mechanical authority ⇒ absent
+    assert _va(runtime=_rt())["runtime"] is None
 
 
 @pytest.mark.parametrize("doc", [

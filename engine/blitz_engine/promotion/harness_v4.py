@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import os
 import subprocess
 import sys
@@ -476,68 +475,31 @@ def fit_frame_sha256(measurement_pins: dict[str, str]) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
-def _finite_nonneg(x: Any) -> bool:
-    return (
-        isinstance(x, (int, float)) and not isinstance(x, bool)
-        and math.isfinite(x) and x >= 0
-    )
-
-
-def _aux_bound(effective: dict[str, Any], frame_sha: str, doc: Any, kind: str) -> bool:
-    """Common authority: a well-formed receipt of the right kind, bound to the frozen protocol and
-    to THIS exact fit frame, carrying mechanical tooling provenance."""
-    return (
-        isinstance(doc, dict)
-        and doc.get("kind") == kind
-        and doc.get("effective_v4_manifest_sha256") == effective_v4_manifest_sha256(effective)
-        and doc.get("fit_frame_sha256") == frame_sha
-        and bool(doc.get("produced_by_tooling"))
-    )
-
-
 def validate_auxiliary(
     effective: dict[str, Any], frame_sha: str, *,
     deterministic: Any, calibration: Any, runtime: Any,
 ) -> dict[str, Any]:
-    """Return only the auxiliary evidence that is mechanically authoritative for THIS frame; any
-    receipt that is malformed, unbound, or unauthoritative is dropped to None so the frozen gates
-    treat it as ABSENT evidence — which can never promote. Shared by writing and confirmation
-    (reviewer C05D). Byte-hash pinning proves retention, never authority — hence this validator.
+    """Auxiliary evidence must be MECHANICALLY GENERATED from canonical frozen state, never accepted
+    from caller-supplied documents. No such producer exists yet, so every auxiliary input stays
+    absent (None) and the frozen gates treat it as missing — which can never promote. This is the
+    shortest safe path while C05 is parked (reviewer C05E).
 
-    Calibration is deliberately never admitted from a caller document: the frozen manifest freezes
-    the calibration SOURCE identity but no accepted calibration REPORT identity (the C02 report
-    failed, and `missing_report_interpretation` is numerical_fail). Until a new accepted report is
-    frozen, no auxiliary dictionary can prove acceptance, so calibration stays absent and promotion
-    is blocked. ponytail: when an accepted-report identity is frozen in calibration_gates, bind and
-    admit it here — the source-identity checks below are already in place for that day.
+    Why nothing is admitted from a caller document:
+    - A provenance-SHAPED field (`produced_by_tooling`, module/manifest hashes, clean-tree claims) is
+      just more caller bytes; it proves retention, not that the harness produced the receipt. So
+      deterministic and runtime receipts are not admitted on provenance fields.
+    - Calibration is never admitted: the frozen manifest freezes the calibration SOURCE identity but
+      NO accepted calibration REPORT identity (the C02 report failed; `missing_report_interpretation`
+      is numerical_fail). A caller-mutated `effective` cannot manufacture that authority either.
+    - The `effective` argument is caller-mutable and is deliberately NOT read here as an authority
+      source; nothing it can carry admits any evidence.
+
+    ponytail: when a later authorized phase adds a mechanical producer (deterministic probes; a
+    measured runtime receipt; a loader-bound accepted calibration-report identity), admit each here
+    against its frozen-generated identity — not against caller-shaped fields. `frame_sha` is retained
+    for that binding.
     """
-    out: dict[str, Any] = {"deterministic": None, "calibration": None, "runtime": None}
-
-    d = deterministic
-    if (_aux_bound(effective, frame_sha, d, "deterministic_receipt")
-            and d.get("invariants_pass") is True
-            and d.get("leakage_detected") is False
-            and d.get("nondeterminism_detected") is False):
-        out["deterministic"] = d
-
-    r = runtime
-    if (_aux_bound(effective, frame_sha, r, "runtime_receipt")
-            and _finite_nonneg(r.get("wall_clock_hours"))
-            and _finite_nonneg(r.get("peak_rss_gib"))):
-        out["runtime"] = r
-
-    cg = effective["calibration_gates"]
-    accepted_report = cg.get("accepted_report_sha256")  # not frozen today ⇒ nothing is admissible
-    c = calibration
-    if (accepted_report
-            and _aux_bound(effective, frame_sha, c, "calibration_receipt")
-            and c.get("accepted") is True
-            and c.get("accepted_report_sha256") == accepted_report
-            and c.get("source_manifest_sha256") == cg.get("source_manifest_sha256")
-            and c.get("source_amendment_sha256") == cg.get("source_amendment_sha256")):
-        out["calibration"] = c.get("report")
-
-    return out
+    return {"deterministic": None, "calibration": None, "runtime": None}
 
 
 def write_fit_verdict(
