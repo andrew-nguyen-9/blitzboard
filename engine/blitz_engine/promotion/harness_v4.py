@@ -314,7 +314,7 @@ def validate_fit_measurement_receipt(
     if doc.get("kind") != "measurement":
         raise ExecutionError("fit frame: not a measurement receipt")
     if doc.get("authoritative") is not True:
-        raise ExecutionError("fit frame: non-authoritative receipt cannot enter an authoritative fit")
+        raise ExecutionError("fit frame: non-authoritative receipt in an authoritative fit")
     if doc.get("stage") != "fit":
         raise ExecutionError(f"fit frame: receipt stage {doc.get('stage')!r} is not 'fit'")
     ar = doc.get("arm_run") or {}
@@ -322,7 +322,7 @@ def validate_fit_measurement_receipt(
     if arm not in ARM_POLICY_SHAS:
         raise ExecutionError(f"fit frame: receipt arm {arm!r} is not a frozen arm name")
     if ar.get("policy_sha") != ARM_POLICY_SHAS[arm]:
-        raise ExecutionError(f"fit frame: arm {arm!r} policy_sha does not match its frozen identity")
+        raise ExecutionError(f"fit frame: arm {arm!r} policy_sha != its frozen identity")
     if doc.get("measured_by_sha") != MEASUREMENT_SHA:
         raise ExecutionError("fit frame: measured_by_sha is not the frozen measurement SHA")
     if doc.get("manifest_sha256") != V4_MANIFEST_SHA256:
@@ -361,7 +361,9 @@ def assert_complete_fit_frame(
     missing = expected - seen
     extra = seen - expected
     if missing:
-        raise ExecutionError(f"fit frame incomplete: {len(missing)} missing cells, e.g. {sorted(missing)[:3]}")
+        raise ExecutionError(
+            f"fit frame incomplete: {len(missing)} missing cells, e.g. {sorted(missing)[:3]}"
+        )
     if extra:
         raise ExecutionError(f"fit frame: {len(extra)} off-frame cells, e.g. {sorted(extra)[:3]}")
 
@@ -387,13 +389,13 @@ def validate_fit_analysis_receipt(
     want_pairs = len(expected_fit_cells(effective)) // len(effective["_v4"]["arm_shas"])
     if int(report.get("n_pairs", -1)) != want_pairs:
         raise ExecutionError(
-            f"fit-analysis: report covers {report.get('n_pairs')} pairs, not the frozen {want_pairs}"
+            f"fit-analysis: report has {report.get('n_pairs')} pairs, not the frozen {want_pairs}"
         )
     if fit_analysis.get("effective_v4_manifest_sha256") != effective_v4_manifest_sha256(effective):
         raise ExecutionError("fit-analysis: effective-v4-manifest hash mismatch")
     pinned = set((fit_analysis.get("pinned_inputs") or {}).get("measurement_sha256", {}).values())
     if pinned != set(measurement_shas):
-        raise ExecutionError("fit-analysis: pinned measurement input set does not match the fit frame")
+        raise ExecutionError("fit-analysis: pinned measurement inputs != the fit frame")
     verdict = report.get("verdict")
     if verdict not in ("BLOCK", "do_not_ship_candidate", "preserve_v5", "promote"):
         raise ExecutionError(f"fit-analysis: report verdict {verdict!r} is not a frozen verdict")
@@ -404,7 +406,7 @@ def write_fit_verdict(
     out_dir: str | Path, *, effective: dict[str, Any], measurement_paths: Any,
     fit_analysis: dict[str, Any],
 ) -> Path:
-    """Write the write-once fit verdict. `pass` is emitted ONLY when the complete fit frame validates,
+    """Write the write-once fit verdict. `pass` is emitted ONLY when the complete frame validates,
     every receipt validates, and the hash-pinned fit-analysis report's verdict is `promote`.
     Otherwise the frozen-gate verdict (BLOCK / do_not_ship_candidate / preserve_v5) is recorded;
     missing or failed evidence is NEVER turned into a pass (reviewer req 1/5/6)."""

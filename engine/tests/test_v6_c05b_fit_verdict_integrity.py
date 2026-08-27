@@ -38,7 +38,8 @@ def _mrec(arm, year, lid, base_seed, **over) -> dict:
         "arm": arm, "policy_sha": ARM_POLICY_SHAS[arm], "year": year, "league_id": lid,
         "base_seed": base_seed, "eval_seed": derive_eval_seed(base_seed, year, lid),
         "board_hash": "b" * 64, "seat_policy": ["static_proxy"], "per_season": [[0.0]],
-        "h2h_win_rate": [0.0], "playoff_proxy": None, "championship_proxy": None, "synthetic": False,
+        "h2h_win_rate": [0.0], "playoff_proxy": None, "championship_proxy": None,
+        "synthetic": False,
     }
     doc = {
         "kind": "measurement", "authoritative": True, "stage": "fit",
@@ -59,8 +60,8 @@ def _a_cell():
 
 
 def test_valid_receipt_returns_its_cell_key():
-    arm, year, lid, seed = _a_cell()
-    assert validate_fit_measurement_receipt(_mrec(arm, year, lid, seed), EFF) == (arm, year, lid, seed)
+    cell = _a_cell()
+    assert validate_fit_measurement_receipt(_mrec(*cell), EFF) == cell
 
 
 @pytest.mark.parametrize("mut,match", [
@@ -97,8 +98,9 @@ def test_receipt_refuses_missing_pairing_key():
 
 def test_receipt_refuses_offframe_league():
     _, year, _, seed = _a_cell()
+    off = _mrec("v6_candidate", year, "t8-1qb-std-te0.0-b4-ir0", seed)
     with pytest.raises(ExecutionError, match="mandatory"):
-        validate_fit_measurement_receipt(_mrec("v6_candidate", year, "t8-1qb-std-te0.0-b4-ir0", seed), EFF)
+        validate_fit_measurement_receipt(off, EFF)
 
 
 # ── req 2: complete-frame enumeration ──────────────────────────────────────────────────
@@ -132,7 +134,9 @@ def _fit_analysis(measurement_shas, verdict="preserve_v5", **over) -> dict:
     fa = {
         "kind": "fit_analysis", "report": report, "report_sha256": report_hash(report),
         "effective_v4_manifest_sha256": effective_v4_manifest_sha256(EFF),
-        "pinned_inputs": {"measurement_sha256": {f"m{i}": s for i, s in enumerate(sorted(measurement_shas))}},
+        "pinned_inputs": {
+            "measurement_sha256": {f"m{i}": s for i, s in enumerate(sorted(measurement_shas))}
+        },
     }
     fa.update(over)
     return fa
@@ -140,7 +144,8 @@ def _fit_analysis(measurement_shas, verdict="preserve_v5", **over) -> dict:
 
 def test_fit_analysis_valid_returns_verdict():
     shas = {"a" * 64, "b" * 64}
-    assert validate_fit_analysis_receipt(_fit_analysis(shas), EFF, measurement_shas=shas) == "preserve_v5"
+    got = validate_fit_analysis_receipt(_fit_analysis(shas), EFF, measurement_shas=shas)
+    assert got == "preserve_v5"
 
 
 def test_fit_analysis_refuses_bad_report_hash():
