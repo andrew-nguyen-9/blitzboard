@@ -22,6 +22,7 @@ is a tiny two-checkout rehearsal whose receipts are labelled non-authoritative.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -50,6 +51,7 @@ __all__ = [
     "MEASUREMENT_SHA",
     "V4_MANIFEST_SHA256",
     "draft_arm",
+    "effective_v4_manifest_sha256",
     "load_execution_manifest_v4",
     "mandatory_league_ids",
     "measure_arm",
@@ -237,12 +239,31 @@ def recompute_seat_policy(eval_seed: int, teams: int, effective: dict[str, Any])
     return seats
 
 
+def effective_v4_manifest_sha256(effective: dict[str, Any]) -> str:
+    """Deterministic hash of the effective v4 execution manifest (frozen chain + overlays)."""
+    return hashlib.sha256(
+        json.dumps(effective, sort_keys=True, separators=(",", ":"), default=str).encode()
+    ).hexdigest()
+
+
+def _require_v4_binding(receipt: dict[str, Any], effective: dict[str, Any]) -> None:
+    """Every draft receipt must bind itself to the v4 manifest, the exec-v2 addendum, and the
+    deterministic effective-v4-manifest hash (reviewer blocker 5)."""
+    if receipt.get("manifest_sha256") != V4_MANIFEST_SHA256:
+        raise ExecutionError("draft receipt is not bound to the promotion-v4 manifest hash")
+    if receipt.get("exec_addendum_sha256") != EXEC_V2_SHA256:
+        raise ExecutionError("draft receipt is not bound to the exec-v2 addendum hash")
+    if receipt.get("effective_v4_manifest_sha256") != effective_v4_manifest_sha256(effective):
+        raise ExecutionError("draft receipt effective-v4-manifest hash mismatch")
+
+
 def validate_authoritative_draft_receipt(
     receipt: dict[str, Any], row: dict[str, Any], board_ids: frozenset[str],
     effective: dict[str, Any], *, stage: str,
 ) -> None:
     """The strict authoritative validator: shape + arm<->policy identity, the frozen-manifest
-    frame, and the recomputed deterministic seat-policy. Every violation aborts (BLOCK)."""
+    frame, the recomputed deterministic seat-policy, and the v4/exec-v2/effective-v4 binding.
+    Every violation aborts (BLOCK)."""
     validate_draft_receipt(receipt, row, board_ids)
     _check_authoritative_frame(
         effective, year=receipt["year"], league_id=receipt["league_id"],
@@ -254,6 +275,7 @@ def validate_authoritative_draft_receipt(
         raise ExecutionError(
             "draft receipt seat_policy does not match the deterministic assignment"
         )
+    _require_v4_binding(receipt, effective)
 
 
 def _receipt_path(out_dir: str | Path, kind: str, stage: str, arm: str, r: dict[str, Any]) -> Path:
@@ -412,6 +434,9 @@ def draft_arm(
         "rosters": payload["rosters"],
         "stage": stage,
         "produced_by_tooling": provenance,
+        "manifest_sha256": V4_MANIFEST_SHA256,
+        "exec_addendum_sha256": EXEC_V2_SHA256,
+        "effective_v4_manifest_sha256": effective_v4_manifest_sha256(effective),
         "authoritative": bool(authoritative),
         "label": None if authoritative else "NON-AUTHORITATIVE rehearsal/probe receipt",
     }

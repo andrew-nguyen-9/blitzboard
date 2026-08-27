@@ -12,6 +12,9 @@ import pytest
 
 from blitz_engine.promotion.execution import ExecutionError
 from blitz_engine.promotion.harness_v4 import (
+    EXEC_V2_SHA256,
+    V4_MANIFEST_SHA256,
+    effective_v4_manifest_sha256,
     load_execution_manifest_v4,
     mandatory_league_ids,
     measure_arm,
@@ -114,8 +117,15 @@ def test_recompute_seat_policy_reproduces_the_real_receipt():
     assert list(r["seat_policy"]) == want  # the harness reproduces the frozen draft assignment
 
 
+def _bind(r: dict) -> dict:
+    r["manifest_sha256"] = V4_MANIFEST_SHA256
+    r["exec_addendum_sha256"] = EXEC_V2_SHA256
+    r["effective_v4_manifest_sha256"] = effective_v4_manifest_sha256(EFFECTIVE)
+    return r
+
+
 def test_authoritative_validator_passes_untampered_real_receipt():
-    r = _real_receipt()
+    r = _bind(_real_receipt())
     r["authoritative"] = True
     validate_authoritative_draft_receipt(r, _row(r), _board(r), EFFECTIVE, stage="fit")
 
@@ -125,4 +135,28 @@ def test_authoritative_refuses_tampered_seat_policy():
     r["authoritative"] = True
     r["seat_policy"] = list(reversed(r["seat_policy"]))
     with pytest.raises(ExecutionError, match="seat_policy"):
+        validate_authoritative_draft_receipt(r, _row(r), _board(r), EFFECTIVE, stage="fit")
+
+
+# ── req 6: bind every draft receipt to v4 + exec-v2 + effective-v4-manifest hash ───────
+
+
+def test_effective_v4_manifest_sha256_is_deterministic():
+    h1 = effective_v4_manifest_sha256(EFFECTIVE)
+    h2 = effective_v4_manifest_sha256(load_execution_manifest_v4(REPO))
+    assert h1 == h2 and len(h1) == 64
+
+
+def test_authoritative_validator_refuses_missing_v4_binding():
+    r = _real_receipt()  # a real fit receipt has no v4 binding fields
+    r["authoritative"] = True
+    with pytest.raises(ExecutionError, match="v4|addendum|bound"):
+        validate_authoritative_draft_receipt(r, _row(r), _board(r), EFFECTIVE, stage="fit")
+
+
+def test_authoritative_validator_refuses_wrong_effective_hash():
+    r = _bind(_real_receipt())
+    r["authoritative"] = True
+    r["effective_v4_manifest_sha256"] = "0" * 64
+    with pytest.raises(ExecutionError, match="effective-v4"):
         validate_authoritative_draft_receipt(r, _row(r), _board(r), EFFECTIVE, stage="fit")
