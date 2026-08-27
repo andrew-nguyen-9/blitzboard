@@ -1,8 +1,9 @@
 # C04 independent acceptance contract
 
 Status: preparation only. This document does not define production implementation and is not a
-checkpoint verdict. C02 is provisional at `edbcc4d743b447ebcbbfe84a0e1210380c6250d1`; C03 is
-unfinished. Names below are semantic requirements, not proposed TypeScript field names.
+checkpoint verdict. C02 is accepted at production head
+`417af276dd4438d8a35f38d08bfc26206044925e` (review `f2a1537`); C03 is unfinished.
+Names below are semantic requirements, not proposed TypeScript field names.
 
 ## Scoring components
 
@@ -54,10 +55,10 @@ browser-safe generated artifact. It must prove:
 Exact filenames, serialization order, and field names remain deliberately unspecified until C03
 publishes its accepted interface.
 
-## Provisional C02 interface reconciliation
+## Accepted C02 interface reconciliation
 
-Read-only inspection of provisional C02 commit
-`edbcc4d743b447ebcbbfe84a0e1210380c6250d1` found these result surfaces:
+Read-only inspection of accepted C02 production head
+`417af276dd4438d8a35f38d08bfc26206044925e` and PASS review `f2a1537` confirms:
 
 - aggregate per-seat means: `emergency_adds`, `upside_adds`, and backward-compatible
   `waiver_adds = emergency_adds + upside_adds`;
@@ -67,20 +68,34 @@ Read-only inspection of provisional C02 commit
   `per_season_champ`;
 - `paired_ci(a, b, seats, field)` returning `{mean, lo, hi, n}`.
 
-These interfaces are explicitly provisional. They do **not** currently publish transaction-level
-add/drop records, candidate-level replacement or churn value, a browser-safe result, or a stable
-producer-issued evidence/outcome identifier. Therefore C04 must not convert aggregate waiver-add
-counts into candidate explanation value.
+Accepted transaction semantics additionally require:
 
-Until C02 publishes an identifier, acceptance fixtures may use a reviewer-local composite reference
+- `waiver_cost` is a strict remaining-horizon decision gate and a single accounting charge; an
+  equal-or-below-cost claim does not transact;
+- `per_season`/`started_points` are net of that charge, while H2H and playoff/championship proxies
+  remain gross on-field outcomes;
+- emergency and upside claims draw from one weekly allowance, with emergencies first, and retain a
+  shared season cap;
+- upside drops are roster-wide feasible: the lowest forward-looking nonstarter is preferred, the
+  add must be legal in the actual slot shape, and a started body is dropped only if lineup coverage
+  does not decrease;
+- `SUPERFLEX`, `OP`, and `SFLX` are equivalent QB/RB/WR/TE aliases; K/DST are ineligible.
+
+The accepted interfaces still do **not** publish transaction-level add/drop records,
+candidate-level replacement or churn value, a browser-safe result, or a stable producer-issued
+evidence/outcome identifier. Therefore C04 must not convert aggregate waiver-add counts into
+candidate explanation value.
+
+Until a producer publishes an identifier, acceptance fixtures may use a reviewer-local composite reference
 of `(producer_commit, seed, seats, field, n_seasons)` to prevent outcome-family collisions. This is
 test bookkeeping only, not a production identifier contract. A production explanation must consume
 a stable producer-issued reference or visibly degrade with
 `aggregate_only_no_candidate_transactions`.
 
-The paired field identifiers above distinguish points, H2H, playoff proxy, and championship proxy.
-The latter two remain explicitly proxies; C04 explanations must not describe them as observed
-playoff qualification or championships.
+The paired field identifiers above distinguish net points, gross H2H, gross playoff proxy, and
+gross championship proxy. The latter two remain explicitly proxies; C04 explanations must not
+describe them as observed playoff qualification or championships, and no comparison may silently
+mix the net and gross accounting families.
 
 ## Runtime budget
 
