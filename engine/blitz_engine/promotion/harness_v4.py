@@ -346,6 +346,12 @@ def measure_arm(
     provenance = tooling_provenance(tooling_root)
     receipt = json.loads(Path(draft_receipt_path).read_text())
     stage = receipt["stage"]
+    if bool(authoritative) != bool(receipt.get("authoritative", False)):
+        raise ExecutionError(
+            f"authority mismatch: draft receipt authoritative={receipt.get('authoritative')} "
+            f"but measurement authoritative={authoritative}; draft and measurement authority must "
+            "match and an authoritative run refuses non-authoritative input"
+        )
     guard.check(receipt["year"], stage=stage)
     measured_by = verify_measurement_checkout(measurement_checkout, effective)
 
