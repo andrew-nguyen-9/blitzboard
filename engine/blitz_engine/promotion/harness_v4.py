@@ -467,7 +467,8 @@ def _run_fit_analysis(
 
 
 def write_fit_verdict(
-    out_dir: str | Path, *, effective: dict[str, Any], measurement_paths: Any,
+    out_dir: str | Path, *, effective: dict[str, Any], measurement_paths: Any = None,
+    fit_measure_paths: Any = None,
     deterministic_receipt_path: str | Path | None = None,
     calibration_report_path: str | Path | None = None,
     runtime_receipt_path: str | Path | None = None,
@@ -475,11 +476,16 @@ def write_fit_verdict(
     """Produce and record the write-once fit verdict. The report is computed MECHANICALLY by the
     frozen `evaluate_promotion` over the reconstructed frame — never accepted from a caller. `pass`
     is emitted ONLY when that verdict is `promote`; otherwise the frozen-gate verdict is recorded.
-    Missing/invalid auxiliary evidence can never promote (reviewer C05C req 1/4/5/6)."""
+    Missing/invalid auxiliary evidence can never promote (reviewer C05C req 1/4/5/6).
+
+    `fit_measure_paths` is the accepted C05B alias for `measurement_paths`."""
     from blitz_engine.promotion.gates import report_hash
     from blitz_engine.promotion.manifest import sha256_file
 
-    paths = sorted(str(p) for p in measurement_paths)
+    supplied = measurement_paths if measurement_paths is not None else fit_measure_paths
+    if supplied is None:
+        raise ExecutionError("write_fit_verdict: no measurement paths supplied")
+    paths = sorted(str(p) for p in supplied)
     docs = [json.loads(Path(p).read_text()) for p in paths]
     assert_complete_fit_frame(docs, effective)  # validates every receipt + exact coverage
 
