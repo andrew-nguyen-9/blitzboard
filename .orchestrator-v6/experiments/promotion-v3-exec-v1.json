@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "status": "candidate_identity_frozen_not_executed",
+  "purpose": "Execution addendum required by promotion-v3.json arms.candidate.sha_freeze_rule: freezes the combined candidate SHA and exact arm identities for the authoritative C05 run. This file authorizes NOTHING by itself; the authoritative experiment has NOT run and requires independent freeze review first.",
+  "manifest": "promotion-v3.json",
+  "manifest_sha256": "bbb241603a33697bff376b21a2e57e7e066c3c85186eaaab120485ec6bd941ab",
+  "manifest_edited": false,
+  "arms": {
+    "control": {
+      "name": "v5_shipped",
+      "sha": "01f01d3c5f9c00a046edd43707db75ce1426c0e8",
+      "identity": "engine + frontend policy code at the immutable v5 baseline, shipped coefficients unmodified"
+    },
+    "candidate": {
+      "name": "v6_candidate",
+      "combined_candidate_sha": "7b3fd73578943b992402ad693259a3e92358da69",
+      "identity": "accepted combined C02-C04 production head, policy mix static_proxy/vorp_adp/engine_msv, no coefficients tuned after freeze"
+    }
+  },
+  "acceptance_evidence": {
+    "c01_c01a": "PASS (review 2be8a22), integrated at 13ec3c2",
+    "c02": "accepted at 417af276dd4438d8a35f38d08bfc26206044925e (review f2a1537)",
+    "c03": "accepted and integrated at 8694d98186e5800e5439725973bb8789ebdb2979 (experiment verdict do_not_promote; non-shipping evidence)",
+    "c04": "BLOCK at review 2dd08397869f0fc577af70b68c1fe12b76d2a799; C04A accepted; combined head is the candidate SHA above"
+  },
+  "candidate_artifact_hashes": {
+    "fixtures/bench_shape.json": "96cabb5f4db802237a0081e6effd40bdfa8548179ac3c8297464bf05ecbcdde8",
+    "fixtures/bench_shape.json:canonical_source_hash": "58b611f5b768dc0b95867410ccd815be39e390cd2711a4f67f8e8844c43f9e90",
+    "frontend/lib/generated/benchShape.generated.ts": "208ecb3854bcecf4c1dc9eb5a7f8538542d523df79adb8e058bb29412f2ab0eb"
+  },
+  "board_corpus_verified_at_candidate_sha": true,
+  "metric_binding": {
+    "waiver_cost": 0.0,
+    "rule": "the authoritative run MUST use waiver_cost = 0.0 per C05-netting-disposition.md; any nonzero value requires a promotion-v4 amendment before execution"
+  },
+  "gate_evidence_pre_freeze": {
+    "tests": "37 passed (test_promotion.py + test_promotion_adapter.py) at the candidate SHA, ruff clean",
+    "dry_run_receipt": ".orchestrator-v6/prep/c04-accepted/C05-dryrun-receipt.json (non-authoritative: board-corpus hashes verified, synthetic byte-stable, null CRN run all-zero deltas, determinism and leak guard proven)",
+    "netting_disposition": ".orchestrator-v6/prep/C05-netting-disposition.md (mismatch item 2 closed for waiver_cost = 0.0)"
+  },
+  "execution_preconditions_remaining": [
+    "independent freeze review of this addendum",
+    "executed C02 calibration report supplied to the calibration gate at run time (the accepted report exists; attestations per adapter contract)",
+    "no byte change to the four frozen board-corpus files between this freeze and execution"
+  ],
+  "prohibited_without_new_authority": [
+    "running the authoritative experiment",
+    "editing promotion-v3.json or this file (amendments get promotion-v3-exec-v2.json)",
+    "push, merge, PR, release, protected-branch change"
+  ]
+}
