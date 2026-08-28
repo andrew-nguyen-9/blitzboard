@@ -86,10 +86,11 @@ describe("C04 executable live-draft invariants", () => {
     expect(fillRoster(qbs, TWO_QB).bench).toHaveLength(0);
   });
 
-  it("hard-demotes an early duplicate K or DST", () => {
+  it("hard-demotes a duplicate K or DST in every round", () => {
     expect(isCapped(player("k2", "K"), { K: 1 }, false)).toBe(true);
     expect(isCapped(player("dst2", "DST"), { DST: 1 }, false)).toBe(true);
-    expect(isCapped(player("k2", "K"), { K: 1 }, true)).toBe(false);
+    expect(isCapped(player("k2", "K"), { K: 1 }, true)).toBe(true);
+    expect(isCapped(player("dst2", "DST"), { DST: 1 }, true)).toBe(true);
   });
 
   it("gives the same QB2 substantially more bench value in SF than 1QB", () => {
