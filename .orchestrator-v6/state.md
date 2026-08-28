@@ -1,29 +1,27 @@
 # v6 orchestration state
 
-- state: blocked
-- phase: C06 independent land gate BLOCK; C05 removed from landing scope, parked, and v5 preserved
-- branch: `v6/bench-portfolio-review`
-- worktree: runtime-local `.worktrees/v6-review` (uncommitted parent location)
-- green base SHA: `01f01d3c5f9c00a046edd43707db75ce1426c0e8`
-- reviewed producer SHA: `39563c373265790461e18f388b3c7cd3e31d58d0`
-- accepted producer base SHA: `9d71428c8dacabd747d21205296b46d5410de3f3`
-- C05A base SHA: `ce0758bf4b94885d1df580a55cef679c6dd4d1eb`
-- C05B base SHA: `2b0ae60ca2f61623597abf9cccc75a257e55210f`
-- C05C base SHA: `37ed8b361f882abf09f6bdbcedf2ae4e24ca0b23`
-- C05D base SHA: `36d395aefb4bb4683e9e8d7186d65c7f6fbbda47`
-- current attempt: 8
-- failure signature: deterministic shipped-v5 drafts omit required K/DST starters in mandatory
-  10/12-team slices; only 6 of 18 sampled league drafts had every roster legal
-- blockers: invalid completed rosters; full Ruff has four tracked immutable-probe findings; five
-  username-specific paths remain in historical committed records; no browser/external live mock
-- verification: independent selection replay matched the committed artifact exactly; 18/18 drafts
-  were duplicate-free but only 6/18 fully legal; immutable probes 8 passed; C05 suite 127 passed;
-  full engine 3,888 passed and 1 skipped; frontend 553 passed and 4 skipped; pipeline 157 passed;
-  frozen diff, bundle-secret audit, artifact parity, diff check, and original-checkout comparison
-  passed; required Ruff failed with four findings
-- next action: do not land. A separately authorized correction unit must restore required K/DST
-  roster legality and resolve land-audit blockers without changing C05 authority.
+- state: pass
+- phase: C06A independent land gate PASS; C05 promotion excluded and parked
+- reviewer branch: `v6/bench-portfolio-review`
+- reviewer predecessor: `c29fbbaf3ad788e09e592ad5be0e645b540f2053`
+- reviewed producer branch: `v6/c06a-roster-legality`
+- reviewed producer SHA: `ea706a393d50fbb328131cea5ec532436303e922`
+- corrected producer base: `39563c373265790461e18f388b3c7cd3e31d58d0`
+- accepted C05E producer base: `9d71428c8dacabd747d21205296b46d5410de3f3`
+- current attempt: 9
+- resolved signature: required K/DST omissions, tied-solver replay variance, full-Ruff immutable-probe
+  configuration, and historical username-specific receipt paths are corrected
+- verification: independent 100-artifact validation found 100/100 legal and duplicate-free drafts,
+  exactly one K/DST per roster, 100 unique seeds/primary rosters; independent first-18 replay matched
+  every non-timing field; browser fallback completed 192 unique picks and a legal full roster;
+  engine 3,890 passed/1 skipped; frontend 554 passed/4 skipped; pipeline 157 passed; C05 authority
+  127 passed; immutable probes 8 passed and byte-identical; Ruff, build, typecheck, lint, generators,
+  frozen diff, bundle-secret scan, portable-path scan, diff check, and clean-tree checks passed
+- limitations: no safe external mock room; browser uses bounded live randomness; local recorded data
+  and proxy season metrics; one existing non-blocking frontend hook warning; no win guarantee
+- blockers: none in C06A scope
+- next action: preserve producer and reviewer branches; no landing action without separate authority
 - external authority: no push, merge, PR, release, protected-branch edit, or branch deletion
 
-The 25 files between the reviewed predecessor and baseline belong to the separately landed
-intelligence subsystem. They do not overlap the v6 bench surfaces.
+The original checkout remains at `9192163b5be121e645e5574d7e04855725b4895f` with its pre-existing
+user-owned changes untouched. C05 fit or confirmation was not run and cannot be inferred from C06A.
