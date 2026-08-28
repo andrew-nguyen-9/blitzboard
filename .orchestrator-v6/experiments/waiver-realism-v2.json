@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "name": "waiver-realism-v2",
+  "status": "preregistered",
+  "frozen_utc": "2026-08-27T00:45:00Z",
+  "responds_to": "supplemental independent C02 evidence (remote reproduction commit 0993a9c): combined emergency+proactive claims could exceed the configured weekly move bound",
+  "supersedes": "waiver-realism-v1 (append-only: v1 is preserved unmodified; every v1 rule not listed below carries forward verbatim)",
+  "changes": {
+    "weekly_move_budget": {
+      "rule": "ONE total per-team weekly move budget, shared across ALL claim types. `waiver_moves_per_week` IS that budget. Emergency claims draw from it first (they patch unfillable slots); upside claims may use only the remaining allowance and stay additionally sub-bounded by `proactive_moves_per_week`. Separate emergency/upside counters are retained and must still reconcile to total claims.",
+      "boundary_semantics": "with the default budget of 1, an executed emergency claim consumes the week's entire allowance and a same-week upside claim must not execute; raising the budget to 2 permits both. The season cap (`season_moves_cap`) remains a separate, additional bound.",
+      "replaces": "v1's implicit independent weekly limits (emergency <= waiver_moves_per_week AND upside <= proactive_moves_per_week, combinable to their sum)"
+    }
+  },
+  "cost_vs_proxy_reconciliation": {
+    "started_points_and_per_season": "NET of transaction cost: the accounting charge (one per executed claim, v1 rule) is subtracted at season aggregation. This is the metric a fit maximises; roster-management friction belongs in it.",
+    "h2h": "ON-FIELD: weekly head-to-head outcomes are decided by the weekly lineup scores, which the cost never touches (a league fee does not change who won a week).",
+    "playoff_and_championship_proxies": "ON-FIELD: seeding uses season wins with GROSS (pre-cost) season points as the tiebreak, and the championship proxy is the highest GROSS scorer among playoff seats — standings in a real league are computed from on-field results, not net of fees.",
+    "consequence_for_promotion": "any promotion experiment comparing arms with non-zero waiver_cost must state per outcome family whether it is net (started_points/per_season) or on-field (H2H, playoff, championship) and may not mix them in one threshold. This reconciliation is recorded here and mirrored in C02A-claude.md; the frozen C05 promotion manifest is owned elsewhere and is not edited by this preregistration."
+  },
+  "acceptance_tests": [
+    "an emergency claim consumes the weekly allowance and prevents an additional same-week upside claim (budget 1)",
+    "the identical fixture without the emergency executes the upside claim (control)",
+    "a weekly budget of 2 permits the emergency and the upside claim in the same week",
+    "emergency_adds + upside_adds still reconcile to waiver_adds; season cap still binds",
+    "all v1 acceptance tests and the reviewer probe continue to pass"
+  ],
+  "failure_interpretation": "unchanged from v1: deterministic failure blocks; ambiguity preserves C02-accepted behavior; calibration out of scope"
+}

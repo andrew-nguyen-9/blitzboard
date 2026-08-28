@@ -1,0 +1,64 @@
+{
+  "schema_version": 3,
+  "status": "executed_report_only",
+  "executes_manifest": ".worktrees/v6-review/.orchestrator-v6/experiments/player-calibration-v1.json",
+  "manifest_status_at_execution": "preregistered_not_executed",
+  "executed_utc": "2026-08-26T21:54:27Z",
+  "production_head_at_execution": "13ec3c2 (v6/bench-portfolio, post C01A PASS)",
+  "arms": {
+    "v5_shipped_rating": {
+      "code": "pipeline/models/{value_engine,league_rules}.py at baseline 01f01d3c5f9c00a046edd43707db75ce1426c0e8 (full baseline pipeline tree via git archive)",
+      "boards_content_sha256": "5898efdd6e483548bb893a18edbb1060b8b2f901edb6cc608e4053b2333642e3"
+    },
+    "v6_candidate_rating": {
+      "code": "this tree (C01/C01A deterministic corrections; every tuned constant byte-identical to v5)",
+      "boards_content_sha256": "0590fd2cdc5fafe9d74ef5f782b3478c962d84229023474faf9cc52896a6eff4"
+    }
+  },
+  "frozen_inputs": {
+    "snapshot_content_sha256": "386b7afdb1b8549a99cd78a73ed6abd7c1533a9e0a0438e271848c82f4a3f8dc",
+    "benchmarks_content_sha256": "9607dedab67cce3b6463a6363f84c3a0249c9c94619aa4ad33e0ea3f30c0bf28",
+    "benchmarks": {
+      "fantasypros-half-ppr-ecr": {
+        "raw_sha256": "999492c557343134d9852e3a4f36e60ea475a0747f5bc02a04debb0da2f74255",
+        "retrieved_utc": "2026-08-26T21:54:26Z",
+        "expert_count": 112,
+        "row_count": 934,
+        "deviation": "retrieval variant: the manifest cheatsheet URL server-renders only 24 rows; the print rankings page embeds the identical half-PPR draft ECR product in full"
+      },
+      "fantasypros-half-ppr-adp": {
+        "raw_sha256": "71b4242cd24229a77e8afce051c39660c416ad0e7c12c562c103155e720b0a4c",
+        "retrieved_utc": "2026-08-26T21:54:26Z",
+        "included_platforms": "236,439,4350 (Yahoo, RTSports, Sleeper)",
+        "row_count": 346,
+        "deviation": "rows fetched from the page's own partners endpoint (public in-page key); the manifest URL's HTML carries only a 5-row server-rendered preview"
+      },
+      "fantasypros-superflex-ecr": {
+        "raw_sha256": "a537f4c0ed11b8dbde9f9fb6da55989dbdbac00897f8f34db5b722060b48d54e",
+        "retrieved_utc": "2026-08-26T21:54:27Z",
+        "expert_count": 104,
+        "row_count": 525,
+        "deviation": "retrieval variant: superflex draft cheatsheet print page (embeds full ecrData); the manifest URL server-renders only a partial table"
+      }
+    }
+  },
+  "threshold_results": {
+    "deterministic_unit_failures": 0,
+    "unmatched_top_100_rate_max_0.02": "PASS on all four format×benchmark comparisons (rate 0.0)",
+    "spearman_delta_min_0.0": "PASS superflex (+0.1013); FAIL 1qb-ecr (-0.0137), 1qb-adp (-0.0147), 2qb-sf-ecr (-0.0278)",
+    "weighted_rank_error_delta_max_0.0": "PASS superflex (-5.82); FAIL 1qb (+0.55/+0.60), 2qb (+0.99)"
+  },
+  "disposition": {
+    "coefficient_promotion": "NONE_ATTEMPTED — no tuned constant differs between arms; the arm delta is exactly the C01 deterministic corrections",
+    "deterministic_corrections": "RETAINED — they shipped through the C01/C01A correctness gate, which the manifest itself sets above benchmark agreement (failure_interpretation.deterministic governs C01, not this report)",
+    "benchmark_disagreement": "the 1QB/2QB spearman decline is concentrated in the veteran_age_30_plus and rookie cohorts: v5's removed youth multiplier reproduced the market's age discount, so removing the double-count moves the board toward the forecast and away from market consensus. Per the manifest, benchmarks are references, not targets, and market agreement alone never earns promotion; the mirror principle is that market agreement alone never vetoes a correctness fix.",
+    "next": "C05 preregistered matched-seat experiments remain the promotion authority for any numerical candidate; this report supplies the frozen boards and decomposition C02 owes"
+  },
+  "outputs": {
+    "report": ".orchestrator-v6/experiments/calibration/report.json",
+    "narrative": ".orchestrator-v6/experiments/calibration/report.md",
+    "runner": "pipeline/calibration_run.py (snapshot | boards | report)",
+    "raw_html_receipts": "artifacts/calibration/*.html (uncommitted; sha256 recorded above)"
+  },
+  "never_overwrites": ["promotion-v1.json", "promotion-v2.json"]
+}

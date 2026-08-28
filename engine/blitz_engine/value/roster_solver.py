@@ -47,7 +47,7 @@ def slot_accepts(slot: str, position: str) -> bool:
     """True if a player at ``position`` may fill starter ``slot``."""
     if slot == "FLEX":
         return position in FLEX_ELIGIBLE
-    if slot in ("SUPERFLEX", "SFLX"):
+    if slot in ("SUPERFLEX", "OP", "SFLX"):
         return position in SUPERFLEX_ELIGIBLE
     return slot == position
 
@@ -296,6 +296,7 @@ def _build_and_solve(
     model.maximize(sum(terms))
 
     solver = cp_model.CpSolver()
+    solver.parameters.num_search_workers = 1
     status = solver.Solve(model)
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         raise InfeasibleRosterError(

@@ -1,0 +1,19 @@
+{
+  "schema_version": 4,
+  "name": "waiver-realism-v4",
+  "status": "preregistered",
+  "frozen_utc": "2026-08-27T01:55:00Z",
+  "responds_to": "laptop-2 suite semantics (test_v6_c02_remote_adversarial.py): limit=0 with proactive_limit=1 must still permit one upside claim, while limit=1 with proactive_limit=1 must permit ONE total claim",
+  "supersedes": "waiver-realism-v2/v3 budget wording (append-only: v1-v3 preserved byte-for-byte; only the budget FORMULA below replaces v2's 'waiver_moves_per_week IS the budget' sentence, which those reviewer semantics contradict)",
+  "changes": {
+    "weekly_move_budget_formula": {
+      "total": "per-team weekly claims (all types combined) <= max(waiver_moves_per_week, proactive_moves_per_week)",
+      "per_type": "emergency claims <= waiver_moves_per_week; upside claims <= proactive_moves_per_week",
+      "order": "emergency claims draw from the shared allowance first; upside claims may use only the remainder",
+      "boundary": "defaults (1, 1) give a total budget of 1: an executed emergency claim consumes it and a same-week upside claim must not execute; (0, 1) disables emergencies while permitting one upside claim; (2, 1) permits an emergency and an upside claim in the same week",
+      "season_cap": "season_moves_cap remains a separate additional bound on all claim types"
+    }
+  },
+  "unchanged": "everything else in v1-v3, including v3's roster-wide drop feasibility, cost gates and units, counters, seeds, accounting, and the cost/proxy reconciliation",
+  "failure_interpretation": "unchanged from v1"
+}

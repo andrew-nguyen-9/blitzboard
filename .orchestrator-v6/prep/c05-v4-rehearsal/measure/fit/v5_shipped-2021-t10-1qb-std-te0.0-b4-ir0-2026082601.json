@@ -1,0 +1,92 @@
+{
+  "arm_run": {
+    "arm": "v5_shipped",
+    "base_seed": 2026082601,
+    "board_hash": "d5a2eca5570920e9b509216aadb51c3fa896b165b9cfd7ca606fda36d6645803",
+    "championship_proxy": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "eval_seed": 2026816791,
+    "h2h_win_rate": [
+      0.6666666666666666,
+      0.6666666666666666,
+      0.2777777777777778,
+      0.6666666666666666,
+      0.5555555555555556,
+      0.6111111111111112,
+      0.4444444444444444,
+      0.2777777777777778,
+      0.2777777777777778,
+      0.5555555555555556
+    ],
+    "league_id": "t10-1qb-std-te0.0-b4-ir0",
+    "max_rss_mb": 0.0,
+    "per_season": [
+      [
+        1525.261900370717,
+        1320.6356174230577,
+        1065.5023989802598,
+        1377.004639968872,
+        1516.3300360691546,
+        1602.4663646137712,
+        1208.8514544707539,
+        1258.0622635167838,
+        1117.9490891397002,
+        1428.8854591333868
+      ]
+    ],
+    "playoff_proxy": [
+      1.0,
+      1.0,
+      0.0,
+      1.0,
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "policy_sha": "01f01d3c5f9c00a046edd43707db75ce1426c0e8",
+    "runtime_s": 0.0,
+    "seat_policy": [
+      "static_proxy",
+      "engine_msv",
+      "engine_msv",
+      "static_proxy",
+      "static_proxy",
+      "engine_msv",
+      "vorp_adp",
+      "vorp_adp",
+      "vorp_adp",
+      "static_proxy"
+    ],
+    "synthetic": true,
+    "year": 2021
+  },
+  "authoritative": false,
+  "draft_receipt_sha256": "37394b9845859dd01efcbfb716adeba0e890dfd5cc83fa02ca60c0e2099bbedd",
+  "exec_addendum_sha256": "7e88b09087687da3cf328f4fe027df181cf2b82975e605d73519b9ce4ae16480",
+  "kind": "measurement",
+  "label": "NON-AUTHORITATIVE rehearsal/probe receipt",
+  "manifest_sha256": "47af290506a2aa9e66add39b62125c12341927814d3cbc660426cc767e32569a",
+  "measured_by_sha": "7b3fd73578943b992402ad693259a3e92358da69",
+  "measurement_file_hashes_verified": true,
+  "produced_by_tooling": {
+    "clean_definition": "git status --porcelain --untracked-files=no is empty",
+    "effective_manifest_sha256": "61f3a70a3bee0f242cc1ffa1004e11cbd3026842cd3c47abd5a1a63465fabdc1",
+    "execution_module_sha256": "8e4c97872524b5358e4cd6c2e25b50b2588041958d878bc75b61c0cafcccbfb5",
+    "tooling_head": "44ec16b4348efc237686847f8a577af6d96a290c",
+    "tooling_tree_clean": true
+  },
+  "stage": "fit"
+}

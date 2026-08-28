@@ -74,6 +74,9 @@ MAX_DEPTH: dict[str, int] = {"QB": 3, "RB": 5, "WR": 5, "TE": 3, "K": 2, "DST": 
 KDST_HOLD_ARMS: tuple[int, ...] = (2, 3, 4, 6, 9, 13)
 
 _FIXTURE_PATH = Path(__file__).resolve().parents[3] / "fixtures" / "bench_shape.json"
+_C02C_FIXTURE_PATH = (
+    Path(__file__).resolve().parents[3] / "fixtures" / "bench_shape_c02c.json"
+)
 #: The v4 hand-set constants this unit replaces (`frontend/lib/draftAI.ts` DEFAULT_POLICY) — kept
 #: ONLY as the control arm of the block-release ablation. Never used as an answer.
 V4_OVERFILL_DEPTH: dict[str, int] = {"QB": 3, "RB": 5, "WR": 5, "TE": 2, "K": 1, "DST": 1}
@@ -484,6 +487,19 @@ def _load_fixture() -> dict[str, Any]:
     return json.loads(_FIXTURE_PATH.read_text())
 
 
+def _load_accepted_c02c_fixture() -> dict[str, Any]:
+    if not _C02C_FIXTURE_PATH.exists():
+        raise FileNotFoundError(
+            f"{_C02C_FIXTURE_PATH} is missing — accepted C02C bounds cannot be preserved"
+        )
+    return json.loads(_C02C_FIXTURE_PATH.read_text())
+
+
+def _load_bounds_fixture() -> dict[str, Any]:
+    data = _load_fixture()
+    return _load_accepted_c02c_fixture() if data.get("schema_version") == 2 else data
+
+
 def _row_features(row: Mapping[str, Any]) -> tuple[float, float, float, float]:
     qb = {"1qb": 1.0, "superflex": 1.5, "2qb": 2.0}.get(str(row["qb_mode"]), 1.0)
     return (
@@ -501,7 +517,7 @@ def bench_bounds(row: Mapping[str, Any]) -> BenchBounds:
     from the measured row nearest in (teams, qb_mode, bench_slots, ir_slots), rescaled to this
     row's bench budget. `BenchBounds.measured` says which you got.
     """
-    data = _load_fixture()
+    data = _load_bounds_fixture()
     rows = data.get("rows", {})
     rid = str(row["id"])
     if rid in rows:
@@ -558,7 +574,7 @@ def kdst_timing(row: Mapping[str, Any]) -> KdstTiming:
     measured `cap_rounds_from_end` per row and unmeasured rows take the measured row nearest in
     roster size (`starters + bench`) and league size.
     """
-    data = _load_fixture()
+    data = _load_bounds_fixture()
     rows = data.get("rows", {})
     rid = str(row["id"])
     if rid in rows and rows[rid].get("kdst"):

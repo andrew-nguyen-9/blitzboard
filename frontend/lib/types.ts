@@ -17,6 +17,7 @@ export interface Player {
   metadata?: {
     depth_chart_order?: number | null;
     depth_chart_position?: string | null;
+    /** Sleeper search popularity — search/display metadata ONLY; never a value input (C01). */
     search_rank?: number | null;
     [k: string]: unknown;
   } | null;
@@ -28,7 +29,10 @@ export interface PlayerValue {
   value: number | null;
   vor: number | null;
   replacement: number | null;
+  /** CEILING VOR = projection ceiling − replacement (C01 unit contract; NOT a raw ceiling —
+   *  convert via lib/valueUnits.projectionCeiling before comparing with raw projections). */
   boom: number | null;
+  /** FLOOR VOR = projection floor − replacement (same contract as boom). */
   bust: number | null;
   adp: number | null;
   rank: number | null;

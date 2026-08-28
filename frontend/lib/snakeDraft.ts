@@ -31,7 +31,31 @@ export interface SnakeOpts {
 }
 
 // Run a full snake draft with every team on the shared policy; return the pick log.
+// Sync wrapper over the generator below — behavior and pick order are identical.
 export function runSnakeDraft(players: PlayerWithValue[], opts: SnakeOpts): MappedPick[] {
+  const g = snakeDraftPicks(players, opts);
+  let r = g.next();
+  while (!r.done) r = g.next();
+  return r.value;
+}
+
+// Async driver for tests/tools: identical draft, but yields to the event loop after every
+// pick. A full 192-pick draft is otherwise one multi-second synchronous block; inside a
+// vitest worker under CPU load that block can starve the worker<->main RPC past its 60s
+// ceiling and fail a fully green run ("Timeout calling onTaskUpdate"). Per-pick yields cap
+// the longest synchronous stretch at a single pick, which no plausible load stretches to 60s.
+export async function runSnakeDraftAsync(players: PlayerWithValue[], opts: SnakeOpts): Promise<MappedPick[]> {
+  const g = snakeDraftPicks(players, opts);
+  let r = g.next();
+  while (!r.done) {
+    await new Promise((res) => setImmediate(res));
+    r = g.next();
+  }
+  return r.value;
+}
+
+// The single draft loop both drivers share: yields each pick, returns the full log.
+function* snakeDraftPicks(players: PlayerWithValue[], opts: SnakeOpts): Generator<MappedPick, MappedPick[]> {
   const { numTeams, rng = Math.random, randomness = 0.05, chooser = pickForTeam } = opts;
   const ROSTER_SPOTS = SUPERFLEX_ROSTER.length + BENCH_SIZE;
   const totalSpots = numTeams * ROSTER_SPOTS;
@@ -66,8 +90,10 @@ export function runSnakeDraft(players: PlayerWithValue[], opts: SnakeOpts): Mapp
         randomness,
         rng,
       }) ?? pool[0];
-    picks.push({ pickNo, team, player });
+    const pick: MappedPick = { pickNo, team, player };
+    picks.push(pick);
     taken.add(player.id);
+    yield pick;
   }
   return picks;
 }

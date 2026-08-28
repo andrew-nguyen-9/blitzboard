@@ -1,0 +1,15 @@
+{
+  "schema_version": 4,
+  "experiment_id": "bench-portfolio-c03-v4",
+  "status": "preregistered_not_executed",
+  "amends": ".orchestrator-v6/experiments/bench-portfolio-c03-v3.json",
+  "reason_for_amendment": "Correct the nonexistent frozen C03 public-interface commit recorded by v2. V3 did not correct that field.",
+  "replaces_v2_field": {
+    "field": "frozen_c03_interface_sha",
+    "old_value": "a3394b0af8fbb6bb731d51ac0515aba345a094e2",
+    "new_value": "a3394b0a6c72174894bd8a44b33c702372903d11"
+  },
+  "disclosure": "The typo was discovered after untracked implementation work began, but before any production implementation commit or authoritative C03 execution. The untracked work is not evidence and execution remains paused.",
+  "unchanged": "All v1-v3 hypotheses, formulas, arms, configurations, seeds, metrics, thresholds, evidence rules, adapter correction, and failure dispositions remain unchanged. Read v1-v4 cumulatively with only frozen_c03_interface_sha replaced.",
+  "execution_rule": "Commit this v4 amendment alone. Do not resume implementation or authoritative execution until the amendment is reconciled."
+}

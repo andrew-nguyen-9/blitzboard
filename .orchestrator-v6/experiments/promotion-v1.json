@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "preregistered",
+  "baseline_sha": "01f01d3c5f9c00a046edd43707db75ce1426c0e8",
+  "hypothesis": "The candidate policy improves started points without deterministic, slice, H2H, or playoff regression.",
+  "arms": ["v5_shipped", "v6_candidate"],
+  "pairing": ["board", "seat", "season", "seed"],
+  "seasons": [2021, 2022, 2023, 2024, 2025],
+  "held_out_seasons": [2020],
+  "seeds": [2026082601, 2026082602, 2026082603, 2026082604],
+  "mandatory_formats": {
+    "teams": [10, 12, 14],
+    "qb_modes": ["1qb", "superflex", "2qb"],
+    "bench_slots": [4, 8],
+    "te_premium": [0.0, 0.5],
+    "ir_slots": [0, 1]
+  },
+  "blocked_slice": "t14-2qb-std-te0.5-b4-ir1",
+  "primary_metric": "started_points_paired_delta",
+  "secondary_metrics": ["h2h_win_rate_paired_delta", "playoff_proxy_paired_delta", "championship_proxy_paired_delta"],
+  "thresholds": {
+    "started_points_ci95_lower": 0.0,
+    "mandatory_slice_no_regression_tolerance": 0.0,
+    "h2h_ci95_lower": -0.005,
+    "playoff_or_championship_ci95_lower": -0.002
+  },
+  "failure_interpretation": {
+    "deterministic": "BLOCK",
+    "leakage_or_nondeterminism": "BLOCK",
+    "numerical_fail": "do_not_ship_candidate",
+    "numerical_inconclusive": "preserve_v5"
+  }
+}

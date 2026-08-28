@@ -1,0 +1,39 @@
+{
+  "schema_version": 5,
+  "name": "waiver-realism-v5",
+  "status": "preregistered",
+  "frozen_utc": "2026-08-27T03:30:00Z",
+  "responds_to": "C02B-codex BLOCK at review commit 9352aef: canonical ESPN OP was treated as a literal player position instead of an offensive-player/superflex slot",
+  "supersedes": "waiver-realism-v4 by append-only amendment (v1-v4 remain byte-for-byte preserved; only shared slot-alias eligibility and flexible-slot ordering are clarified here)",
+  "changes": {
+    "shared_slot_eligibility": {
+      "dedicated_slots": {
+        "QB": ["QB"],
+        "RB": ["RB"],
+        "WR": ["WR"],
+        "TE": ["TE"],
+        "K": ["K"],
+        "DST": ["DST"]
+      },
+      "flexible_slots": {
+        "FLEX": ["RB", "WR", "TE"],
+        "SUPERFLEX": ["QB", "RB", "WR", "TE"],
+        "OP": ["QB", "RB", "WR", "TE"],
+        "SFLX": ["QB", "RB", "WR", "TE"]
+      },
+      "alias_rule": "OP and SFLX are exact aliases of SUPERFLEX everywhere the shared engine resolves or fills lineup slots; this is not a waiver-only special case",
+      "rejections": "K and DST are never eligible for FLEX, SUPERFLEX, OP, or SFLX",
+      "ordering": "all dedicated slots are filled before flexible slots; FLEX, SUPERFLEX, OP, and SFLX therefore absorb only bodies remaining after dedicated-position allocation",
+      "unknown_slot_fallback": "unchanged: an unknown non-alias slot accepts only a player whose nominal position exactly equals that slot"
+    }
+  },
+  "acceptance_tests": [
+    "the unchanged supplemental OP waiver regression returns the legal cross-role swap",
+    "QB, RB, WR, and TE are accepted identically by SUPERFLEX, OP, and SFLX",
+    "K and DST are rejected identically by SUPERFLEX, OP, and SFLX",
+    "dedicated positions fill before every flexible alias",
+    "all v1-v4 acceptance tests and calibration dispositions remain unchanged"
+  ],
+  "unchanged": "all v1-v4 decision gates, opportunity-cost rules, shared weekly budget formula, season cap, counters, seeds, cost/accounting reconciliation, calibration records, and failure interpretation",
+  "failure_interpretation": "deterministic alias, eligibility, ordering, or prior-suite failure blocks C02C; ambiguity preserves accepted C02B behavior; no coefficient or calibration result may change"
+}

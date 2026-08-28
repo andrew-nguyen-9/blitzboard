@@ -1,0 +1,41 @@
+{
+  "fixture_status": "noncanonical-producer-blind-c04-specification",
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "c04-1qb-b4-noir",
+      "league": { "teams": 12, "qb_mode": "1qb", "bench_slots": 4, "ir_slots": 0, "te_premium": 0.0 },
+      "starting_slots": { "QB": 1, "RB": 2, "WR": 2, "TE": 1, "FLEX": 1, "K": 1, "DST": 1 },
+      "required": ["legal_starters", "no_early_duplicate_k_dst", "no_backup_qb_mandate", "insurance_and_upside"],
+      "dependency": "c02_missing_candidate_transactions_c03_unsupported_evidence"
+    },
+    {
+      "id": "c04-1qb-tep-b8-ir",
+      "league": { "teams": 10, "qb_mode": "1qb", "bench_slots": 8, "ir_slots": 1, "te_premium": 0.5 },
+      "starting_slots": { "QB": 1, "RB": 2, "WR": 3, "TE": 1, "FLEX": 2, "K": 1, "DST": 1 },
+      "required": ["legal_starters", "te_premium_evidence", "ir_evidence", "soft_shape_not_cap", "insurance_and_upside"],
+      "dependency": "c02_missing_candidate_transactions_c03_unsupported_evidence"
+    },
+    {
+      "id": "c04-superflex-b4-noir",
+      "league": { "teams": 14, "qb_mode": "superflex", "bench_slots": 4, "ir_slots": 0, "te_premium": 0.0 },
+      "starting_slots": { "QB": 1, "RB": 2, "WR": 2, "TE": 1, "FLEX": 1, "OP": 1, "K": 1, "DST": 1 },
+      "required": ["legal_starters", "multi_qb_scarcity", "no_early_duplicate_k_dst", "degraded_evidence_visible"],
+      "dependency": "c03_accepted_unsupported_evidence"
+    },
+    {
+      "id": "c04-2qb-tep-b8-ir",
+      "league": { "teams": 10, "qb_mode": "2qb", "bench_slots": 8, "ir_slots": 1, "te_premium": 0.5 },
+      "starting_slots": { "QB": 2, "RB": 2, "WR": 2, "TE": 1, "FLEX": 1, "K": 1, "DST": 1 },
+      "required": ["legal_starters", "multi_qb_scarcity", "te_premium_evidence", "ir_evidence", "soft_shape_not_cap"],
+      "dependency": "c03_accepted_unsupported_evidence"
+    },
+    {
+      "id": "c04-custom-wrte-no-k-noir",
+      "league": { "teams": 12, "qb_mode": "custom", "bench_slots": 6, "ir_slots": 0, "te_premium": 0.25 },
+      "starting_slots": { "QB": 1, "RB": 1, "WR": 3, "TE": 0, "WRTE": 2, "DST": 1 },
+      "required": ["legal_starters", "no_phantom_te_slot", "no_phantom_k_slot", "unsupported_not_measured", "degraded_evidence_visible"],
+      "dependency": "c03_accepted_missing_key_fallback"
+    }
+  ]
+}

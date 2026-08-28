@@ -1,0 +1,73 @@
+
+> blitzboard-frontend@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.19
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 11.4s
+   Linting and checking validity of types ...
+
+./lib/useEspnSync.ts
+56:6  Warning: React Hook useEffect has a missing dependency: 'creds'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/25) ...
+   Generating static pages (6/25)
+   Generating static pages (12/25)
+   Generating static pages (18/25)
+ ✓ Generating static pages (25/25)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                    3.05 kB         136 kB
+├ ○ /_not-found                            187 B         103 kB
+├ ○ /about                                 187 B         103 kB
+├ ƒ /account                             1.66 kB         108 kB
+├ ƒ /api/auth/signup                       187 B         103 kB
+├ ƒ /api/espn/draft                        187 B         103 kB
+├ ƒ /api/sleeper/draft/[draftId]           187 B         103 kB
+├ ƒ /api/sleeper/draft/[draftId]/picks     187 B         103 kB
+├ ƒ /api/sleeper/league/[leagueId]         187 B         103 kB
+├ ƒ /api/sleeper/user/[username]           187 B         103 kB
+├ ○ /articles                              172 B         106 kB
+├ ƒ /articles/[slug]                       172 B         106 kB
+├ ƒ /auth/2fa                              187 B         103 kB
+├ ƒ /auth/2fa/verify                       187 B         103 kB
+├ ƒ /auth/callback                         187 B         103 kB
+├ ƒ /auth/confirm                          187 B         103 kB
+├ ƒ /auth/update-password                  187 B         103 kB
+├ ƒ /betting                             1.86 kB         104 kB
+├ ○ /draft                               16.3 kB         131 kB
+├ ○ /draft/analysis                        847 B         111 kB
+├ ○ /icon.svg                                0 B            0 B
+├ ○ /kit                                 1.39 kB         131 kB
+├ ƒ /lab                                 3.42 kB         106 kB
+├ ƒ /lab/api/run                           187 B         103 kB
+├ ƒ /league                                172 B         106 kB
+├ ƒ /leagues                             4.03 kB         107 kB
+├ ƒ /login                                 187 B         103 kB
+├ ○ /manifest.webmanifest                  187 B         103 kB
+├ ○ /opengraph-image.png                     0 B            0 B
+├ ƒ /players                             15.1 kB         130 kB
+├ ƒ /players/[id]                        1.69 kB         140 kB
+├ ○ /privacy                               187 B         103 kB
+├ ○ /robots.txt                            187 B         103 kB
+├ ƒ /search                              2.44 kB         169 kB
+├ ○ /signup                              3.79 kB         106 kB
+├ ○ /sitemap.xml                           187 B         103 kB
+├ ○ /terms                                 187 B         103 kB
+├ ƒ /trades                              12.9 kB         179 kB
+└ ƒ /waivers                             2.59 kB         109 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/1255-5c680abb9db89955.js      46.3 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js  54.2 kB
+  └ other shared chunks (total)          2.06 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+BUILD EXIT:0

@@ -1,0 +1,115 @@
+{
+  "schema_version": 4,
+  "status": "preregistered_not_executed",
+  "experiment": "C05 matched-seat promotion of the v6 candidate policy against shipped v5, measured through one common frozen evaluator",
+  "supersedes": "promotion-v3.json",
+  "supersedes_sha256": "bbb241603a33697bff376b21a2e57e7e066c3c85186eaaab120485ec6bd941ab",
+  "supersedes_exec_addendum": "promotion-v3-exec-v1.json",
+  "supersedes_exec_addendum_sha256": "24e5e50afdad75006ca3a1814317d9254ea98de25bbb97dba4b06bbee7c3b7ad",
+  "baseline_sha": "01f01d3c5f9c00a046edd43707db75ce1426c0e8",
+  "authored_at_checkpoint": "C05 second freeze review response (review commit 3905689656635918baa9c0b31aea39b3f179780c)",
+  "amendment_justification": {
+    "measurement_split": "The v5 control evaluator predates per_season_playoff/per_season_champ, so v3's design (each arm measured by its own checkout's evaluator) makes the paired playoff/championship gates structurally inconclusive - the two-checkout rehearsal proved the control receipt necessarily carries null proxies. v4 separates POLICY identity from MEASUREMENT identity: each arm's frozen checkout produces only its policy/draft outputs; one common frozen accepted-C02 measurement evaluator replays both outputs to derive every outcome sample. Both arms are then scored by identical rules and all frozen gates become decidable.",
+    "provenance": "Receipts additionally freeze mechanical tooling provenance (clean committed tooling head containing the harness, execution-module hash, effective-manifest hash) per the second freeze review.",
+    "immutability": "promotion-v3.json and promotion-v3-exec-v1.json are preserved byte-for-byte; this version is append-only."
+  },
+  "inherited_frozen_terms": {
+    "from": "promotion-v3.json (sha256 above), unchanged and incorporated by reference",
+    "terms": [
+      "hypotheses",
+      "board_corpus (files and hashes)",
+      "league_configurations (216 mandatory ids via promotion-v2 hash)",
+      "seasons [2021, 2024] and held_out_seasons [2018] with the held_out_rule",
+      "seed_derivation (base seeds, eval-seed formula, stream offsets, bootstrap seed formula)",
+      "common_random_numbers",
+      "evaluator settings (n_seasons 8, waivers true, waiver_moves_per_week 1)",
+      "primary_metric and secondary_metrics",
+      "ci_method (seat-clustered paired percentile bootstrap, n_boot 10000)",
+      "thresholds (started_points_ci95_lower 0.0; slice tolerance 0.0; h2h -0.005; playoff/championship -0.002)",
+      "mandatory_high_risk_slices (24 ids) and blocked_slice",
+      "slice_gate and hidden_regression_rule and mandatory_slice_reports",
+      "calibration_gates (player-calibration-v1 by hash) and its missing_report_interpretation",
+      "promotion_requirements",
+      "limits (12 h wall, 8 GiB RSS, free local compute)",
+      "failure_interpretation (BLOCK / do_not_ship_candidate / preserve_v5 / dry-run clauses)"
+    ]
+  },
+  "calibration_evidence_disposition": "The accepted C02 calibration report is executed evidence and FAILED the frozen calibration thresholds (1QB/2QB spearman deltas negative). It is preserved without reinterpretation: under the inherited calibration gate the candidate cannot promote unless a NEW accepted calibration report passes every threshold. Runtime attestations may fill only genuinely unexpressed report fields and must not reinterpret failed benchmark deltas or non-computable cohorts.",
+  "policy_vs_measurement_identity": {
+    "policy": "WHAT each arm decides: the draft/policy code of the arm's own frozen checkout. Control policy = baseline_sha; candidate policy = the combined candidate SHA frozen in promotion-v4-exec-v1.json. Policy code is the experimental variable.",
+    "measurement": "HOW outcomes are scored: one common frozen accepted-C02 measurement evaluator replays both arms' draft outputs under identical trajectories. Measurement code is held constant across arms and is NOT part of the experimental variable.",
+    "rule": "No arm may be measured by its own checkout's evaluator; a receipt whose measurement identity differs from the frozen measurement evaluator is invalid."
+  },
+  "measurement_evaluator": {
+    "sha": "7b3fd73578943b992402ad693259a3e92358da69",
+    "definition": "blitz_engine.simulation.season_eval.evaluate_rosters at the accepted combined C02-C04 head, with build_players/matrix inputs from the frozen board corpus and EvalConfig(n_seasons=8, seed=eval_seed, waiver_cost=0.0)",
+    "file_hashes": {
+      "engine/blitz_engine/simulation/season_eval.py": "043473a35735658fddddeeb1b79166204fe2c62294ec6257b4f3b22584154dd8",
+      "engine/blitz_engine/survival/availability.py": "77181355e505436d73b1f24efe949799d63aefd99b7a4724665c823678672641",
+      "engine/blitz_engine/lineup/feasibility.py": "5fdf659e0a299a03cbd3c671198d1354877871a1e2d5dfa4f83276c7b8c7bde1",
+      "engine/blitz_engine/backtest/harness.py": "b6374c3282e5b3ae9561f15490f817cee07a67ad9ae21dac5c0761fef063c12d",
+      "engine/blitz_engine/value/mcts.py": "02364cd9d78a7b981a0cca00cd8dd425385bd49436213a477c133a6d85f2eaa1",
+      "engine/blitz_engine/testing/corpus.py": "be59204d6a0cb6b76eca583edd7664aa39cfeabd28775226f6fdac54b5965e72",
+      "engine/blitz_engine/testing/matrix.py": "eed68f132c22267d496746450d94023f874000ec126e174b2a57fc4c476ae776"
+    },
+    "verification_rule": "before any measurement run, every listed file in the measurement checkout must hash-match; a mismatch aborts (BLOCK), never degrades"
+  },
+  "two_stage_protocol": {
+    "stage_1_draft": "Inside EACH arm's frozen checkout (import-resolution pinned and hard-asserted): build the frozen board for (year, league_id), run the arm's own draft_league with the derived eval seed and the frozen policy mix. Output = a DRAFT RECEIPT recording the per-seat rosters as player_id lists plus all pairing keys. No outcome metric is computed at this stage.",
+    "stage_2_measure": "Inside the frozen MEASUREMENT checkout only: verify measurement file hashes, load both arms' draft receipts, validate pairing (identical board_hash, seat_policy, eval_seed, year, league_id, base_seed; rosters must partition the same board), then evaluate_rosters each arm's rosters under the SAME derived eval seed - identical injury/availability/waiver trajectories by construction (CRN). Output = a MEASUREMENT RECEIPT per arm carrying started-points, H2H, playoff, and championship per-season samples.",
+    "analysis": "pair_slice/evaluate_promotion consume only measurement receipts; all inherited gates, CI methods, and interpretation rules apply unchanged."
+  },
+  "intermediate_receipt_schema": {
+    "draft_receipt": {
+      "kind": "draft",
+      "arm": "v5_shipped | v6_candidate",
+      "policy_sha": "verified arm checkout HEAD",
+      "year": "int",
+      "league_id": "string",
+      "base_seed": "int",
+      "eval_seed": "int (derived by the frozen formula)",
+      "board_hash": "sha256 of the sorted (player_id, position, projection) board",
+      "seat_policy": "string[] (the seeded permutation)",
+      "rosters": "player_id[][] - one list per seat, draft order preserved",
+      "stage": "fit | confirm",
+      "produced_by_tooling": "{tooling_head, tooling_tree_clean, clean_definition, execution_module_sha256, effective_manifest_sha256}",
+      "authoritative": "bool",
+      "write_once": true
+    },
+    "measurement_receipt": {
+      "kind": "measurement",
+      "measured_by_sha": "measurement checkout HEAD (must equal measurement_evaluator.sha)",
+      "measurement_file_hashes_verified": "bool (must be true)",
+      "draft_receipt_sha256": "sha256 of the exact draft receipt file measured",
+      "arm_run": "the ArmRun object (per_season, h2h, playoff and championship proxies, pairing keys)",
+      "produced_by_tooling": "same provenance object",
+      "stage": "fit | confirm",
+      "authoritative": "bool",
+      "write_once": true
+    }
+  },
+  "pairing_keys": [
+    "year",
+    "league_id",
+    "base_seed",
+    "eval_seed",
+    "board_hash",
+    "seat_policy",
+    "seat"
+  ],
+  "write_once_stage_separation": "receipts land under <out>/draft/fit/, <out>/draft/confirm/, <out>/measure/fit/, <out>/measure/confirm/; an existing path refuses overwrite; the HeldOutGuard year/stage check precedes every stage; confirm-stage receipts may not exist before the fit verdict is recorded",
+  "exact_commands": {
+    "note": "concrete argv is produced by the (yet-to-be-implemented) v4 harness; the frozen shapes are:",
+    "draft_arm": "git worktree add --detach <scratch>/arm-<name> <arm_sha>; then from the tooling root: <venv-python> -m blitz_engine.promotion (v4 harness) draft --arm <name> --checkout <scratch>/arm-<name> --expected-sha <arm_sha> --year <Y> --league-id <ID> --base-seed <S> --stage <fit|confirm> --out <receipts>/draft/<stage>/  (subprocess pins the ARM checkout's engine/, strips editable finders, hard-asserts blitz_engine resolution)",
+    "measure": "git worktree add --detach <scratch>/measure 7b3fd73578943b992402ad693259a3e92358da69; then: <venv-python> -m blitz_engine.promotion (v4 harness) measure --checkout <scratch>/measure --draft-receipt <path> --out <receipts>/measure/<stage>/  (verifies measurement file hashes, then evaluate_rosters with n_seasons=8, seed=eval_seed, waiver_cost=0.0)",
+    "implementation_status": "NOT implemented; frozen here first per the second freeze review, awaiting its own freeze review before any code"
+  },
+  "tooling_provenance_requirement": "every receipt embeds the mechanically derived provenance object (clean committed tooling head that contains the execution harness, execution-module sha256, effective-manifest sha256); a caller-supplied tooling identity string is invalid",
+  "execution_preconditions": [
+    "promotion-v4 freeze review PASS (this document, before implementation)",
+    "v4 harness implemented and its own freeze review PASS (before authoritative execution)",
+    "combined candidate SHA frozen in promotion-v4-exec-v1.json",
+    "measurement evaluator file hashes verify in the measurement checkout",
+    "a passing accepted calibration report per the inherited calibration gate"
+  ]
+}

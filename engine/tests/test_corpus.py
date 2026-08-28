@@ -29,9 +29,6 @@ ELIGIBLE = {
     "K": {"K"},
     "DST": {"DST", "DEF"},
 }
-OFFENSIVE = {"QB", "RB", "WR", "TE", "FLEX", "SUPERFLEX"}
-
-
 # ── determinism ────────────────────────────────────────────────────────────────────────
 @pytest.mark.parametrize("year", corpus.SEASONS)
 def test_season_loads_identically_twice(year: int) -> None:
@@ -115,13 +112,10 @@ def test_golden_draft_rosters_are_legal(row: dict) -> None:
 
 
 @pytest.mark.parametrize("row", matrix.smoke(), ids=lambda r: r["id"])
-def test_golden_drafts_fill_every_offensive_starter(row: dict) -> None:
-    """The e1 draft-end invariant. K/DST are deliberately NOT asserted: today's draftAI only
-    unlocks them in the final `kdstCapRoundsFromEnd` rounds, so shallow-bench rows finish with
-    empty K/DST slots. The goldens LOCK that — e10 proving a fit fills them is the point."""
+def test_golden_drafts_fill_every_required_starter(row: dict) -> None:
     for team_starters in corpus.golden_draft(row["id"])["starters"]:
         empty = [s["slot"] for s in team_starters if s["player_id"] is None]
-        assert not (set(empty) & OFFENSIVE), f"empty offensive slot(s) {empty} in {row['id']}"
+        assert not empty, f"empty starter slot(s) {empty} in {row['id']}"
 
 
 # ── the generator still reproduces the checked-in bytes ────────────────────────────────
