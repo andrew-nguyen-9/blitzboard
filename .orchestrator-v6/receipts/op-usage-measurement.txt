@@ -1,0 +1,15 @@
+C01 A3 receipt — superflex OP-slot demand evidence (2026-08-26)
+
+Measured OP/SUPERFLEX-slot occupancy across the regenerated deterministic golden-draft
+corpus (fixtures/golden_drafts, 4 superflex rows): {'WR': 10, 'RB': 14, 'TE': 7, 'QB': 13} of 44 OP slots.
+
+This measurement is NOT usable as authoritative usage: the goldens are drafted by the
+very value stack whose superflex QB replacement was understated (QB~15 instead of ~24 in
+12-team SF), so the low QB share is the defect's own artifact, not real-league behavior.
+
+Adopted rule (explicit, format-specific, per the reviewer amendment): OP demand accrues
+to QB in full — an OP is started by a QB in any rational lineup because QB weekly scoring
+clears every other position's replacement level (the premise of the superflex format and
+what expert superflex boards encode: FantasyPros superflex ECR top-3 all QB; Footballguys
+2QB guidance ~8 QB in the first 10 picks). 12-team SF => QB replacement rank 24; clamped
+to pool size by _replacement_index. RB/WR/TE receive nothing from OP; FLEX split unchanged.

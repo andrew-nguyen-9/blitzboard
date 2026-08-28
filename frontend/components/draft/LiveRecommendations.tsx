@@ -2,11 +2,17 @@ import Link from "next/link";
 import type { PlayerWithValue } from "@/lib/types";
 import { UncertaintyStrip, playerUncertainty } from "@/components/uncertainty";
 import type { WhyChip } from "./reasons";
+import { formatDraftExplanation, type DraftExplanationPayload } from "@/lib/v6DraftExplanation";
 
 export interface Recommendation {
   player: PlayerWithValue;
   reasons: WhyChip[];
   equity: number; // marginal projected starting-lineup points this pick adds
+  explanation: DraftExplanationPayload;
+}
+
+export function recommendationClaims(recommendation: Recommendation): readonly string[] {
+  return formatDraftExplanation(recommendation.explanation);
 }
 
 // Live ranked recommendations with a legible "why" (VONA / scarcity / run-risk /
@@ -30,9 +36,11 @@ export default function LiveRecommendations({
         RECOMMENDED{isMyPick ? " · YOUR PICK" : picksUntilMe != null ? ` · IN ${picksUntilMe}` : ""}
       </h3>
       <ol className="space-y-4">
-        {recs.map(({ player, reasons, equity }, idx) => {
+        {recs.map((recommendation, idx) => {
+          const { player, reasons, equity } = recommendation;
           const pos = player.position === "DEF" ? "DST" : player.position;
           const unc = playerUncertainty(player.value, null, "pts");
+          const explanation = recommendationClaims(recommendation);
           return (
             <li key={player.id} className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
@@ -62,6 +70,9 @@ export default function LiveRecommendations({
                   </span>
                 )}
               </div>
+              <ul className="space-y-0.5 pl-6 text-label text-ink-muted" aria-label={`Why ${player.full_name}`}>
+                {explanation.map((claim) => <li key={claim}>{claim}</li>)}
+              </ul>
               {unc && (
                 <div className="pl-6">
                   <UncertaintyStrip data={unc} showDistribution={false} className="!gap-2" />

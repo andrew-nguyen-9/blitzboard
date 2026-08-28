@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "blitzboard://v6/bench-shape/public-interface-v1",
+  "title": "Blitzboard v6 bench-shape artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "canonical_source_hash", "canonical_source_receipt", "rows"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "canonical_source_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "canonical_source_receipt": {"type": "string", "pattern": "^\\.orchestrator-v6/experiments/.+"},
+    "rows": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/leagueConfigKey"},
+      "additionalProperties": {"$ref": "#/$defs/row"}
+    }
+  },
+  "$defs": {
+    "leagueConfigKey": {
+      "type": "string",
+      "pattern": "^t(10|12|14)-(1qb|superflex|2qb)-(std|half|ppr)-te(0\\.0|0\\.5)-b(4|8)-ir(0|1)$"
+    },
+    "positionCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["QB", "RB", "WR", "TE", "K", "DST"],
+      "properties": {
+        "QB": {"type": "integer", "minimum": 0},
+        "RB": {"type": "integer", "minimum": 0},
+        "WR": {"type": "integer", "minimum": 0},
+        "TE": {"type": "integer", "minimum": 0},
+        "K": {"type": "integer", "minimum": 0},
+        "DST": {"type": "integer", "minimum": 0}
+      }
+    },
+    "finiteCurve": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "number"}
+    },
+    "softMarginalCosts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["QB", "RB", "WR", "TE", "K", "DST"],
+      "properties": {
+        "QB": {"$ref": "#/$defs/finiteCurve"},
+        "RB": {"$ref": "#/$defs/finiteCurve"},
+        "WR": {"$ref": "#/$defs/finiteCurve"},
+        "TE": {"$ref": "#/$defs/finiteCurve"},
+        "K": {"$ref": "#/$defs/finiteCurve"},
+        "DST": {"$ref": "#/$defs/finiteCurve"}
+      }
+    },
+    "measuredProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "source_receipt", "producer_sha", "evaluator_sha", "n_pairs", "seeds"],
+      "properties": {
+        "kind": {"const": "measured"},
+        "source_receipt": {"type": "string", "minLength": 1},
+        "producer_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "evaluator_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "n_pairs": {"type": "integer", "minimum": 1},
+        "seeds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer"}}
+      }
+    },
+    "interpolatedProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "source_receipt", "source_keys", "method"],
+      "properties": {
+        "kind": {"const": "interpolated"},
+        "source_receipt": {"type": "string", "minLength": 1},
+        "source_keys": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/leagueConfigKey"}},
+        "method": {"type": "string", "minLength": 1}
+      }
+    },
+    "unsupportedProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "reason"],
+      "properties": {
+        "kind": {"const": "unsupported"},
+        "reason": {"type": "string", "minLength": 1},
+        "nearest_measured_keys": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/leagueConfigKey"}}
+      }
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["league_config_key", "evidence_status", "bench_slots", "composition", "soft_marginal_costs", "provenance"],
+      "properties": {
+        "league_config_key": {"$ref": "#/$defs/leagueConfigKey"},
+        "evidence_status": {"enum": ["measured", "interpolated", "unsupported"]},
+        "bench_slots": {"enum": [4, 8]},
+        "composition": {"$ref": "#/$defs/positionCounts"},
+        "soft_marginal_costs": {"$ref": "#/$defs/softMarginalCosts"},
+        "provenance": {
+          "oneOf": [
+            {"$ref": "#/$defs/measuredProvenance"},
+            {"$ref": "#/$defs/interpolatedProvenance"},
+            {"$ref": "#/$defs/unsupportedProvenance"}
+          ]
+        }
+      },
+      "allOf": [
+        {"if": {"properties": {"evidence_status": {"const": "measured"}}}, "then": {"properties": {"provenance": {"$ref": "#/$defs/measuredProvenance"}}}},
+        {"if": {"properties": {"evidence_status": {"const": "interpolated"}}}, "then": {"properties": {"provenance": {"$ref": "#/$defs/interpolatedProvenance"}}}},
+        {"if": {"properties": {"evidence_status": {"const": "unsupported"}}}, "then": {"properties": {"provenance": {"$ref": "#/$defs/unsupportedProvenance"}}}}
+      ]
+    }
+  }
+}

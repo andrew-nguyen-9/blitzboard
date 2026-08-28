@@ -36,16 +36,27 @@ class LeagueRules:
         return bool(self.roster_slots.get("_superflex")) or "OP" in self.roster_slots
 
     def starters_per_team(self, position: str) -> float:
-        """Expected starters of `position` per team, spreading flex/OP demand.
+        """Expected starters of `position` per team, spreading flex demand.
 
-        Dedicated slots count fully; flexible slots are apportioned across their
-        eligible positions (simple even split — refined with ADP weighting in P2).
+        Dedicated slots count fully. Multi-position slots are apportioned across their
+        eligible positions EXCEPT the superflex OP slot: an OP is started by a QB in any
+        rational lineup (QB weekly scoring clears every other position's replacement
+        level — the premise of the format, and what expert superflex boards encode), so
+        OP demand accrues to QB in full and adds nothing to RB/WR/TE. This is the C01
+        explicit, format-specific rule replacing the indefensible equal four-way split
+        (which priced 12-team superflex replacement at ~QB15 instead of ~QB24). QB
+        demand is capped at the 32 real starting jobs league-wide by replacement_ranks'
+        caller-side clamp to pool size.
         """
         slots = self.roster_slots
         count = float(slots.get(position, 0) or 0)
         for slot, eligible in SLOT_ELIGIBILITY.items():
             n = float(slots.get(slot, 0) or 0)
-            if n and position in eligible:
+            if not n or position not in eligible:
+                continue
+            if slot == "OP":
+                count += n if position == "QB" else 0.0
+            else:
                 count += n / len(eligible)
         return count
 

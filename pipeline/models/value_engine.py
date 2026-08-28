@@ -24,10 +24,12 @@ ELITE_SCALE = 7.0       # how fast the premium decays down the position ranks
 CLIFF_W = 0.45          # "tier cliff" bonus = separation over the next tier below
 CLIFF_LOOKAHEAD = 4     # compare to the player N spots lower at the position
 UPSIDE_W = 0.33         # reward ceiling over mean (boom = trade/league-winner equity)
-YOUTH_W = 0.18          # future value: ascending youth up, aging down
-CONSENSUS_W = 18.0      # consensus (Sleeper search_rank) nudge for the deep/bench pool
-# rough positional peak ages (value-trajectory, not just this season)
-PEAK_AGE = {"RB": 24, "WR": 26, "TE": 26, "QB": 29, "K": 30, "DST": 99}
+# C01: YOUTH_W / PEAK_AGE / CONSENSUS_W are REMOVED from redraft value shaping.
+#  - Age already flows through the projection (the production forecast); a second
+#    dynasty-style future-value multiplier double-counted it and underrated
+#    productive veterans. Redraft weighs age exactly once, inside the forecast.
+#  - Sleeper search_rank is search/display metadata, not consensus or ADP; it must
+#    never alter player value (it favored popular/stale names in the deep pool).
 
 # ── Predictability discount + streamer replacement (#3: K/DEF overvalued) ─────
 # v4/E1 tuning: DISCOUNT_K 1.0→1.2 and STREAMER_PCT 0.60→0.62. A steeper ρ^k pushes
@@ -64,27 +66,37 @@ def _replacement_index(pos: str, n: int, repl_rank: int, streamer_pct: float) ->
     return max(0, min(idx, n - 1))
 
 
-def _youth_factor(pos: str, age: int | None) -> float:
-    if age is None:
-        return 1.0
-    peak = PEAK_AGE.get(pos, 27)
-    # young (below peak) gets up to +, old gets down; clamped and gentle
-    delta = (peak - age) / 8.0
-    return 1.0 + YOUTH_W * max(-0.8, min(1.0, delta))
-
-
 @dataclass
 class PlayerValue:
+    """C01 unit contract — every field's scale is explicit; a raw projection must never
+    be compared with a replacement-adjusted number without converting first.
+
+      projection_mean / projection_ceiling  raw season points (derived properties)
+      replacement                           raw season points (positional baseline)
+      vor   = projection mean − replacement       (mean VOR)
+      boom  = projection ceiling − replacement    (CEILING VOR — not a raw ceiling)
+      bust  = projection floor − replacement      (FLOOR VOR)
+      value shaped, unitless board score — ranks the board, never a points value
+    """
+
     player_id: str
     engine: str                # 'vorp' | 'monte_carlo'
-    value: float               # shaped DRAFT value (non-linear, future-aware) — ranks the board
-    vor: float                 # raw value-over-replacement (linear, interpretable; used for lineup sums)
+    value: float               # shaped DRAFT value — ranks the board
+    vor: float                 # mean VOR (linear, interpretable; used for lineup sums)
     replacement: float
     rank: int
-    boom: float | None = None
-    bust: float | None = None
+    boom: float | None = None  # CEILING VOR (see class docstring)
+    bust: float | None = None  # FLOOR VOR
     adp: float | None = None
     tier: int | None = None
+
+    @property
+    def projection_mean(self) -> float:
+        return self.vor + self.replacement
+
+    @property
+    def projection_ceiling(self) -> float | None:
+        return None if self.boom is None else self.boom + self.replacement
 
 
 class ValueEngine(ABC):
@@ -157,20 +169,17 @@ class VorpEngine(ValueEngine):
             cliff = max(0.0, proj.mean - below) * CLIFF_W
             # 3) UPSIDE — ceiling over mean = future trade equity / league-winner odds
             upside = max(0.0, proj.ceiling - proj.mean) * UPSIDE_W
-            # 4) future-value YOUTH factor
-            youth = _youth_factor(pos, m.get("age"))
-            # 5) predictability discount f(ρ)=ρ^k — compresses unreproducible value
+            # 4) predictability discount f(ρ)=ρ^k — compresses unreproducible value
             #    (volatile K/DEF) toward replacement without special-casing position.
             disc = f_predictability(proj.predictability, self.discount_k)
 
             if vor > 0:
-                shaped = (vor * elite + cliff + upside) * disc * youth
+                shaped = (vor * elite + cliff + upside) * disc
             else:
-                # deep/bench pool: real projections are thin & nearly tied here, so
-                # order by Sleeper's consensus rank (search_rank) + a little upside.
-                sr = m.get("search_rank")
-                consensus = CONSENSUS_W * (1 - min(sr, 800) / 800) if (sr and sr < 999) else 0.0
-                shaped = (vor + upside * 0.5) * youth + consensus
+                # C01: deep/bench pool orders by the forecast itself plus a little
+                # upside — no youth multiplier (age lives in the projection, once),
+                # no search_rank (search popularity is never a value input).
+                shaped = vor + upside * 0.5
 
             out.append(PlayerValue(
                 player_id=pid, engine=self.name, value=round(shaped, 2), vor=round(vor, 2),
@@ -178,7 +187,7 @@ class VorpEngine(ValueEngine):
                 boom=round(proj.ceiling - repl, 2), bust=round(proj.floor - repl, 2),
                 adp=m.get("adp"),
             ))
-        # rank by SHAPED value (so elite/upside/youth reorder the board)
+        # rank by SHAPED value (so elite/upside reorder the board)
         out.sort(key=lambda v: v.value, reverse=True)
         # assign overall rank + per-position tiers (gaps in shaped value = tier breaks)
         by_pos_vals: dict[str, list[PlayerValue]] = {}
@@ -211,7 +220,7 @@ class MonteCarloEngine(ValueEngine):
 
     Unlike VORP's deterministic mean−replacement, MC samples the full
     distribution N times so variance becomes an explicit input to value:
-      value = E[VOR] + UPSIDE_W × (P90_VOR − E[VOR]) × youth_factor
+      value = E[VOR] + UPSIDE_W × (P90_VOR − E[VOR])   (C01: no age multiplier)
     boom/bust = P90/P10 VOR across simulations (not projection bounds).
 
     v2.2.3: the sampled σ is widened by low predictability (`1 + MC_VOL_GAIN·(1−ρ)`)
@@ -296,8 +305,8 @@ class MonteCarloEngine(ValueEngine):
             if pos not in BASE_POSITIONS:
                 continue
             m = meta.get(pid, {})
-            youth = _youth_factor(pos, m.get("age"))
-            mc_val = (float(mean_vor[i]) + UPSIDE_W * float(upside_spread[i])) * youth
+            # C01: no future-age multiplier in redraft (age lives in the projection).
+            mc_val = float(mean_vor[i]) + UPSIDE_W * float(upside_spread[i])
             out.append(PlayerValue(
                 player_id=pid,
                 engine=self.name,

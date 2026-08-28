@@ -80,7 +80,7 @@ def run_bridge(jobs: list[dict[str, Any]], *, season: int = 2024) -> list[dict[s
     if not TSX.exists():  # pragma: no cover - environment guard
         raise RuntimeError(f"missing {TSX}; run `npm ci` in frontend/ first")
     proc = subprocess.run(
-        [str(TSX), str(BRIDGE)],
+        ["node", "--import", "tsx", str(BRIDGE)],
         input=json.dumps({"season": season, "jobs": jobs}),
         capture_output=True,
         text=True,

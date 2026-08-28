@@ -1,0 +1,95 @@
+{
+  "amends": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json",
+  "disposition": "do_not_promote",
+  "disposition_amendment": ".orchestrator-v6/experiments/bench-portfolio-c03-v5.json",
+  "interpolation_sources": [],
+  "results_receipt": ".orchestrator-v6/experiments/bench-portfolio-c03-results-v1.json",
+  "results_v1_sha256": "3634b803859e63a1620f923b6fdc89a6b6d36ba56698882cbb07e773a9b02e5f",
+  "rows": {
+    "t10-1qb-half-te0.0-b4-ir0": {
+      "evidence_status": "unsupported",
+      "historical_evidence": {
+        "prior_evidence_status": "measured",
+        "receipt": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
+      },
+      "league_config_key": "t10-1qb-half-te0.0-b4-ir0",
+      "unsupported_reason": "authoritative candidate disposition is do_not_promote"
+    },
+    "t10-2qb-ppr-te0.0-b8-ir0": {
+      "evidence_status": "unsupported",
+      "historical_evidence": {
+        "prior_evidence_status": "measured",
+        "receipt": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
+      },
+      "league_config_key": "t10-2qb-ppr-te0.0-b8-ir0",
+      "unsupported_reason": "authoritative candidate disposition is do_not_promote"
+    },
+    "t10-superflex-half-te0.5-b8-ir1": {
+      "evidence_status": "unsupported",
+      "historical_evidence": {
+        "prior_evidence_status": "measured",
+        "receipt": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
+      },
+      "league_config_key": "t10-superflex-half-te0.5-b8-ir1",
+      "unsupported_reason": "authoritative candidate disposition is do_not_promote"
+    },
+    "t12-1qb-ppr-te0.5-b8-ir0": {
+      "evidence_status": "unsupported",
+      "historical_evidence": {
+        "prior_evidence_status": "measured",
+        "receipt": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
+      },
+      "league_config_key": "t12-1qb-ppr-te0.5-b8-ir0",
+      "unsupported_reason": "authoritative candidate disposition is do_not_promote"
+    },
+    "t12-2qb-half-te0.5-b8-ir1": {
+      "evidence_status": "unsupported",
+      "historical_evidence": {
+        "prior_evidence_status": "measured",
+        "receipt": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
+      },
+      "league_config_key": "t12-2qb-half-te0.5-b8-ir1",
+      "unsupported_reason": "authoritative candidate disposition is do_not_promote"
+    },
+    "t12-superflex-std-te0.0-b4-ir1": {
+      "evidence_status": "unsupported",
+      "historical_evidence": {
+        "prior_evidence_status": "measured",
+        "receipt": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
+      },
+      "league_config_key": "t12-superflex-std-te0.0-b4-ir1",
+      "unsupported_reason": "authoritative candidate disposition is do_not_promote"
+    },
+    "t14-1qb-half-te0.0-b4-ir1": {
+      "evidence_status": "unsupported",
+      "historical_evidence": {
+        "prior_evidence_status": "measured",
+        "receipt": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
+      },
+      "league_config_key": "t14-1qb-half-te0.0-b4-ir1",
+      "unsupported_reason": "authoritative candidate disposition is do_not_promote"
+    },
+    "t14-2qb-std-te0.5-b4-ir1": {
+      "evidence_status": "unsupported",
+      "historical_evidence": {
+        "prior_evidence_status": "unsupported",
+        "receipt": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
+      },
+      "league_config_key": "t14-2qb-std-te0.5-b4-ir1",
+      "unsupported_reason": "authoritative candidate disposition is do_not_promote"
+    },
+    "t14-superflex-ppr-te0.5-b8-ir0": {
+      "evidence_status": "unsupported",
+      "historical_evidence": {
+        "prior_evidence_status": "measured",
+        "receipt": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v1.json"
+      },
+      "league_config_key": "t14-superflex-ppr-te0.5-b8-ir0",
+      "unsupported_reason": "authoritative candidate disposition is do_not_promote"
+    }
+  },
+  "schema_version": 2,
+  "source_kind": "consumer_disposition",
+  "source_receipt": ".orchestrator-v6/experiments/bench-portfolio-c03-source-v2.json",
+  "source_v1_sha256": "01734b796d605788bf6b6815d2484242a4c25a2fe1c0a148f173280d3efc7e2b"
+}

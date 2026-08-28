@@ -420,10 +420,12 @@ def test_real_data_distillation_is_seed_reproducible_and_lifts_mcts_agreement() 
 
 
 def test_bench_slot_accepts_every_position_and_leaves_starter_slots_alone() -> None:
-    """E11 added `BN`; the starter/FLEX/SUPERFLEX vocabulary is unchanged."""
+    """BN widens to every position; flexible aliases share exact eligibility."""
     from blitz_engine.value.mcts import slot_positions as sp
 
     assert sp("BN") == frozenset({"QB", "RB", "WR", "TE", "K", "DST"})
     assert sp("FLEX") == frozenset({"RB", "WR", "TE"})
-    assert sp("SUPERFLEX") == frozenset({"QB", "RB", "WR", "TE"})
+    offensive = frozenset({"QB", "RB", "WR", "TE"})
+    assert sp("SUPERFLEX") == sp("OP") == sp("SFLX") == offensive
+    assert not ({"K", "DST"} & sp("OP"))
     assert sp("QB") == frozenset({"QB"}) and sp("DST") == frozenset({"DST"})

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "experiment_id": "bench-portfolio-c03-v1",
+  "status": "preregistered_not_executed",
+  "frozen_at_utc": "2026-08-26T00:00:00Z",
+  "accepted_base_sha": "b81541c226dd5aeeacbe9ed79df927853a4b8954",
+  "dependencies": {
+    "c02_status": "not_accepted",
+    "c02_contract_only": ["point_in_time_inputs", "shared_waiver_pool", "paired_outcomes", "deterministic_seed"],
+    "forbidden_dependency": "No C03 arm may depend on a private C02 implementation detail."
+  },
+  "hypotheses": [
+    "Complete feasible bench-count vectors outperform or tie independently optimized positional bounds under the preregistered paired season metrics.",
+    "FLEX and superflex substitution, correlated contingencies, starter fragility, and waiver replaceability materially change the best composition in at least one mandatory slice.",
+    "A shared versioned shape with explicit evidence status and soft marginal costs can be consumed in the browser with exact canonical parity and explicit degradation."
+  ],
+  "arms": {
+    "control": "accepted C01A policy using independent positional bounds/overfill behavior",
+    "candidate": "complete-vector portfolio selected from preregistered evidence; soft marginal costs only"
+  },
+  "mandatory_configs": [
+    "t10-1qb-half-te0.0-b4-ir0",
+    "t10-superflex-half-te0.5-b8-ir1",
+    "t10-2qb-ppr-te0.0-b8-ir0",
+    "t12-1qb-ppr-te0.5-b8-ir0",
+    "t12-superflex-std-te0.0-b4-ir1",
+    "t12-2qb-half-te0.5-b8-ir1",
+    "t14-1qb-half-te0.0-b4-ir1",
+    "t14-superflex-ppr-te0.5-b8-ir0",
+    "t14-2qb-std-te0.5-b4-ir1"
+  ],
+  "blocked_configs": {
+    "t14-2qb-std-te0.5-b4-ir1": "Known -25.3 started-points regression (p=0.0025); remains unsupported until all thresholds clear."
+  },
+  "seasons": {"fit": [2021, 2024], "held_out": [2018]},
+  "board_seeds": [2026082501, 2026082502, 2026082503, 2026082504],
+  "season_seeds": [2026082601, 2026082602, 2026082603, 2026082604],
+  "seats": "all seats in every league, mirrored arm assignment, common random numbers",
+  "metrics": [
+    "started_points_delta", "paired_h2h_delta", "playoff_proxy_delta", "championship_proxy_delta",
+    "lineup_illegal_count", "bench_budget_violation_count", "vector_coverage_rate",
+    "waiver_adds_delta", "runtime_seconds", "peak_rss_mib", "browser_artifact_bytes"
+  ],
+  "thresholds": {
+    "deterministic_failures": 0,
+    "lineup_illegal_count": 0,
+    "bench_budget_violation_count": 0,
+    "vector_coverage_rate": 1.0,
+    "started_points_ci95_lower_bound": 0.0,
+    "paired_h2h_ci95_lower_bound": -0.005,
+    "playoff_proxy_ci95_lower_bound": -0.002,
+    "championship_proxy_ci95_lower_bound": -0.002,
+    "mandatory_slice_regressions": 0,
+    "blocked_slice_must_clear_individually": true,
+    "local_runtime_minutes_max": 60,
+    "peak_rss_mib_max": 2048,
+    "browser_artifact_bytes_max": 262144
+  },
+  "failure_interpretation": {
+    "deterministic_or_parity_failure": "BLOCK_C03",
+    "candidate_below_any_numerical_threshold": "DO_NOT_PROMOTE_PRESERVE_C01A",
+    "blocked_slice_not_individually_cleared": "KEEP_UNSUPPORTED",
+    "missing_or_malformed_evidence": "DEGRADE_EXPLICITLY_USE_SOFT_FALLBACK",
+    "inconclusive": "PRESERVE_C01A"
+  },
+  "execution_rule": "This manifest is immutable. Amendments create bench-portfolio-c03-v2.json or later before execution. This preparation branch may run synthetic prototypes only."
+}

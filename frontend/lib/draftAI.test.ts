@@ -6,7 +6,6 @@ import {
   marginalStarterValue,
   DEFAULT_POLICY,
   detectRuns,
-  byeCover,
   injuryCover,
   ceilingWeeks,
   availability,
@@ -19,9 +18,11 @@ import {
   pickRawVorp,
   pickAdp,
   candidatePool,
+  STARTABLE_WEEKS,
 } from "./draftAI";
 import { SUPERFLEX_ROSTER } from "./draft";
-import { runSnakeDraft, mulberry32 } from "./snakeDraft";
+import { weeklyByeCoverage, contingentValuation } from "./contingency";
+import { runSnakeDraft, runSnakeDraftAsync, mulberry32 } from "./snakeDraft";
 import type { PlayerWithValue } from "./types";
 
 // Minimal player factory — only the fields the policy reads. Value-fields (boom, vor,
@@ -116,27 +117,54 @@ describe("marginalStarterValue", () => {
   });
 });
 
-describe("byeCover", () => {
-  it("counts one start per distinct same-position starter bye", () => {
-    const cand = mk("wr4", "WR", 120);
-    const starters = [mk("wr1", "WR", 240, { bye_week: 7 }), mk("wr2", "WR", 230, { bye_week: 11 })];
-    expect(byeCover(cand, starters)).toBe(2);
+describe("bye coverage (consolidated, candidate-aware)", () => {
+  it("counts one start per distinct coverable starter bye when the candidate's bye differs", () => {
+    const cand = mk("wr4", "WR", 120, { bye_week: 4 });
+    const starters = [
+      { slot: "WR", player: mk("wr1", "WR", 240, { bye_week: 7 }) },
+      { slot: "WR", player: mk("wr2", "WR", 230, { bye_week: 11 }) },
+    ];
+    const r = weeklyByeCoverage(cand, starters, SUPERFLEX_ROSTER);
+    expect(r.expectedStarts).toBe(2);
+    expect(r.covered).toEqual([
+      { week: 7, slot: "WR", starterId: "wr1" },
+      { week: 11, slot: "WR", starterId: "wr2" },
+    ]);
   });
-  it("is 0 when no same-position starter has a bye", () => {
-    expect(byeCover(mk("wr4", "WR", 120), [mk("rb1", "RB", 240, { bye_week: 7 })])).toBe(0);
+  it("gives nothing for a shared bye or an ineligible slot", () => {
+    const cand = mk("wr4", "WR", 120, { bye_week: 7 });
+    expect(
+      weeklyByeCoverage(cand, [{ slot: "WR", player: mk("wr1", "WR", 240, { bye_week: 7 }) }], SUPERFLEX_ROSTER).covered,
+    ).toEqual([]);
+    expect(
+      weeklyByeCoverage(mk("wr4", "WR", 120, { bye_week: 4 }), [{ slot: "RB", player: mk("rb1", "RB", 240, { bye_week: 7 }) }], SUPERFLEX_ROSTER).covered,
+    ).toEqual([]);
   });
 });
 
-describe("injuryCover", () => {
+describe("injuryCover (shared contingent valuation)", () => {
   it("is 0 with no starter to cover", () => {
-    expect(injuryCover(mk("rb3", "RB", 100), null, false, DEFAULT_POLICY)).toBe(0);
+    const cand = mk("rb3", "RB", 100);
+    expect(injuryCover(cand, null, contingentValuation(cand, null), DEFAULT_POLICY)).toBe(0);
   });
-  it("amplifies a same-team handcuff over a generic backup", () => {
-    const cand = mk("rb-hc", "RB", 100, { nfl_team: "KC" });
-    const starter = mk("rb1", "RB", 240, { nfl_team: "KC" });
-    const hc = injuryCover(cand, starter, true, DEFAULT_POLICY);
-    const generic = injuryCover(cand, starter, false, DEFAULT_POLICY);
+  it("an evidenced handcuff behind an ailing starter beats the generic fill-in prior", () => {
+    const cand = mk("rb-hc", "RB", 100, { nfl_team: "KC", depth: 2 });
+    const starter = mk("rb1", "RB", 240, { nfl_team: "KC", depth: 1 });
+    starter.injury_status = "Questionable";
+    const supported = contingentValuation(cand, starter);
+    expect(supported.eligible).toBe(true);
+    const hc = injuryCover(cand, starter, supported, DEFAULT_POLICY);
+    const genericCand = mk("rb-gen", "RB", 100, { nfl_team: "DAL", depth: 2 });
+    const generic = injuryCover(genericCand, starter, contingentValuation(genericCand, starter), DEFAULT_POLICY);
     expect(hc).toBeGreaterThan(generic);
+  });
+  it("never credits more starts than the season, even for a near-certain inheritance", () => {
+    const cand = mk("rb-hc", "RB", 100, { nfl_team: "KC", depth: 2 });
+    const starter = mk("rb1", "RB", 240, { nfl_team: "KC", depth: 1 });
+    starter.injury_status = "IR";
+    const starts = injuryCover(cand, starter, contingentValuation(cand, starter), DEFAULT_POLICY);
+    expect(starts).toBeLessThanOrEqual(STARTABLE_WEEKS);
+    expect(starts).toBeGreaterThan(0);
   });
 });
 
@@ -175,9 +203,9 @@ describe("availability", () => {
 });
 
 describe("isCapped (hard K/DST gate)", () => {
-  it("blocks a 2nd K before the final rounds and allows it inside them", () => {
+  it("blocks a 2nd K in every round", () => {
     expect(isCapped(mk("k2", "K", 120), { K: 1 }, false)).toBe(true);
-    expect(isCapped(mk("k2", "K", 120), { K: 1 }, true)).toBe(false);
+    expect(isCapped(mk("k2", "K", 120), { K: 1 }, true)).toBe(true);
     expect(isCapped(mk("k1", "K", 120), { K: 0 }, false)).toBe(false);
   });
 });
@@ -208,7 +236,7 @@ describe("scoreBoard assembly", () => {
 });
 
 describe("full-draft regression", () => {
-  it("no team holds 2+ K or 2+ DST before the final 2 rounds (the anti-hoarding cap)", () => {
+  it("no team holds 2+ K or 2+ DST before the final 2 rounds (the anti-hoarding cap)", async () => {
     // Realistic pool: offense is plentiful and high-value; K/DST are few and low-value
     // (~110-140 pts, as in real leagues). The policy defers K/DST on value, and the hard
     // cap prevents a 2nd before the final rounds. [pos, count, topProj, bottomProj]
@@ -229,7 +257,7 @@ describe("full-draft regression", () => {
         n++;
       }
     }
-    const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(42), randomness: 0 });
+    const picks = await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(42), randomness: 0 });
     const totalRounds = picks.length / 12;
     const earlyByTeam: Record<number, { K: number; DST: number }> = {};
     for (const p of picks) {
@@ -447,21 +475,21 @@ describe("1.3 — more dynamic to rival drafting", () => {
     const pre = marginalStarterValue(rbs[0], c, PRE_TUNE);
     expect(tuned).toBeGreaterThan(pre); // the run is worth more under the tuned coefficients
   });
-  it("backtest still beats both naive baselines (no regression)", () => {
+  it("backtest still beats both naive baselines (no regression)", async () => {
     const players = realisticPool();
     const seed = 7;
-    const v2 = teamLineupTotal(players, runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 }));
-    const raw = teamLineupTotal(players, runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0, chooser: pickRawVorp }));
-    const adp = teamLineupTotal(players, runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0, chooser: pickAdp }));
+    const v2 = teamLineupTotal(players, await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 }));
+    const raw = teamLineupTotal(players, await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0, chooser: pickRawVorp }));
+    const adp = teamLineupTotal(players, await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0, chooser: pickAdp }));
     expect(v2).toBeGreaterThan(raw);
     expect(v2).toBeGreaterThan(adp);
   });
 });
 
 describe("1.4 — prioritize QB/RB/TE/WR over K/DST", () => {
-  it("K/DST appear only in the final rounds of a full sim", () => {
+  it("K/DST appear only in the final rounds of a full sim", async () => {
     const players = realisticPool();
-    const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(11), randomness: 0 });
+    const picks = await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(11), randomness: 0 });
     const totalRounds = picks.length / 12;
     const kdstRounds = picks
       .filter((p) => { const pos = norm(p.player.position); return pos === "K" || pos === "DST"; })

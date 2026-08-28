@@ -1,0 +1,1171 @@
+{
+  "generated_utc": "2026-08-26T22:02:05Z",
+  "manifest": ".worktrees/v6-review/.orchestrator-v6/experiments/player-calibration-v1.json (frozen, reviewer-owned)",
+  "inputs": {
+    "snapshot_rows": {
+      "history": 1682,
+      "players": 4265
+    },
+    "benchmarks": {
+      "fantasypros-half-ppr-adp": {
+        "api_url": "https://partners.fantasypros.com/api/v1/consensus-rankings.php?sport=NFL&year=2026&week=0&position=ALL&type=ADP&scoring=HALF&experts=available",
+        "deviation": "rows fetched from the page's own partners endpoint; the manifest URL's HTML carries only a 5-row server-rendered preview",
+        "included_platforms": "236,439,4350",
+        "platform_count": 3,
+        "raw_sha256": "71b4242cd24229a77e8afce051c39660c416ad0e7c12c562c103155e720b0a4c",
+        "retrieved_utc": "2026-08-26T21:54:26Z",
+        "row_count": 346,
+        "source_last_updated": "8/26",
+        "url": "https://www.fantasypros.com/nfl/adp/half-point-ppr-overall.php/"
+      },
+      "fantasypros-half-ppr-ecr": {
+        "deviation": "retrieval variant: manifest cheatsheet URL server-renders only 24 rows; the print rankings page embeds the identical half-PPR draft ECR in full",
+        "expert_count": 112,
+        "manifest_url": "https://www.fantasypros.com/nfl/cheatsheets/top-half-ppr-players.php?week=draft",
+        "raw_sha256": "999492c557343134d9852e3a4f36e60ea475a0747f5bc02a04debb0da2f74255",
+        "retrieved_utc": "2026-08-26T21:54:26Z",
+        "row_count": 934,
+        "url": "https://www.fantasypros.com/nfl/rankings/half-point-ppr-cheatsheets.php?print=true"
+      },
+      "fantasypros-superflex-ecr": {
+        "expert_count": 104,
+        "raw_sha256": "a537f4c0ed11b8dbde9f9fb6da55989dbdbac00897f8f34db5b722060b48d54e",
+        "retrieved_utc": "2026-08-26T21:54:27Z",
+        "row_count": 525,
+        "url": "https://www.fantasypros.com/nfl/rankings/superflex-cheatsheets.php?print=true"
+      }
+    }
+  },
+  "results": {
+    "12-team-half-ppr-1qb": {
+      "fantasypros-half-ppr-ecr": {
+        "v5": {
+          "matched": 150,
+          "unmatched": [],
+          "unmatched_top_100_rate": 0.0,
+          "spearman_rho": 0.7292,
+          "weighted_absolute_rank_error": 12.164,
+          "top_12_recall": 0.5,
+          "top_24_recall": 0.6667,
+          "top_50_recall": 0.78,
+          "median_rank_bias_by_position": {
+            "QB": -22.0,
+            "RB": 8.0,
+            "WR": 8.0,
+            "TE": -27.0
+          },
+          "largest_absolute_outliers": [
+            {
+              "player": "Luther Burden III",
+              "position": "WR",
+              "benchmark_rank": 50,
+              "board_rank": 1969,
+              "dense_delta": 99.0
+            },
+            {
+              "player": "Baker Mayfield",
+              "position": "QB",
+              "benchmark_rank": 120,
+              "board_rank": 34,
+              "dense_delta": -86.0
+            },
+            {
+              "player": "Tyrone Tracy Jr.",
+              "position": "RB",
+              "benchmark_rank": 150,
+              "board_rank": 73,
+              "dense_delta": -81.0
+            },
+            {
+              "player": "Travis Etienne Jr.",
+              "position": "RB",
+              "benchmark_rank": 45,
+              "board_rank": 379,
+              "dense_delta": 76.0
+            },
+            {
+              "player": "Sam Darnold",
+              "position": "QB",
+              "benchmark_rank": 140,
+              "board_rank": 70,
+              "dense_delta": -73.0
+            },
+            {
+              "player": "Mark Andrews",
+              "position": "TE",
+              "benchmark_rank": 124,
+              "board_rank": 57,
+              "dense_delta": -69.0
+            },
+            {
+              "player": "George Kittle",
+              "position": "TE",
+              "benchmark_rank": 94,
+              "board_rank": 27,
+              "dense_delta": -67.0
+            },
+            {
+              "player": "Chris Olave",
+              "position": "WR",
+              "benchmark_rank": 24,
+              "board_rank": 106,
+              "dense_delta": 65.0
+            },
+            {
+              "player": "Harold Fannin Jr.",
+              "position": "TE",
+              "benchmark_rank": 79,
+              "board_rank": 558,
+              "dense_delta": 64.0
+            },
+            {
+              "player": "Jared Goff",
+              "position": "QB",
+              "benchmark_rank": 110,
+              "board_rank": 48,
+              "dense_delta": -63.0
+            }
+          ],
+          "cohorts": {
+            "all": {
+              "n": 150,
+              "mean_abs_err": 23.99,
+              "median_free_bias": 0.0
+            },
+            "RB": {
+              "n": 51,
+              "mean_abs_err": 20.37,
+              "median_free_bias": 9.51
+            },
+            "WR": {
+              "n": 57,
+              "mean_abs_err": 20.75,
+              "median_free_bias": 9.63
+            },
+            "injury_designation": {
+              "n": 36,
+              "mean_abs_err": 24.56,
+              "median_free_bias": 4.72
+            },
+            "veteran_age_30_plus": {
+              "n": 21,
+              "mean_abs_err": 30.62,
+              "median_free_bias": -23.86
+            },
+            "TE": {
+              "n": 19,
+              "mean_abs_err": 33.68,
+              "median_free_bias": -26.74
+            },
+            "missing_adp": {
+              "n": 2,
+              "mean_abs_err": 25.0,
+              "median_free_bias": -18.0
+            },
+            "QB": {
+              "n": 23,
+              "mean_abs_err": 32.0,
+              "median_free_bias": -22.87
+            },
+            "rookie": {
+              "n": 8,
+              "mean_abs_err": 22.25,
+              "median_free_bias": 21.0
+            }
+          }
+        },
+        "v6": {
+          "matched": 150,
+          "unmatched": [],
+          "unmatched_top_100_rate": 0.0,
+          "spearman_rho": 0.7155,
+          "weighted_absolute_rank_error": 12.71,
+          "top_12_recall": 0.5,
+          "top_24_recall": 0.6667,
+          "top_50_recall": 0.76,
+          "median_rank_bias_by_position": {
+            "QB": -22.0,
+            "RB": 6.0,
+            "WR": 5.0,
+            "TE": -38.0
+          },
+          "largest_absolute_outliers": [
+            {
+              "player": "Luther Burden III",
+              "position": "WR",
+              "benchmark_rank": 50,
+              "board_rank": 3516,
+              "dense_delta": 99.0
+            },
+            {
+              "player": "Baker Mayfield",
+              "position": "QB",
+              "benchmark_rank": 120,
+              "board_rank": 33,
+              "dense_delta": -88.0
+            },
+            {
+              "player": "Travis Etienne Jr.",
+              "position": "RB",
+              "benchmark_rank": 45,
+              "board_rank": 394,
+              "dense_delta": 79.0
+            },
+            {
+              "player": "Mark Andrews",
+              "position": "TE",
+              "benchmark_rank": 124,
+              "board_rank": 51,
+              "dense_delta": -75.0
+            },
+            {
+              "player": "Tyrone Tracy Jr.",
+              "position": "RB",
+              "benchmark_rank": 150,
+              "board_rank": 87,
+              "dense_delta": -73.0
+            },
+            {
+              "player": "Chris Olave",
+              "position": "WR",
+              "benchmark_rank": 24,
+              "board_rank": 315,
+              "dense_delta": 70.0
+            },
+            {
+              "player": "George Kittle",
+              "position": "TE",
+              "benchmark_rank": 94,
+              "board_rank": 24,
+              "dense_delta": -70.0
+            },
+            {
+              "player": "Jared Goff",
+              "position": "QB",
+              "benchmark_rank": 110,
+              "board_rank": 47,
+              "dense_delta": -65.0
+            },
+            {
+              "player": "Sam Darnold",
+              "position": "QB",
+              "benchmark_rank": 140,
+              "board_rank": 84,
+              "dense_delta": -64.0
+            },
+            {
+              "player": "Emeka Egbuka",
+              "position": "WR",
+              "benchmark_rank": 41,
+              "board_rank": 344,
+              "dense_delta": 63.0
+            }
+          ],
+          "cohorts": {
+            "all": {
+              "n": 150,
+              "mean_abs_err": 24.81,
+              "median_free_bias": 0.0
+            },
+            "RB": {
+              "n": 51,
+              "mean_abs_err": 22.8,
+              "median_free_bias": 8.73
+            },
+            "WR": {
+              "n": 57,
+              "mean_abs_err": 20.68,
+              "median_free_bias": 9.74
+            },
+            "injury_designation": {
+              "n": 36,
+              "mean_abs_err": 25.75,
+              "median_free_bias": 5.92
+            },
+            "veteran_age_30_plus": {
+              "n": 21,
+              "mean_abs_err": 32.0,
+              "median_free_bias": -26.76
+            },
+            "TE": {
+              "n": 19,
+              "mean_abs_err": 36.0,
+              "median_free_bias": -28.0
+            },
+            "missing_adp": {
+              "n": 2,
+              "mean_abs_err": 25.5,
+              "median_free_bias": -18.5
+            },
+            "QB": {
+              "n": 23,
+              "mean_abs_err": 30.26,
+              "median_free_bias": -20.35
+            },
+            "rookie": {
+              "n": 8,
+              "mean_abs_err": 24.5,
+              "median_free_bias": 22.75
+            }
+          }
+        }
+      },
+      "fantasypros-half-ppr-adp": {
+        "v5": {
+          "matched": 141,
+          "unmatched": [],
+          "unmatched_top_100_rate": 0.0,
+          "spearman_rho": 0.697,
+          "weighted_absolute_rank_error": 12.081,
+          "top_12_recall": 0.5833,
+          "top_24_recall": 0.75,
+          "top_50_recall": 0.76,
+          "median_rank_bias_by_position": {
+            "QB": -31.5,
+            "RB": 6.0,
+            "WR": 3.5,
+            "TE": -11.0
+          },
+          "largest_absolute_outliers": [
+            {
+              "player": "Baker Mayfield",
+              "position": "QB",
+              "benchmark_rank": 131,
+              "board_rank": 34,
+              "dense_delta": -92.0
+            },
+            {
+              "player": "Luther Burden III",
+              "position": "WR",
+              "benchmark_rank": 54,
+              "board_rank": 1969,
+              "dense_delta": 87.0
+            },
+            {
+              "player": "Travis Etienne Jr.",
+              "position": "RB",
+              "benchmark_rank": 40,
+              "board_rank": 379,
+              "dense_delta": 77.0
+            },
+            {
+              "player": "Tyrone Tracy Jr.",
+              "position": "RB",
+              "benchmark_rank": 149,
+              "board_rank": 73,
+              "dense_delta": -71.0
+            },
+            {
+              "player": "Brock Purdy",
+              "position": "QB",
+              "benchmark_rank": 109,
+              "board_rank": 40,
+              "dense_delta": -70.0
+            },
+            {
+              "player": "Jared Goff",
+              "position": "QB",
+              "benchmark_rank": 120,
+              "board_rank": 48,
+              "dense_delta": -70.0
+            },
+            {
+              "player": "Harold Fannin Jr.",
+              "position": "TE",
+              "benchmark_rank": 68,
+              "board_rank": 558,
+              "dense_delta": 68.0
+            },
+            {
+              "player": "Sam Darnold",
+              "position": "QB",
+              "benchmark_rank": 142,
+              "board_rank": 70,
+              "dense_delta": -67.0
+            },
+            {
+              "player": "Mark Andrews",
+              "position": "TE",
+              "benchmark_rank": 122,
+              "board_rank": 57,
+              "dense_delta": -64.0
+            },
+            {
+              "player": "George Kittle",
+              "position": "TE",
+              "benchmark_rank": 90,
+              "board_rank": 27,
+              "dense_delta": -63.0
+            }
+          ],
+          "cohorts": {
+            "all": {
+              "n": 141,
+              "mean_abs_err": 23.65,
+              "median_free_bias": 0.0
+            },
+            "RB": {
+              "n": 50,
+              "mean_abs_err": 22.16,
+              "median_free_bias": 10.48
+            },
+            "WR": {
+              "n": 56,
+              "mean_abs_err": 20.09,
+              "median_free_bias": 5.59
+            },
+            "injury_designation": {
+              "n": 35,
+              "mean_abs_err": 26.17,
+              "median_free_bias": 3.83
+            },
+            "veteran_age_30_plus": {
+              "n": 21,
+              "mean_abs_err": 29.43,
+              "median_free_bias": -24.76
+            },
+            "missing_adp": {
+              "n": 1,
+              "mean_abs_err": 12.0,
+              "median_free_bias": 12.0
+            },
+            "QB": {
+              "n": 20,
+              "mean_abs_err": 36.55,
+              "median_free_bias": -31.15
+            },
+            "TE": {
+              "n": 15,
+              "mean_abs_err": 24.67,
+              "median_free_bias": -14.27
+            },
+            "rookie": {
+              "n": 10,
+              "mean_abs_err": 23.1,
+              "median_free_bias": 22.7
+            }
+          }
+        },
+        "v6": {
+          "matched": 141,
+          "unmatched": [],
+          "unmatched_top_100_rate": 0.0,
+          "spearman_rho": 0.6823,
+          "weighted_absolute_rank_error": 12.684,
+          "top_12_recall": 0.5833,
+          "top_24_recall": 0.75,
+          "top_50_recall": 0.74,
+          "median_rank_bias_by_position": {
+            "QB": -27.5,
+            "RB": 2.5,
+            "WR": 2.5,
+            "TE": -14.0
+          },
+          "largest_absolute_outliers": [
+            {
+              "player": "Baker Mayfield",
+              "position": "QB",
+              "benchmark_rank": 131,
+              "board_rank": 33,
+              "dense_delta": -94.0
+            },
+            {
+              "player": "Luther Burden III",
+              "position": "WR",
+              "benchmark_rank": 54,
+              "board_rank": 3516,
+              "dense_delta": 87.0
+            },
+            {
+              "player": "Travis Etienne Jr.",
+              "position": "RB",
+              "benchmark_rank": 40,
+              "board_rank": 394,
+              "dense_delta": 79.0
+            },
+            {
+              "player": "Jared Goff",
+              "position": "QB",
+              "benchmark_rank": 120,
+              "board_rank": 47,
+              "dense_delta": -72.0
+            },
+            {
+              "player": "Mark Andrews",
+              "position": "TE",
+              "benchmark_rank": 122,
+              "board_rank": 51,
+              "dense_delta": -70.0
+            },
+            {
+              "player": "George Kittle",
+              "position": "TE",
+              "benchmark_rank": 90,
+              "board_rank": 24,
+              "dense_delta": -66.0
+            },
+            {
+              "player": "Brock Purdy",
+              "position": "QB",
+              "benchmark_rank": 109,
+              "board_rank": 45,
+              "dense_delta": -66.0
+            },
+            {
+              "player": "Chris Olave",
+              "position": "WR",
+              "benchmark_rank": 28,
+              "board_rank": 315,
+              "dense_delta": 65.0
+            },
+            {
+              "player": "Harold Fannin Jr.",
+              "position": "TE",
+              "benchmark_rank": 68,
+              "board_rank": 1114,
+              "dense_delta": 65.0
+            },
+            {
+              "player": "Tyrone Tracy Jr.",
+              "position": "RB",
+              "benchmark_rank": 149,
+              "board_rank": 87,
+              "dense_delta": -63.0
+            }
+          ],
+          "cohorts": {
+            "all": {
+              "n": 141,
+              "mean_abs_err": 24.47,
+              "median_free_bias": 0.0
+            },
+            "RB": {
+              "n": 50,
+              "mean_abs_err": 24.3,
+              "median_free_bias": 9.78
+            },
+            "WR": {
+              "n": 56,
+              "mean_abs_err": 20.21,
+              "median_free_bias": 5.61
+            },
+            "injury_designation": {
+              "n": 35,
+              "mean_abs_err": 27.83,
+              "median_free_bias": 4.97
+            },
+            "veteran_age_30_plus": {
+              "n": 21,
+              "mean_abs_err": 31.95,
+              "median_free_bias": -27.95
+            },
+            "missing_adp": {
+              "n": 1,
+              "mean_abs_err": 12.0,
+              "median_free_bias": 12.0
+            },
+            "QB": {
+              "n": 20,
+              "mean_abs_err": 34.0,
+              "median_free_bias": -28.1
+            },
+            "TE": {
+              "n": 15,
+              "mean_abs_err": 28.2,
+              "median_free_bias": -16.07
+            },
+            "rookie": {
+              "n": 10,
+              "mean_abs_err": 24.6,
+              "median_free_bias": 23.8
+            }
+          }
+        }
+      }
+    },
+    "12-team-half-ppr-superflex": {
+      "fantasypros-superflex-ecr": {
+        "v5": {
+          "matched": 150,
+          "unmatched": [],
+          "unmatched_top_100_rate": 0.0,
+          "spearman_rho": 0.6834,
+          "weighted_absolute_rank_error": 17.496,
+          "top_12_recall": 0.5833,
+          "top_24_recall": 0.625,
+          "top_50_recall": 0.76,
+          "median_rank_bias_by_position": {
+            "QB": 36.0,
+            "RB": -7.0,
+            "WR": -5.0,
+            "TE": -38.5
+          },
+          "largest_absolute_outliers": [
+            {
+              "player": "Jaxson Dart",
+              "position": "QB",
+              "benchmark_rank": 23,
+              "board_rank": 425,
+              "dense_delta": 102.0
+            },
+            {
+              "player": "Tyler Shough",
+              "position": "QB",
+              "benchmark_rank": 51,
+              "board_rank": 747,
+              "dense_delta": 93.0
+            },
+            {
+              "player": "Malik Willis",
+              "position": "QB",
+              "benchmark_rank": 55,
+              "board_rank": 3402,
+              "dense_delta": 92.0
+            },
+            {
+              "player": "Trevor Lawrence",
+              "position": "QB",
+              "benchmark_rank": 14,
+              "board_rank": 206,
+              "dense_delta": 88.0
+            },
+            {
+              "player": "George Kittle",
+              "position": "TE",
+              "benchmark_rank": 110,
+              "board_rank": 28,
+              "dense_delta": -82.0
+            },
+            {
+              "player": "Cam Ward",
+              "position": "QB",
+              "benchmark_rank": 71,
+              "board_rank": 3548,
+              "dense_delta": 77.0
+            },
+            {
+              "player": "Mark Andrews",
+              "position": "TE",
+              "benchmark_rank": 129,
+              "board_rank": 55,
+              "dense_delta": -76.0
+            },
+            {
+              "player": "Daniel Jones",
+              "position": "QB",
+              "benchmark_rank": 66,
+              "board_rank": 538,
+              "dense_delta": 75.0
+            },
+            {
+              "player": "Luther Burden III",
+              "position": "WR",
+              "benchmark_rank": 76,
+              "board_rank": 2229,
+              "dense_delta": 70.0
+            },
+            {
+              "player": "Jordan Love",
+              "position": "QB",
+              "benchmark_rank": 45,
+              "board_rank": 358,
+              "dense_delta": 69.0
+            }
+          ],
+          "cohorts": {
+            "all": {
+              "n": 150,
+              "mean_abs_err": 26.0,
+              "median_free_bias": 0.0
+            },
+            "QB": {
+              "n": 30,
+              "mean_abs_err": 41.53,
+              "median_free_bias": 40.67
+            },
+            "veteran_age_30_plus": {
+              "n": 23,
+              "mean_abs_err": 34.13,
+              "median_free_bias": -6.65
+            },
+            "RB": {
+              "n": 47,
+              "mean_abs_err": 18.38,
+              "median_free_bias": -6.77
+            },
+            "WR": {
+              "n": 57,
+              "mean_abs_err": 19.18,
+              "median_free_bias": -4.89
+            },
+            "injury_designation": {
+              "n": 36,
+              "mean_abs_err": 26.42,
+              "median_free_bias": -8.36
+            },
+            "TE": {
+              "n": 16,
+              "mean_abs_err": 43.56,
+              "median_free_bias": -38.94
+            },
+            "missing_adp": {
+              "n": 6,
+              "mean_abs_err": 29.33,
+              "median_free_bias": 26.0
+            },
+            "rookie": {
+              "n": 8,
+              "mean_abs_err": 11.12,
+              "median_free_bias": 8.62
+            }
+          }
+        },
+        "v6": {
+          "matched": 150,
+          "unmatched": [],
+          "unmatched_top_100_rate": 0.0,
+          "spearman_rho": 0.7847,
+          "weighted_absolute_rank_error": 11.676,
+          "top_12_recall": 0.75,
+          "top_24_recall": 0.625,
+          "top_50_recall": 0.82,
+          "median_rank_bias_by_position": {
+            "QB": 8.5,
+            "RB": -4.0,
+            "WR": -4.0,
+            "TE": -27.5
+          },
+          "largest_absolute_outliers": [
+            {
+              "player": "George Kittle",
+              "position": "TE",
+              "benchmark_rank": 110,
+              "board_rank": 32,
+              "dense_delta": -78.0
+            },
+            {
+              "player": "Malik Willis",
+              "position": "QB",
+              "benchmark_rank": 55,
+              "board_rank": 452,
+              "dense_delta": 74.0
+            },
+            {
+              "player": "Luther Burden III",
+              "position": "WR",
+              "benchmark_rank": 76,
+              "board_rank": 3902,
+              "dense_delta": 73.0
+            },
+            {
+              "player": "Mark Andrews",
+              "position": "TE",
+              "benchmark_rank": 129,
+              "board_rank": 59,
+              "dense_delta": -72.0
+            },
+            {
+              "player": "Jacoby Brissett",
+              "position": "QB",
+              "benchmark_rank": 86,
+              "board_rank": 4019,
+              "dense_delta": 64.0
+            },
+            {
+              "player": "Jaxson Dart",
+              "position": "QB",
+              "benchmark_rank": 23,
+              "board_rank": 95,
+              "dense_delta": 62.0
+            },
+            {
+              "player": "Chris Olave",
+              "position": "WR",
+              "benchmark_rank": 41,
+              "board_rank": 326,
+              "dense_delta": 59.0
+            },
+            {
+              "player": "Tyler Shough",
+              "position": "QB",
+              "benchmark_rank": 51,
+              "board_rank": 359,
+              "dense_delta": 59.0
+            },
+            {
+              "player": "Travis Etienne Jr.",
+              "position": "RB",
+              "benchmark_rank": 67,
+              "board_rank": 409,
+              "dense_delta": 59.0
+            },
+            {
+              "player": "Cam Ward",
+              "position": "QB",
+              "benchmark_rank": 71,
+              "board_rank": 436,
+              "dense_delta": 57.0
+            }
+          ],
+          "cohorts": {
+            "all": {
+              "n": 150,
+              "mean_abs_err": 22.24,
+              "median_free_bias": 0.0
+            },
+            "QB": {
+              "n": 30,
+              "mean_abs_err": 21.77,
+              "median_free_bias": 15.7
+            },
+            "veteran_age_30_plus": {
+              "n": 23,
+              "mean_abs_err": 28.83,
+              "median_free_bias": -17.0
+            },
+            "RB": {
+              "n": 47,
+              "mean_abs_err": 21.21,
+              "median_free_bias": 1.04
+            },
+            "WR": {
+              "n": 57,
+              "mean_abs_err": 19.53,
+              "median_free_bias": -0.44
+            },
+            "injury_designation": {
+              "n": 36,
+              "mean_abs_err": 25.0,
+              "median_free_bias": -2.94
+            },
+            "TE": {
+              "n": 16,
+              "mean_abs_err": 35.81,
+              "median_free_bias": -30.94
+            },
+            "missing_adp": {
+              "n": 6,
+              "mean_abs_err": 18.83,
+              "median_free_bias": 7.17
+            },
+            "rookie": {
+              "n": 8,
+              "mean_abs_err": 15.62,
+              "median_free_bias": 13.62
+            }
+          }
+        }
+      }
+    },
+    "14-team-half-ppr-2qb": {
+      "fantasypros-superflex-ecr": {
+        "v5": {
+          "matched": 150,
+          "unmatched": [],
+          "unmatched_top_100_rate": 0.0,
+          "spearman_rho": 0.8344,
+          "weighted_absolute_rank_error": 9.906,
+          "top_12_recall": 0.75,
+          "top_24_recall": 0.6667,
+          "top_50_recall": 0.82,
+          "median_rank_bias_by_position": {
+            "QB": 9.0,
+            "RB": -4.0,
+            "WR": 0.0,
+            "TE": -23.5
+          },
+          "largest_absolute_outliers": [
+            {
+              "player": "Malik Willis",
+              "position": "QB",
+              "benchmark_rank": 55,
+              "board_rank": 422,
+              "dense_delta": 75.0
+            },
+            {
+              "player": "Luther Burden III",
+              "position": "WR",
+              "benchmark_rank": 76,
+              "board_rank": 2304,
+              "dense_delta": 74.0
+            },
+            {
+              "player": "George Kittle",
+              "position": "TE",
+              "benchmark_rank": 110,
+              "board_rank": 39,
+              "dense_delta": -71.0
+            },
+            {
+              "player": "Jacoby Brissett",
+              "position": "QB",
+              "benchmark_rank": 86,
+              "board_rank": 1134,
+              "dense_delta": 62.0
+            },
+            {
+              "player": "Mark Andrews",
+              "position": "TE",
+              "benchmark_rank": 129,
+              "board_rank": 70,
+              "dense_delta": -62.0
+            },
+            {
+              "player": "Brian Thomas Jr.",
+              "position": "WR",
+              "benchmark_rank": 91,
+              "board_rank": 33,
+              "dense_delta": -58.0
+            },
+            {
+              "player": "Cam Ward",
+              "position": "QB",
+              "benchmark_rank": 71,
+              "board_rank": 413,
+              "dense_delta": 57.0
+            },
+            {
+              "player": "Emeka Egbuka",
+              "position": "WR",
+              "benchmark_rank": 56,
+              "board_rank": 126,
+              "dense_delta": 54.0
+            },
+            {
+              "player": "Travis Etienne Jr.",
+              "position": "RB",
+              "benchmark_rank": 67,
+              "board_rank": 249,
+              "dense_delta": 54.0
+            },
+            {
+              "player": "Tyler Shough",
+              "position": "QB",
+              "benchmark_rank": 51,
+              "board_rank": 112,
+              "dense_delta": 49.0
+            }
+          ],
+          "cohorts": {
+            "all": {
+              "n": 150,
+              "mean_abs_err": 18.63,
+              "median_free_bias": 0.0
+            },
+            "QB": {
+              "n": 30,
+              "mean_abs_err": 18.9,
+              "median_free_bias": 12.43
+            },
+            "veteran_age_30_plus": {
+              "n": 23,
+              "mean_abs_err": 24.3,
+              "median_free_bias": -11.17
+            },
+            "RB": {
+              "n": 47,
+              "mean_abs_err": 16.38,
+              "median_free_bias": -0.98
+            },
+            "WR": {
+              "n": 57,
+              "mean_abs_err": 17.37,
+              "median_free_bias": 0.98
+            },
+            "injury_designation": {
+              "n": 36,
+              "mean_abs_err": 21.83,
+              "median_free_bias": -2.67
+            },
+            "TE": {
+              "n": 16,
+              "mean_abs_err": 29.19,
+              "median_free_bias": -23.94
+            },
+            "missing_adp": {
+              "n": 6,
+              "mean_abs_err": 18.33,
+              "median_free_bias": 5.33
+            },
+            "rookie": {
+              "n": 8,
+              "mean_abs_err": 12.62,
+              "median_free_bias": 12.62
+            }
+          }
+        },
+        "v6": {
+          "matched": 150,
+          "unmatched": [],
+          "unmatched_top_100_rate": 0.0,
+          "spearman_rho": 0.8066,
+          "weighted_absolute_rank_error": 10.894,
+          "top_12_recall": 0.75,
+          "top_24_recall": 0.625,
+          "top_50_recall": 0.82,
+          "median_rank_bias_by_position": {
+            "QB": 8.0,
+            "RB": -4.0,
+            "WR": -2.0,
+            "TE": -23.0
+          },
+          "largest_absolute_outliers": [
+            {
+              "player": "George Kittle",
+              "position": "TE",
+              "benchmark_rank": 110,
+              "board_rank": 32,
+              "dense_delta": -78.0
+            },
+            {
+              "player": "Malik Willis",
+              "position": "QB",
+              "benchmark_rank": 55,
+              "board_rank": 436,
+              "dense_delta": 74.0
+            },
+            {
+              "player": "Luther Burden III",
+              "position": "WR",
+              "benchmark_rank": 76,
+              "board_rank": 3954,
+              "dense_delta": 74.0
+            },
+            {
+              "player": "Mark Andrews",
+              "position": "TE",
+              "benchmark_rank": 129,
+              "board_rank": 66,
+              "dense_delta": -65.0
+            },
+            {
+              "player": "Jacoby Brissett",
+              "position": "QB",
+              "benchmark_rank": 86,
+              "board_rank": 3935,
+              "dense_delta": 63.0
+            },
+            {
+              "player": "Chris Olave",
+              "position": "WR",
+              "benchmark_rank": 41,
+              "board_rank": 121,
+              "dense_delta": 58.0
+            },
+            {
+              "player": "Cam Ward",
+              "position": "QB",
+              "benchmark_rank": 71,
+              "board_rank": 425,
+              "dense_delta": 57.0
+            },
+            {
+              "player": "Tyler Shough",
+              "position": "QB",
+              "benchmark_rank": 51,
+              "board_rank": 138,
+              "dense_delta": 56.0
+            },
+            {
+              "player": "Travis Etienne Jr.",
+              "position": "RB",
+              "benchmark_rank": 67,
+              "board_rank": 395,
+              "dense_delta": 56.0
+            },
+            {
+              "player": "Chuba Hubbard",
+              "position": "RB",
+              "benchmark_rank": 111,
+              "board_rank": 57,
+              "dense_delta": -56.0
+            }
+          ],
+          "cohorts": {
+            "all": {
+              "n": 150,
+              "mean_abs_err": 20.76,
+              "median_free_bias": 0.0
+            },
+            "QB": {
+              "n": 30,
+              "mean_abs_err": 20.57,
+              "median_free_bias": 13.37
+            },
+            "veteran_age_30_plus": {
+              "n": 23,
+              "mean_abs_err": 27.7,
+              "median_free_bias": -16.04
+            },
+            "RB": {
+              "n": 47,
+              "mean_abs_err": 19.57,
+              "median_free_bias": -1.4
+            },
+            "WR": {
+              "n": 57,
+              "mean_abs_err": 19.14,
+              "median_free_bias": 1.04
+            },
+            "injury_designation": {
+              "n": 36,
+              "mean_abs_err": 23.53,
+              "median_free_bias": -3.31
+            },
+            "TE": {
+              "n": 16,
+              "mean_abs_err": 30.38,
+              "median_free_bias": -24.62
+            },
+            "missing_adp": {
+              "n": 6,
+              "mean_abs_err": 20.67,
+              "median_free_bias": 3.0
+            },
+            "rookie": {
+              "n": 8,
+              "mean_abs_err": 13.0,
+              "median_free_bias": 12.25
+            }
+          }
+        }
+      }
+    }
+  },
+  "threshold_checks": [
+    {
+      "format": "12-team-half-ppr-1qb",
+      "benchmark": "fantasypros-half-ppr-ecr",
+      "unmatched_top_100_rate_max_0.02": true,
+      "spearman_delta_min_0.0": false,
+      "weighted_rank_error_delta_max_0.0": false
+    },
+    {
+      "format": "12-team-half-ppr-1qb",
+      "benchmark": "fantasypros-half-ppr-adp",
+      "unmatched_top_100_rate_max_0.02": true,
+      "spearman_delta_min_0.0": false,
+      "weighted_rank_error_delta_max_0.0": false
+    },
+    {
+      "format": "12-team-half-ppr-superflex",
+      "benchmark": "fantasypros-superflex-ecr",
+      "unmatched_top_100_rate_max_0.02": true,
+      "spearman_delta_min_0.0": true,
+      "weighted_rank_error_delta_max_0.0": true
+    },
+    {
+      "format": "14-team-half-ppr-2qb",
+      "benchmark": "fantasypros-superflex-ecr",
+      "unmatched_top_100_rate_max_0.02": true,
+      "spearman_delta_min_0.0": false,
+      "weighted_rank_error_delta_max_0.0": false
+    }
+  ],
+  "notes": [
+    "Grading is offense-only (QB/RB/WR/TE): DST naming is team-based and K is streamed.",
+    "The superflex ECR benchmark also grades the 2QB board \u2014 the closest public reference.",
+    "Cohorts team_change and low_availability are NOT computable from the frozen snapshot (no prior-team field; player_availability is not present in this database) and are reported as such rather than approximated.",
+    "No coefficient is promoted by this report: deterministic C01 corrections shipped via the C01/C01A correctness gate; every tuned constant is byte-identical between arms."
+  ]
+}

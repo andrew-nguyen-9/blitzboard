@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "name": "calibration-threshold-disposition-addendum",
+  "status": "append_only_addendum",
+  "created_utc": "2026-08-27T02:20:00Z",
+  "responds_to": "C02A-codex BLOCK (C02B requirement 5): the executed report omitted explicit dispositions for two frozen thresholds; an unavailable result must be recorded as failed or inconclusive",
+  "amends": ".orchestrator-v6/experiments/calibration/report.json (by addition only \u2014 no frozen benchmark data altered, no existing failure reinterpreted, no coefficient promoted)",
+  "manifest": ".worktrees/v6-review/.orchestrator-v6/experiments/player-calibration-v1.json (frozen, reviewer-owned, unmodified)",
+  "threshold_dispositions": {
+    "deterministic_unit_failures (== 0)": {
+      "result": "MET",
+      "evidence": "C01/C01A correctness gates, independently verified (C01A-codex PASS); reviewer strict-xfail pipeline tests 3/3"
+    },
+    "unmatched_top_100_rate_max (<= 0.02)": {
+      "result": "MET",
+      "evidence": "rate 0.0 on all four format x benchmark comparisons (report.json)"
+    },
+    "spearman_delta_min (>= 0.0)": {
+      "result": "FAILED on 1QB (ECR -0.0137, ADP -0.0147) and 2QB (-0.0278); MET on superflex (+0.1013)",
+      "consequence": "DO_NOT_PROMOTE any coefficient on benchmark evidence \u2014 none was promoted (executed_report_only); recorded in C02, not reinterpreted here"
+    },
+    "weighted_rank_error_delta_max (<= 0.0)": {
+      "result": "FAILED on 1QB (+0.55/+0.60) and 2QB (+0.99); MET on superflex (-5.82)",
+      "consequence": "same as above"
+    },
+    "position_or_cohort_material_regression (== 0)": {
+      "result": "FAILED (previously omitted \u2014 completed by this addendum)",
+      "operationalization": "the frozen manifest does not define 'material'; conservatively, ANY position or cohort whose v6 mean absolute dense-rank error exceeds v5's counts as a regression. Under that reading every comparison carries at least one regressing position/cohort (largest: superflex rookie +4.5, 2QB veteran_age_30_plus +3.4, 1QB-ADP TE +3.53), so the zero-tolerance threshold is NOT met \u2014 including on superflex, despite its large aggregate gains (QB -19.76, all -3.76).",
+      "per_comparison_deltas": {
+        "12-team-half-ppr-1qb|fantasypros-half-ppr-ecr": {
+          "QB": {
+            "n": 23,
+            "v5_mean_abs_err": 32.0,
+            "v6_mean_abs_err": 30.26,
+            "delta": -1.74
+          },
+          "RB": {
+            "n": 51,
+            "v5_mean_abs_err": 20.37,
+            "v6_mean_abs_err": 22.8,
+            "delta": 2.43
+          },
+          "TE": {
+            "n": 19,
+            "v5_mean_abs_err": 33.68,
+            "v6_mean_abs_err": 36.0,
+            "delta": 2.32
+          },
+          "WR": {
+            "n": 57,
+            "v5_mean_abs_err": 20.75,
+            "v6_mean_abs_err": 20.68,
+            "delta": -0.07
+          },
+          "all": {
+            "n": 150,
+            "v5_mean_abs_err": 23.99,
+            "v6_mean_abs_err": 24.81,
+            "delta": 0.82
+          },
+          "injury_designation": {
+            "n": 36,
+            "v5_mean_abs_err": 24.56,
+            "v6_mean_abs_err": 25.75,
+            "delta": 1.19
+          },
+          "missing_adp": {
+            "n": 2,
+            "v5_mean_abs_err": 25.0,
+            "v6_mean_abs_err": 25.5,
+            "delta": 0.5
+          },
+          "rookie": {
+            "n": 8,
+            "v5_mean_abs_err": 22.25,
+            "v6_mean_abs_err": 24.5,
+            "delta": 2.25
+          },
+          "veteran_age_30_plus": {
+            "n": 21,
+            "v5_mean_abs_err": 30.62,
+            "v6_mean_abs_err": 32.0,
+            "delta": 1.38
+          }
+        },
+        "12-team-half-ppr-1qb|fantasypros-half-ppr-adp": {
+          "QB": {
+            "n": 20,
+            "v5_mean_abs_err": 36.55,
+            "v6_mean_abs_err": 34.0,
+            "delta": -2.55
+          },
+          "RB": {
+            "n": 50,
+            "v5_mean_abs_err": 22.16,
+            "v6_mean_abs_err": 24.3,
+            "delta": 2.14
+          },
+          "TE": {
+            "n": 15,
+            "v5_mean_abs_err": 24.67,
+            "v6_mean_abs_err": 28.2,
+            "delta": 3.53
+          },
+          "WR": {
+            "n": 56,
+            "v5_mean_abs_err": 20.09,
+            "v6_mean_abs_err": 20.21,
+            "delta": 0.12
+          },
+          "all": {
+            "n": 141,
+            "v5_mean_abs_err": 23.65,
+            "v6_mean_abs_err": 24.47,
+            "delta": 0.82
+          },
+          "injury_designation": {
+            "n": 35,
+            "v5_mean_abs_err": 26.17,
+            "v6_mean_abs_err": 27.83,
+            "delta": 1.66
+          },
+          "missing_adp": {
+            "n": 1,
+            "v5_mean_abs_err": 12.0,
+            "v6_mean_abs_err": 12.0,
+            "delta": 0.0
+          },
+          "rookie": {
+            "n": 10,
+            "v5_mean_abs_err": 23.1,
+            "v6_mean_abs_err": 24.6,
+            "delta": 1.5
+          },
+          "veteran_age_30_plus": {
+            "n": 21,
+            "v5_mean_abs_err": 29.43,
+            "v6_mean_abs_err": 31.95,
+            "delta": 2.52
+          }
+        },
+        "12-team-half-ppr-superflex|fantasypros-superflex-ecr": {
+          "QB": {
+            "n": 30,
+            "v5_mean_abs_err": 41.53,
+            "v6_mean_abs_err": 21.77,
+            "delta": -19.76
+          },
+          "RB": {
+            "n": 47,
+            "v5_mean_abs_err": 18.38,
+            "v6_mean_abs_err": 21.21,
+            "delta": 2.83
+          },
+          "TE": {
+            "n": 16,
+            "v5_mean_abs_err": 43.56,
+            "v6_mean_abs_err": 35.81,
+            "delta": -7.75
+          },
+          "WR": {
+            "n": 57,
+            "v5_mean_abs_err": 19.18,
+            "v6_mean_abs_err": 19.53,
+            "delta": 0.35
+          },
+          "all": {
+            "n": 150,
+            "v5_mean_abs_err": 26.0,
+            "v6_mean_abs_err": 22.24,
+            "delta": -3.76
+          },
+          "injury_designation": {
+            "n": 36,
+            "v5_mean_abs_err": 26.42,
+            "v6_mean_abs_err": 25.0,
+            "delta": -1.42
+          },
+          "missing_adp": {
+            "n": 6,
+            "v5_mean_abs_err": 29.33,
+            "v6_mean_abs_err": 18.83,
+            "delta": -10.5
+          },
+          "rookie": {
+            "n": 8,
+            "v5_mean_abs_err": 11.12,
+            "v6_mean_abs_err": 15.62,
+            "delta": 4.5
+          },
+          "veteran_age_30_plus": {
+            "n": 23,
+            "v5_mean_abs_err": 34.13,
+            "v6_mean_abs_err": 28.83,
+            "delta": -5.3
+          }
+        },
+        "14-team-half-ppr-2qb|fantasypros-superflex-ecr": {
+          "QB": {
+            "n": 30,
+            "v5_mean_abs_err": 18.9,
+            "v6_mean_abs_err": 20.57,
+            "delta": 1.67
+          },
+          "RB": {
+            "n": 47,
+            "v5_mean_abs_err": 16.38,
+            "v6_mean_abs_err": 19.57,
+            "delta": 3.19
+          },
+          "TE": {
+            "n": 16,
+            "v5_mean_abs_err": 29.19,
+            "v6_mean_abs_err": 30.38,
+            "delta": 1.19
+          },
+          "WR": {
+            "n": 57,
+            "v5_mean_abs_err": 17.37,
+            "v6_mean_abs_err": 19.14,
+            "delta": 1.77
+          },
+          "all": {
+            "n": 150,
+            "v5_mean_abs_err": 18.63,
+            "v6_mean_abs_err": 20.76,
+            "delta": 2.13
+          },
+          "injury_designation": {
+            "n": 36,
+            "v5_mean_abs_err": 21.83,
+            "v6_mean_abs_err": 23.53,
+            "delta": 1.7
+          },
+          "missing_adp": {
+            "n": 6,
+            "v5_mean_abs_err": 18.33,
+            "v6_mean_abs_err": 20.67,
+            "delta": 2.34
+          },
+          "rookie": {
+            "n": 8,
+            "v5_mean_abs_err": 12.62,
+            "v6_mean_abs_err": 13.0,
+            "delta": 0.38
+          },
+          "veteran_age_30_plus": {
+            "n": 23,
+            "v5_mean_abs_err": 24.3,
+            "v6_mean_abs_err": 27.7,
+            "delta": 3.4
+          }
+        }
+      },
+      "consequence": "DO_NOT_PROMOTE \u2014 consistent with the already-recorded executed_report_only disposition; deterministic C01 corrections stand on the correctness gate, which the manifest ranks above benchmark agreement"
+    },
+    "season_evaluator_no_regression_tolerance (0.0)": {
+      "result": "INCONCLUSIVE \u2014 NOT EXECUTED (previously omitted \u2014 completed by this addendum)",
+      "reason": "the leakage-safe season-evaluator no-regression comparison between value arms was not run in C02: the authoritative matched-seat machinery is preregistered and owned by C05 (promotion-v3 at 82b7705, candidate SHA null until C02/C03/C04 pass), and running a non-preregistered season experiment here would violate the experiment-freezing contract",
+      "consequence": "per the frozen manifest's failure_interpretation, inconclusive -> PRESERVE_SHIPPED_VALUE; combined with the failed benchmark thresholds above the disposition remains DO_NOT_PROMOTE for any coefficient candidate. The season-evaluator evidence obligation transfers to C05's preregistered run."
+    }
+  },
+  "net_disposition": "unchanged from C02: executed_report_only, no coefficient promoted, shipped tuned constants preserved; every frozen threshold now carries an explicit MET / FAILED / INCONCLUSIVE record"
+}

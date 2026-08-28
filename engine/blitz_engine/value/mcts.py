@@ -48,10 +48,10 @@ _BENCH: frozenset[str] = frozenset({"QB", "RB", "WR", "TE", "K", "DST"})
 
 
 def slot_positions(slot: str) -> frozenset[str]:
-    """The set of positions a template slot accepts (FLEX/SUPERFLEX/BN widen it)."""
+    """The positions a template slot accepts (including canonical flexible aliases)."""
     if slot == "FLEX":
         return _FLEX
-    if slot == "SUPERFLEX":
+    if slot in ("SUPERFLEX", "OP", "SFLX"):
         return _SUPERFLEX
     if slot == "BN":
         return _BENCH

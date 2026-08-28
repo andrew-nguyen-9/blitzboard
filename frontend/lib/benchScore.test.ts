@@ -186,3 +186,67 @@ describe("benchHealth / dropPriority", () => {
     expect(ranked[0].id).toBe("kb");
   });
 });
+
+// ── C01A: the league's REAL slots drive the coverage template and superflex ──
+
+describe("league-shape correctness (C01A)", () => {
+  it("derives the superflex overlay from a pure 2QB slot shape (no OP/SF slot name)", () => {
+    const qb2 = player({ id: "qb2", position: "QB", metadata: { depth_chart_order: 2 } });
+    const twoQb = [
+      { slot: "QB", eligible: ["QB"] },
+      { slot: "QB", eligible: ["QB"] },
+      { slot: "RB", eligible: ["RB"] },
+      { slot: "WR", eligible: ["WR"] },
+    ];
+    expect(benchScore(qb2, { roster: [qb2], rosterSlots: twoQb }).superflex).toBe(true);
+    // and a 1QB shape stays on the general model
+    expect(benchScore(qb2, { roster: [qb2], rosterSlots: twoQb.slice(1) }).superflex).toBe(false);
+  });
+
+  it("scores bye coverage against the league's ACTUAL slots, not the hard-coded preset", () => {
+    // A league with no TE and no FLEX slot: a bench TE can cover nothing there, while the
+    // hard-coded preset template would have granted it the full ByeCoverage weight.
+    const noTe = [
+      { slot: "QB", eligible: ["QB"] },
+      { slot: "RB", eligible: ["RB"] },
+      { slot: "RB", eligible: ["RB"] },
+      { slot: "WR", eligible: ["WR"] },
+      { slot: "WR", eligible: ["WR"] },
+    ];
+    const roster = [
+      player({ id: "qb1", position: "QB", bye_week: 6 }),
+      player({ id: "rb1", position: "RB", bye_week: 7 }),
+      player({ id: "rbB", position: "RB", bye_week: 7 }),
+      player({ id: "rb3", position: "RB", bye_week: 7, value: { vor: 25 } as PlayerValue }),
+      player({ id: "wr1", position: "WR", bye_week: 8 }),
+      player({ id: "wrB", position: "WR", bye_week: 8 }),
+      player({ id: "te1", position: "TE", bye_week: 9, value: { vor: 30 } as PlayerValue }),
+    ];
+    const cand = player({ id: "te9", position: "TE", bye_week: 4, value: { vor: 10 } as PlayerValue });
+    const all = [...roster, cand];
+    const custom = benchScore(cand, { roster: all, rosterSlots: noTe, superflex: false });
+    const preset = benchScore(cand, { roster: all, superflex: false });
+    // identical rosters, identical terms except ByeCoverage: 0 (no coverable hole in the
+    // real shape) vs 1 (TE/FLEX holes exist in the preset) — exactly the term's weight.
+    expect(preset.score - custom.score).toBeCloseTo(GENERAL_WEIGHTS.ByeCoverage, 6);
+    expect(custom.coverage).not.toContain("ByeCoverage");
+  });
+
+  it("reads the template from config.rosterSlots when no explicit rosterSlots are passed", () => {
+    const qb2 = player({ id: "qb2", position: "QB", metadata: { depth_chart_order: 2 } });
+    const config = {
+      source: "manual" as const,
+      leagueId: null,
+      name: "2QB",
+      numTeams: 12,
+      rosterSlots: [
+        { slot: "QB", eligible: ["QB"] },
+        { slot: "QB", eligible: ["QB"] },
+      ],
+      benchSize: 6,
+      scoringLabel: "PPR",
+      teams: [],
+    };
+    expect(benchScore(qb2, { roster: [qb2], config }).superflex).toBe(true);
+  });
+});

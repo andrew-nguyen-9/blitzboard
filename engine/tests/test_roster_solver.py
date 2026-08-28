@@ -45,8 +45,9 @@ def _pool() -> list[Player]:
 def test_flex_and_superflex_eligibility() -> None:
     assert slot_accepts("FLEX", "RB") and slot_accepts("FLEX", "WR") and slot_accepts("FLEX", "TE")
     assert not slot_accepts("FLEX", "QB") and not slot_accepts("FLEX", "K")
-    assert slot_accepts("SUPERFLEX", "QB") and slot_accepts("SUPERFLEX", "RB")
-    assert not slot_accepts("SUPERFLEX", "K") and not slot_accepts("SUPERFLEX", "DST")
+    for slot in ("SUPERFLEX", "OP", "SFLX"):
+        assert all(slot_accepts(slot, pos) for pos in ("QB", "RB", "WR", "TE"))
+        assert not slot_accepts(slot, "K") and not slot_accepts(slot, "DST")
     assert slot_accepts("QB", "QB") and not slot_accepts("QB", "RB")
 
 
@@ -96,6 +97,27 @@ def test_optimize_lineup_respects_bye_week() -> None:
     lineup = optimize_lineup(roster, week=7)
     for _, player in lineup.starters:
         assert player.bye_week != 7  # no starter is on bye that week
+
+
+def test_optimize_lineup_replays_tied_slot_assignments_exactly() -> None:
+    specs = (
+        ("q1", "QB", 381.62), ("q2", "QB", 259.54), ("q3", "QB", 187.02),
+        ("r1", "RB", 358.20), ("r2", "RB", 221.88), ("r3", "RB", 256.11),
+        ("r4", "RB", 135.32), ("w1", "WR", 190.06), ("w2", "WR", 244.20),
+        ("w3", "WR", 164.47), ("w4", "WR", 119.44), ("w5", "WR", 123.84),
+        ("w6", "WR", 117.85), ("t1", "TE", 203.22), ("k1", "K", 172.80),
+        ("d1", "DST", 177.88),
+    )
+    roster = [Player(pid, pos, value) for pid, pos, value in specs]
+    reqs = RosterRequirements(
+        starters=("QB", "QB", "RB", "RB", "WR", "WR", "TE", "FLEX", "K", "DST"),
+        bench_size=6,
+    )
+    signatures = {
+        tuple((slot, player.id) for slot, player in optimize_lineup(roster, reqs).starters)
+        for _ in range(40)
+    }
+    assert len(signatures) == 1
 
 
 # -- invariant 2: K/DST cap until the final rounds ------------------------

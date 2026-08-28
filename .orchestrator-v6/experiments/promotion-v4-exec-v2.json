@@ -1,0 +1,87 @@
+{
+  "schema_version": 2,
+  "status": "candidate_identity_frozen_not_executed",
+  "purpose": "Execution addendum for promotion-v4.json, correcting the three freeze blockers of the promotion-v4 freeze review (reviewer commit 4fe81cacfc42db5f39ce8cced1e2168b28365a9d). Authorizes NOTHING by itself; the v4 harness is not implemented and the authoritative experiment has not run - both await this addendum's freeze review PASS.",
+  "manifest": "promotion-v4.json",
+  "manifest_sha256": "47af290506a2aa9e66add39b62125c12341927814d3cbc660426cc767e32569a",
+  "supersedes": "promotion-v4-exec-v1.json",
+  "supersedes_sha256": "41e33538c87cadacde3165ea05c7ceb6f42004bda8f992864c9cfa826220c208",
+  "preserved_immutable": {
+    "promotion-v3.json": "bbb241603a33697bff376b21a2e57e7e066c3c85186eaaab120485ec6bd941ab",
+    "promotion-v3-exec-v1.json": "24e5e50afdad75006ca3a1814317d9254ea98de25bbb97dba4b06bbee7c3b7ad",
+    "promotion-v4.json": "47af290506a2aa9e66add39b62125c12341927814d3cbc660426cc767e32569a",
+    "promotion-v4-exec-v1.json": "41e33538c87cadacde3165ea05c7ceb6f42004bda8f992864c9cfa826220c208"
+  },
+  "arms": {
+    "control": {
+      "name": "v5_shipped",
+      "policy_sha": "01f01d3c5f9c00a046edd43707db75ce1426c0e8",
+      "identity": "draft/policy code at the immutable v5 baseline; measured by the common evaluator, never by its own"
+    },
+    "candidate": {
+      "name": "v6_candidate",
+      "combined_candidate_sha": "7b3fd73578943b992402ad693259a3e92358da69",
+      "identity": "draft/policy code at the accepted combined C02-C04 head; no coefficients tuned after freeze"
+    }
+  },
+  "measurement": {
+    "sha": "7b3fd73578943b992402ad693259a3e92358da69",
+    "file_hashes": "as frozen in promotion-v4.json measurement_evaluator.file_hashes (seven files); every hash must verify in the measurement checkout at run time, mismatch = BLOCK",
+    "note": "measurement identity coincides with the candidate policy SHA because the accepted C02 evaluator lives in the combined head; the policy-versus-measurement rule still forbids measuring either arm by any other evaluator"
+  },
+  "metric_binding": {
+    "waiver_cost": 0.0,
+    "rule": "unchanged: any nonzero value requires a new manifest version"
+  },
+  "blocker_1_tooling_identity": {
+    "rehearsal_tooling_head": "278f50eca932fc389d57ab0844f220cc0999ce6e",
+    "rehearsal_tooling_head_meaning": "the clean committed head from which both regenerated rehearsal receipts were mechanically produced; equals produced_by_tooling.tooling_head inside every receipt",
+    "receipt_commit_head": "bc11f540415a7303e9de74d81d5550553a7a2f04",
+    "receipt_commit_head_meaning": "the LATER commit that added those receipt files to history; it is a storage event, not the producing tooling identity",
+    "execution_module_sha256_at_rehearsal": "8e4c97872524b5358e4cd6c2e25b50b2588041958d878bc75b61c0cafcccbfb5",
+    "effective_manifest_sha256_v3_at_rehearsal": "61f3a70a3bee0f242cc1ffa1004e11cbd3026842cd3c47abd5a1a63465fabdc1",
+    "correction": "exec-v1 conflated the two heads by freezing bc11f540... as the receipts-regeneration head; the actual producing head is 278f50e... as the receipts themselves record. Authoritative receipts always carry their own mechanically derived provenance; a receipt whose embedded tooling head differs from the clean committed head that produced it is invalid."
+  },
+  "blocker_2_roster_validation": {
+    "replaces": "promotion-v4.json stage_2_measure clause 'rosters must partition the same board' (v4 preserved byte-for-byte; this frozen clarification controls)",
+    "rules": [
+      "expected per-seat roster size: every seat's roster has exactly sum(starting_slots) + bench_slots players for the league row",
+      "board membership: every drafted player_id exists on the hashed board for (year, league_id)",
+      "global uniqueness: no player_id appears on more than one roster within an arm's draft receipt",
+      "shared free-agent pool: the undrafted board complement (board minus all drafted ids) is the common initial free-agent pool handed to the measurement evaluator for both arms",
+      "no partition requirement: drafted rosters deliberately do NOT cover the entire board; a draft consumes only teams x (starter slots + bench slots) players"
+    ],
+    "failure_interpretation": "any rule violation in either arm's draft receipt aborts before measurement (BLOCK; pairing_mismatch class), never degrades"
+  },
+  "blocker_3_ruff_gate": {
+    "frozen_command": "<main-checkout>/pipeline/.venv/bin/python -m ruff check engine/blitz_engine/promotion engine/tests/test_promotion.py engine/tests/test_promotion_adapter.py engine/tests/test_promotion_execution.py engine/tests/test_v6_c05_execution_freeze_adversarial.py",
+    "scope": "the promotion package, the three C05-owned test files, and the I001-formatted copy of the first reviewer probe (sha256 fb8ad21c042cca343ca9f81a97637b4650ddd58f0196a0eabac03f96f3199ac6)",
+    "explicit_exclusion": "engine/tests/test_v6_c05_second_freeze_adversarial.py - the byte-identical reviewer-owned second probe (sha256 4771393440450b5c4a02b6faff580f30413fbb08d67ce4908043f172e302b684); it deterministically reports one E501 (line 22, 112 > 100) which is reviewer-owned, expected, and recorded here instead of being fixed or claimed clean",
+    "claim_discipline": "no all-files-clean claim is made or permitted; the gate result is defined ONLY over the frozen command above"
+  },
+  "calibration_evidence": "unchanged: the accepted C02 calibration report FAILED the frozen thresholds and is preserved without reinterpretation; promotion requires a NEW passing accepted calibration report under the inherited calibration gate",
+  "inherited_unchanged": [
+    "all promotion-v4.json identities, measurement file hashes, gates, thresholds, CI method, seeds, pairing keys, receipt schemas, write-once stage separation, held-out rule and stage isolation, failure interpretation, and execution preconditions",
+    "the v3 statistical terms promotion-v4 inherits by reference and hash"
+  ],
+  "acceptance_evidence": {
+    "c02": "accepted at 417af276 (review f2a1537)",
+    "c03": "accepted at 8694d98 (do_not_promote; non-shipping evidence)",
+    "c04": "C04 BLOCK (2dd0839) then C04A accepted; combined head 7b3fd735",
+    "first_freeze_review": "BLOCK 03fc3d87 - corrected, corrections accepted",
+    "second_freeze_review": "BLOCK 3905689 - corrected by the v4 pair",
+    "promotion_v4_freeze_review": "BLOCK 4fe81cac - design accepted, this exec-v2 answers the three freeze blockers"
+  },
+  "execution_preconditions_remaining": [
+    "this exec-v2 freeze review PASS before implementing the v4 harness",
+    "v4 harness freeze review PASS before authoritative execution",
+    "measurement file hashes verify in the measurement checkout at run time",
+    "passing accepted calibration report"
+  ],
+  "prohibited_without_new_authority": [
+    "implementing or executing the v4 protocol",
+    "running the authoritative fit or held-out confirmation",
+    "editing any file listed in preserved_immutable or this file (amendments get promotion-v4-exec-v3.json)",
+    "push, merge, PR, release, protected-branch change"
+  ]
+}

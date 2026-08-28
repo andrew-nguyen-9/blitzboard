@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "name": "waiver-realism-v1",
+  "status": "preregistered",
+  "frozen_utc": "2026-08-26T23:30:00Z",
+  "responds_to": "C02-codex BLOCK at review commit d50f757 (corrections 1-4)",
+  "supersedes": "nothing — the C02 implementation's decision rule was implemented without a frozen manifest; this manifest is preregistered BEFORE the C02A decision-rule change and rewrites no existing manifest",
+  "hypotheses": [
+    "A roster-wide, slot-eligibility-aware add/drop rule removes observable false negatives (a better free body blocked only by nominal position) without breaking K/DST streaming or the bench-insurance contrast.",
+    "Making transaction cost a decision gate (not only a season accounting charge) prevents claims whose expected remaining-horizon improvement cannot repay their cost.",
+    "A point-in-time believed projection is sufficient to acquire a genuine in-season breakout whose preseason prior was low."
+  ],
+  "decision_rule": {
+    "believed_projection": "per-week shrunk forecast (kappa*preseason_per_game + observed_sum) / (kappa + observed_games), computed only from weeks strictly before the decision — unchanged from C02",
+    "cost_units": "fantasy points, identical units to started_points and to the per-week believed projection times weeks",
+    "remaining_horizon_conversion": "expected improvement of a claim decided after week w (0-based, for week w+1 onward) = per-week believed gain x weeks_left, where weeks_left = weeks - 1 - w",
+    "upside_gain": "per-week believed gain of a swap = proj[add] - proj[drop]",
+    "emergency_gain": "per-week believed gain of filling an otherwise-empty starting slot = proj[add] (the alternative is a 0-point hole)",
+    "decision_threshold": "a claim executes only if gain_per_week x weeks_left > waiver_cost (STRICT inequality). Equal-to-cost and below-cost claims must not execute.",
+    "relative_margin": "the C02 anti-churn gate is RETAINED for upside claims and frozen here: proj[add] > proj[drop] x (1 + upgrade_margin), default upgrade_margin = 0.15 (relative per-week projection margin, dimensionless; it is NOT the per-claim cost and never was the cost)",
+    "boundary_semantics": "strict '>' on the cost gate; strict '>' on the margin gate; ties never transact",
+    "feasibility": "an add is feasible only if the incoming body is eligible for at least one of the league's actual lineup slots (slot_positions over the row's starting_slots)",
+    "drop_selection": "drop candidates are squad bodies sharing at least one eligible slot with the incoming body (role space; FLEX/OP overlap makes cross-position swaps legal). Nonstarters in that role space are preferred, lowest believed projection first (the lowest forward-looking nonstarter opportunity cost); only when the role space contains no nonstarter may a started body be replaced - which is exactly K/DST streaming. Identical nominal positions are NOT required.",
+    "no_slots_fallback": "when a caller provides no slot template, the role space is unconstrained and the drop candidate is the lowest-believed-projection body (reviewer probe semantics)",
+    "accounting": "waiver_cost remains charged ONCE per executed claim at season aggregation into per_season/started_points (the C02 documented accounting penalty). The decision gate is a comparison, not a second charge - no double-charging. H2H and playoff/championship proxy outcomes stay on-field (cost-free), as reconciled in C02-claude.md and to be reconciled in the promotion manifest by its owner."
+  },
+  "configs": {
+    "defaults": {
+      "n_seasons": 8,
+      "seed": "SEASON_EVAL_SEED = 20260825 (streams +101 injury, +202 availability, +303 draft)",
+      "shrink_kappa": 4.0,
+      "waiver_moves_per_week": 1,
+      "proactive_moves_per_week": 1,
+      "upgrade_margin": 0.15,
+      "waiver_cost": 0.0,
+      "season_moves_cap": 25,
+      "playoff_slots": 4
+    },
+    "note": "waiver_cost default 0.0 keeps the cost gate inert by default (gain > 0 required); non-zero costs are experiment-arm inputs, not tuned production constants"
+  },
+  "metrics": [
+    "started_points (net of accounting cost) and per_season paired samples",
+    "emergency_adds / upside_adds counters (must reconcile to waiver_adds)",
+    "per_season_h2h / per_season_playoff / per_season_champ paired families",
+    "starts_lost"
+  ],
+  "acceptance_tests": [
+    "cross-position FLEX substitution: a low nonstarter RB is replaced by a materially better free TE when both are FLEX-eligible",
+    "cost boundary: just-below-cost executes is FORBIDDEN; equal-to-cost is FORBIDDEN; just-above-cost executes",
+    "in-season breakout: a free agent with a LOW preseason prior and high realized weeks is acquired once point-in-time observations make it actionable, and is NOT acquired in a no-breakout control",
+    "reviewer probe engine/tests/test_v6_c02_decision_adversarial.py passes against production code",
+    "preserved: shared pool, reverse priority, weekly/season caps, emergency/upside distinction, K/DST streaming, determinism, leakage guard, paired samples, bench-insurance contrast"
+  ],
+  "failure_interpretation": {
+    "deterministic_failure": "BLOCK_C02A — any acceptance test failure or determinism/leakage regression blocks",
+    "behavioral_ambiguity": "PRESERVE_ACCEPTED_C02_BEHAVIOR — where the corrected rule is ambiguous, the C02-accepted behavior (proven items in C02-codex) is the authority",
+    "calibration": "OUT_OF_SCOPE — no player-value coefficient may change and no failed calibration threshold may be reinterpreted under this manifest"
+  }
+}

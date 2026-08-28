@@ -15,7 +15,7 @@
 import { describe, it, expect } from "vitest";
 import { pickForTeam, norm } from "./draftAI";
 import { SUPERFLEX_ROSTER, fillRoster } from "./draft";
-import { runSnakeDraft, mulberry32 } from "./snakeDraft";
+import { runSnakeDraftAsync, mulberry32 } from "./snakeDraft";
 import type { PlayerWithValue } from "./types";
 
 // Player factory — mirrors draftAI.fixtures.test.ts (value-fields in `value`,
@@ -66,11 +66,11 @@ describe("E7: full 12-team superflex auto-draft → ideal bench composition end-
 
   it.each(SEEDS)(
     "seed %s: every team ≥2 QB, ≥1 RB + ≥1 WR benched, no team benches 2+ K or 2+ DST",
-    (seed) => {
+    async (seed) => {
       const players = realisticPool();
       const byId = new Map(players.map((p) => [p.id, p]));
       // Default chooser = pickForTeam @ DEFAULT_POLICY — the live, E5-integrated policy.
-      const picks = runSnakeDraft(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 });
+      const picks = await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 });
 
       for (let t = 1; t <= 12; t++) {
         const roster = picks.filter((pk) => pk.team === t).map((pk) => byId.get(pk.player.id)!);

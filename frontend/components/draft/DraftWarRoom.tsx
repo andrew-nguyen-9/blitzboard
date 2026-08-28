@@ -13,12 +13,13 @@ import {
 } from "@/lib/leagueConfig";
 import {
   pickForTeam,
-  scoreBoard,
   detectRuns,
   candidatePool,
   norm,
   proj,
 } from "@/lib/draftAI";
+import { deriveBenchShapeLeagueKey, scoreBoardWithExplanations } from "@/lib/v6DraftLiveScoring";
+import { projectionCeiling } from "@/lib/valueUnits";
 import { mapPicks, type MappedPick } from "@/lib/sleeperDraft";
 import { mapEspnPicks } from "@/lib/espnDraft";
 import { useSleeperSync } from "@/lib/useSleeperSync";
@@ -115,6 +116,7 @@ export default function DraftWarRoom({
   const runs = useMemo(() => detectRuns(picks, numTeams), [picks, numTeams]);
   const health = useMemo(() => rosterHealth(myTeamPicks, roster), [myTeamPicks, roster]);
   const needed = useMemo(() => neededPositions(myTeamPicks, roster), [myTeamPicks, roster]);
+  const benchShapeKey = useMemo(() => deriveBenchShapeLeagueKey(config), [config]);
 
   // Bench value: score every reserve body (E4), aggregate its health, and rank
   // drop priority. ctx carries the FULL roster (handcuff/dup logic) + config
@@ -140,7 +142,7 @@ export default function DraftWarRoom({
     const myNos = myPickNumbers(numTeams, mySlot, ROSTER_SPOTS);
     const myPickNo = myNos.find((n) => n >= currentPickNo) ?? currentPickNo;
     const after = myNos.find((n) => n > myPickNo) ?? myPickNo + numTeams;
-    const scored = scoreBoard({
+    const scored = scoreBoardWithExplanations({
       pool: candidatePool(available),
       teamPicks: myTeamPicks,
       roster,
@@ -151,16 +153,17 @@ export default function DraftWarRoom({
       round: Math.ceil(myPickNo / numTeams),
       totalRounds: ROSTER_SPOTS,
       randomness: 0,
-    }).slice(0, 4);
+    }, { leagueConfigKey: benchShapeKey }).slice(0, 4);
     return scored.map((sp) => {
       const p = sp.player;
       const ppos = norm(p.position);
       const equity = equityImpact(myTeamPicks, p, roster);
       const mean = proj(p);
-      const boom = p.value?.boom ?? mean;
+      const boom = projectionCeiling(p) ?? mean; // C01 unit fix: raw ceiling vs raw mean
       return {
         player: p,
         equity,
+        explanation: sp.explanation,
         reasons: reasonChips({
           need: needed.has(ppos),
           scarce: (scarce[ppos] ?? 99) <= numTeams,
@@ -171,7 +174,7 @@ export default function DraftWarRoom({
         }),
       };
     });
-  }, [available, myTeamPicks, picks, roster, numTeams, mySlot, ROSTER_SPOTS, currentPickNo, config.benchSize, needed, scarce, runs, complete]);
+  }, [available, myTeamPicks, picks, roster, numTeams, mySlot, ROSTER_SPOTS, currentPickNo, config.benchSize, benchShapeKey, needed, scarce, runs, complete]);
 
   // ── robust strategy tree: re-plan ONLY on a consequential pick ───────────────
   const [plan, setPlan] = useState<DraftPlan | null>(null);

@@ -36,6 +36,13 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+[tool.ruff.lint.per-file-ignores]
+# Accepted reviewer probes are hash-frozen; ignore only their pre-existing formatting findings.
+"tests/test_v6_c05_harness_authority_adversarial.py" = ["I001"]
+"tests/test_v6_c05_second_freeze_adversarial.py" = ["E501"]
+"tests/test_v6_c05a_fit_verdict_adversarial.py" = ["I001"]
+"tests/test_v6_c05b_fit_analysis_adversarial.py" = ["I001"]
+
 [tool.mypy]
 python_version = "3.12"
 ignore_missing_imports = true
