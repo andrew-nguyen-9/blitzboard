@@ -392,15 +392,15 @@ export function fillsEmptyOffensiveStarter(cand: PlayerWithValue, ctx: AIContext
   );
 }
 
-// Hard K/DST cap: a 2nd kicker/defense is ineligible until the final rounds.
+// Hard K/DST cap: a 2nd kicker/defense is always ineligible.
 export function isCapped(
   cand: PlayerWithValue,
   owned: Record<string, number>,
-  lateDraft: boolean,
+  _lateDraft: boolean,
 ): boolean {
   const pos = norm(cand.position);
   if (pos !== "K" && pos !== "DST") return false;
-  return (owned[pos] ?? 0) >= 1 && !lateDraft;
+  return (owned[pos] ?? 0) >= 1;
 }
 
 // Diminishing returns once a position is past its reasonable depth.
@@ -422,6 +422,9 @@ export function scoreBoard(ctx: AIContext, params: PolicyParams = DEFAULT_POLICY
   const jitter = ctx.randomness ?? 0;
   const lateDraft = ctx.round > ctx.totalRounds - params.kdstCapRoundsFromEnd;
   const owned = ownedByPos(ctx.teamPicks);
+  const emptyStarterIndexes = fillRoster(ctx.teamPicks, ctx.roster).starters
+    .flatMap((s, i) => s.player ? [] : [i]);
+  const mustFillStarter = emptyStarterIndexes.length >= ctx.totalRounds - ctx.round + 1;
 
   const scored = ctx.pool.map((p) => {
     const capped = isCapped(p, owned, lateDraft);
@@ -461,6 +464,12 @@ export function scoreBoard(ctx: AIContext, params: PolicyParams = DEFAULT_POLICY
     if (capped) {
       score -= 1e6; // demote below every legal pick without dropping it from the board
       why.push("K/DST capped");
+    }
+    if (mustFillStarter && !emptyStarterIndexes.some(
+      (i) => ctx.roster[i].eligible.includes(p.position ?? ""),
+    )) {
+      score -= 1e6;
+      why.push("starter required");
     }
     // e2b: real availability (roster/injury truth, published by the engine — see lib/availability.ts)
     // replaces the old flat faPenalty + injuryDiscount hacks. Multiplies score directly so a

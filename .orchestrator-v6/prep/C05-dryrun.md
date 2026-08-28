@@ -8,12 +8,12 @@ receipt file itself carries `"label": "SYNTHETIC / NON-AUTHORITATIVE — cannot 
 
 | Step | Command | Result |
 |---|---|---|
-| focused tests | `PYTHONPATH="$PWD" /Users/andrew/Documents/GitHub/blitzboard/pipeline/.venv/bin/python -m pytest tests/test_promotion.py -q` | **26 passed** |
+| focused tests | `PYTHONPATH="$PWD" $HOME/Documents/GitHub/blitzboard/pipeline/.venv/bin/python -m pytest tests/test_promotion.py -q` | **26 passed** |
 | lint (new code) | `.../.venv/bin/python -m ruff check blitz_engine/promotion tests/test_promotion.py` | All checks passed |
 | suite collection | `PYTHONPATH="$PWD" .../.venv/bin/python -m pytest --collect-only -q` | 4150 collected (4124 pre-existing + 26 new; no collection errors) |
 | dry run | `PYTHONPATH="$PWD" .../.venv/bin/python -m blitz_engine.promotion.dryrun ../.orchestrator-v6/prep` | OK — wrote `C05-dryrun-receipt.json` |
 
-(`.../.venv` = `/Users/andrew/Documents/GitHub/blitzboard/pipeline/.venv`. Portable form:
+(`.../.venv` = `$HOME/Documents/GitHub/blitzboard/pipeline/.venv`. Portable form:
 `$HOME/Documents/GitHub/blitzboard/pipeline/.venv`.)
 
 ## Synthetic dry run (fabricated pairs, all 24 mandatory slices, fit + held-out confirm)

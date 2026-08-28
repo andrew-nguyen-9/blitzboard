@@ -234,6 +234,17 @@ describe("cat6: take the value before the cliff (last of a tier > first of the n
 
 // ── Category 7 — Late-round K/DEF timing (≥4) ────────────────────────────────
 describe("cat7: in the final rounds the single K/DST is correctly taken", () => {
+  it("fills both required special-team starters at the last safe picks", () => {
+    const team = coreOffenseNoK().filter((p) => p.id !== "dst1");
+    const pool = [
+      mk("k1", "K", 1, { nfl_team: "DAL" }),
+      mk("dst1", "DST", 1, { nfl_team: "PIT" }),
+      mk("wr9", "WR", 500, { nfl_team: "NYJ", boom: 700 }),
+    ];
+    const first = pickForTeam(ctx(pool, team, 15))!;
+    const second = pickForTeam(ctx(pool.filter((p) => p.id !== first.id), [...team, first], 16))!;
+    expect(new Set([norm(first.position), norm(second.position)])).toEqual(new Set(["K", "DST"]));
+  });
   it("takes the K to fill the empty K slot late (round 15)", () => {
     const team = coreOffenseNoK(); // full offense + DST, no K
     const pool = [mk("k1", "K", 130, { nfl_team: "DAL", bye_week: 7 }), mk("wr9", "WR", 90, { nfl_team: "NYJ", boom: 130, bye_week: 13 })];
@@ -247,11 +258,10 @@ describe("cat7: in the final rounds the single K/DST is correctly taken", () => 
     const pool = [mk("dst1", "DST", 125, { nfl_team: "PIT", bye_week: 9 }), mk("te5", "TE", 80, { nfl_team: "KC", boom: 120, bye_week: 10 })];
     expect(norm(pickForTeam(ctx(pool, team, 16))!.position)).toBe("DST");
   });
-  it("a 2nd K is allowed only inside the final-rounds window", () => {
+  it("a 2nd K remains capped inside the final-rounds window", () => {
     const team = [...coreOffenseNoK(), mk("k1", "K", 135, { nfl_team: "DAL" })];
     const pool = [mk("k2", "K", 128, { nfl_team: "GB" })];
-    // final rounds → the cap lifts, so the K is a legal (indeed the only) pick
-    expect(scoreBoard(ctx(pool, team, 16))[0].reason).not.toContain("capped");
+    expect(scoreBoard(ctx(pool, team, 16))[0].reason).toContain("capped");
   });
   it("still defers K when a startable offensive slot remains open late", () => {
     const team = [mk("qb1", "QB", 300), mk("rb1", "RB", 250), mk("wr1", "WR", 240)]; // many slots open
@@ -278,17 +288,13 @@ describe("auto-draft end-state invariant (full 12-team sim)", () => {
     }
     return players;
   }
-  const OFFENSIVE = new Set(["QB", "RB", "WR", "TE", "FLEX", "OP"]);
-
-  it.each([1, 7, 42, 100])("seed %s: no team ends with an empty startable offensive slot", async (seed) => {
+  it.each([1, 7, 42, 100])("seed %s: no team ends with an empty required starter", async (seed) => {
     const players = realisticPool();
     const byId = new Map(players.map((p) => [p.id, p]));
     const picks = await runSnakeDraftAsync(players, { numTeams: 12, rng: mulberry32(seed), randomness: 0 });
     for (let t = 1; t <= 12; t++) {
       const roster = picks.filter((pk) => pk.team === t).map((pk) => byId.get(pk.player.id)!);
-      const needs = fillRoster(roster, SUPERFLEX_ROSTER).needs;
-      const offenseEmpty = needs.filter((slot) => OFFENSIVE.has(slot));
-      expect(offenseEmpty).toEqual([]);
+      expect(fillRoster(roster, SUPERFLEX_ROSTER).needs).toEqual([]);
     }
   });
 

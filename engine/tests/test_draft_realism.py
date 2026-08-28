@@ -5,7 +5,7 @@ from dataclasses import replace
 import pytest
 
 from blitz_engine.backtest import draft_realism as dr
-from blitz_engine.simulation.season_eval import SeasonPlayer
+from blitz_engine.simulation.season_eval import SeasonPlayer, build_players
 
 
 def _player(pid: str, pos: str, value: float = 100.0, bye: int = 1) -> SeasonPlayer:
@@ -117,6 +117,15 @@ def test_real_bridge_replays_seed_and_varies_without_duplicates() -> None:
     assert drafted
 
 
+def test_real_bridge_completes_every_required_roster() -> None:
+    specs = dr.draft_specs(20260828, 18)
+    for spec, result in zip(specs, dr.draft(specs), strict=True):
+        by_id = {p.player_id: p for p in build_players(2024, spec.row["id"])}
+        rosters = [[by_id[pid] for pid in ids] for ids in result["rosters"]]
+        reports = dr.validate_rosters(rosters, spec.row)
+        assert all(r["legal"] and r["starter_complete"] for r in reports)
+
+
 def test_evaluate_draft_reports_required_reality_dimensions() -> None:
     spec = dr.draft_specs(20260828, 1)[0]
     result = dr.evaluate_draft(spec, dr.draft([spec])[0], n_seasons=2)
@@ -143,11 +152,17 @@ def test_evaluate_draft_reports_required_reality_dimensions() -> None:
 
 
 def test_invalid_roster_has_zero_replacement_quality_instead_of_crashing() -> None:
-    specs = dr.draft_specs(20260828, 3)
-    reports = [
-        dr.evaluate_draft(spec, result, n_seasons=1)
-        for spec, result in zip(specs, dr.draft(specs), strict=True)
-    ]
-    invalid = [r for r in reports if not r["test_team"]["legal"]]
-    assert invalid
-    assert all(r["test_team"]["replacement_quality"] == 0 for r in invalid)
+    spec = dr.draft_specs(20260828, 1)[0]
+    result = dr.draft([spec])[0]
+    pool = build_players(2024, spec.row["id"])
+    by_id = {p.player_id: p for p in pool}
+    drafted = {pid for roster in result["rosters"] for pid in roster}
+    roster = result["rosters"][spec.test_seat]
+    kicker = next(i for i, pid in enumerate(roster) if by_id[pid].position == "K")
+    roster[kicker] = next(
+        p.player_id for p in pool if p.position == "WR" and p.player_id not in drafted
+    )
+
+    report = dr.evaluate_draft(spec, result, n_seasons=1)
+    assert report["test_team"]["legal"] is False
+    assert report["test_team"]["replacement_quality"] == 0

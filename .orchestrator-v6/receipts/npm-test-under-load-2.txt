@@ -3,7 +3,7 @@
 > vitest run
 
 
- RUN  v3.2.6 /Users/andrew/Documents/GitHub/blitzboard/.worktrees/v6-prod/frontend
+ RUN  v3.2.6 $HOME/Documents/GitHub/blitzboard/.worktrees/v6-prod/frontend
 
  ✓ lib/draftAI.candidatePool.test.ts (6 tests) 17127ms
    ✓ UI candidatePool auto-draft path: end-state invariants > seed 1: no empty offensive starter  2946ms

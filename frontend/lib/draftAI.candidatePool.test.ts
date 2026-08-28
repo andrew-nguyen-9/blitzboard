@@ -67,17 +67,14 @@ async function runViaCandidatePool(players: PlayerWithValue[], numTeams: number,
   return picks;
 }
 
-const OFFENSIVE = new Set(["QB", "RB", "WR", "TE", "FLEX", "OP"]);
-
 describe("UI candidatePool auto-draft path: end-state invariants", () => {
-  it.each([1, 7, 42])("seed %s: no empty offensive starter", async (seed) => {
+  it.each([1, 7, 42])("seed %s: no empty required starter", async (seed) => {
     const players = realisticPool();
     const byId = new Map(players.map((p) => [p.id, p]));
     const picks = await runViaCandidatePool(players, 12, mulberry32(seed));
     for (let t = 1; t <= 12; t++) {
       const roster = picks.filter((pk) => pk.team === t).map((pk) => byId.get(pk.player.id)!);
-      const empty = fillRoster(roster, SUPERFLEX_ROSTER).needs.filter((s) => OFFENSIVE.has(s));
-      expect(empty).toEqual([]);
+      expect(fillRoster(roster, SUPERFLEX_ROSTER).needs).toEqual([]);
     }
   });
   it.each([1, 7, 42])("seed %s: no team holds 2+ K or 2+ DST before final 2 rounds", async (seed) => {

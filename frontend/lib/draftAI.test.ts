@@ -203,9 +203,9 @@ describe("availability", () => {
 });
 
 describe("isCapped (hard K/DST gate)", () => {
-  it("blocks a 2nd K before the final rounds and allows it inside them", () => {
+  it("blocks a 2nd K in every round", () => {
     expect(isCapped(mk("k2", "K", 120), { K: 1 }, false)).toBe(true);
-    expect(isCapped(mk("k2", "K", 120), { K: 1 }, true)).toBe(false);
+    expect(isCapped(mk("k2", "K", 120), { K: 1 }, true)).toBe(true);
     expect(isCapped(mk("k1", "K", 120), { K: 0 }, false)).toBe(false);
   });
 });
