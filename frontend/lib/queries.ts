@@ -2,6 +2,7 @@
 // convention). Every helper is null-safe: returns empty/falsy when the client
 // is unconfigured so the UI renders empty states instead of throwing.
 import { getSupabase } from "./supabase";
+import { isDraftBoardEligible } from "./availability";
 import { careerRows, type SeasonRow } from "./playerStats";
 import type { BoxStats } from "./playerColumns";
 import type {
@@ -290,7 +291,7 @@ export async function getAllPlayersByValue(engine: Engine = "vorp"): Promise<Pla
     if (rows.length < PAGE) break;
     afterRank = (rows[rows.length - 1] as any).rank;
   }
-  return out;
+  return out.filter(isDraftBoardEligible);
 }
 
 // Player ids rostered anywhere in the league (for the free-agent filter, #3).

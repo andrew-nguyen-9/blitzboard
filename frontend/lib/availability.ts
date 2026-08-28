@@ -26,9 +26,21 @@ const STATUS_P: Record<string, number> = {
 // Local proxy for e2a's FREE_AGENT roster-state ceiling until the real signal is published.
 const FREE_AGENT_P = 0.02;
 
+const INACTIVE_ROSTER_STATUSES = new Set(["inactive", "retired", "non_roster", "cut"]);
+
+function rosterStatus(status: string | null | undefined): string {
+  return (status ?? "").trim().toLowerCase().replace(/\s+/g, "_");
+}
+
+// Manual picks must not offer records Sleeper explicitly marks off-roster.
+// Free agents with no definitive inactive status remain visible for late signings.
+export function isDraftBoardEligible(p: PlayerWithValue): boolean {
+  return !INACTIVE_ROSTER_STATUSES.has(rosterStatus(p.status));
+}
+
 function localEstimate(p: PlayerWithValue): number {
-  const rosterStatus = (p.status ?? "").trim().toLowerCase().replace(/\s+/g, "_");
-  if (rosterStatus && STATUS_P[rosterStatus] === 0) return 0;
+  const status = rosterStatus(p.status);
+  if (status && STATUS_P[status] === 0) return 0;
   if (p.nfl_team == null) return FREE_AGENT_P;
   const s = (p.injury_status ?? "").trim().toLowerCase();
   return s ? (STATUS_P[s] ?? NEUTRAL_AVAILABILITY) : NEUTRAL_AVAILABILITY;
