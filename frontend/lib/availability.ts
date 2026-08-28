@@ -32,10 +32,10 @@ function rosterStatus(status: string | null | undefined): string {
   return (status ?? "").trim().toLowerCase().replace(/\s+/g, "_");
 }
 
-// Manual picks must not offer records Sleeper explicitly marks off-roster.
-// Free agents with no definitive inactive status remain visible for late signings.
+// A redraft board offers only current NFL roster members. This also removes
+// historical records that Sleeper still labels Active but no longer assigns a team.
 export function isDraftBoardEligible(p: PlayerWithValue): boolean {
-  return !INACTIVE_ROSTER_STATUSES.has(rosterStatus(p.status));
+  return p.nfl_team != null && !INACTIVE_ROSTER_STATUSES.has(rosterStatus(p.status));
 }
 
 function localEstimate(p: PlayerWithValue): number {

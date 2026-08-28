@@ -42,4 +42,8 @@ describe("availabilityOf", () => {
     expect(isDraftBoardEligible(player())).toBe(true);
     expect(isDraftBoardEligible(player({ injury_status: "Questionable" }))).toBe(true);
   });
+
+  it("hides unrostered free agents from the redraft board", () => {
+    expect(isDraftBoardEligible(player({ nfl_team: null }))).toBe(false);
+  });
 });
