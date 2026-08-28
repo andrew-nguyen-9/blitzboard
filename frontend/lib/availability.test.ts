@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { availabilityOf, ZERO_AVAILABILITY_EPS } from "./availability";
+import { availabilityOf, isDraftBoardEligible, ZERO_AVAILABILITY_EPS } from "./availability";
 import type { PlayerWithValue } from "./types";
 
 function player(overrides: Partial<PlayerWithValue> = {}): PlayerWithValue {
@@ -29,5 +29,17 @@ describe("availabilityOf", () => {
 
   it("keeps an active rostered player fully available", () => {
     expect(availabilityOf(player())).toBe(1);
+  });
+
+  it.each(["Inactive", "Retired", "non_roster", "cut"])(
+    "hides a %s player from the manual draft board",
+    (status) => {
+      expect(isDraftBoardEligible(player({ status }))).toBe(false);
+    },
+  );
+
+  it("keeps active and temporarily injured players on the manual board", () => {
+    expect(isDraftBoardEligible(player())).toBe(true);
+    expect(isDraftBoardEligible(player({ injury_status: "Questionable" }))).toBe(true);
   });
 });
