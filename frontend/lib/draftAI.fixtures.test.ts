@@ -343,7 +343,7 @@ describe("auto-draft end-state invariant (full 12-team sim)", () => {
       for (let t = 1; t <= 12; t++) {
         const roster = picks.filter((pk) => pk.team === t).map((pk) => byId.get(pk.player.id)!);
         const fill = fillRoster(roster, SUPERFLEX_ROSTER);
-        expect(fill.needs.filter((slot) => OFFENSIVE.has(slot))).toEqual([]); // legal lineup, both arms
+        expect(fill.needs).toEqual([]); // complete required lineup, both arms
         sum += fill.projectedPoints;
       }
       return sum;
