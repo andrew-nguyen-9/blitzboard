@@ -144,3 +144,41 @@ paths only in this uncommitted execution narrative; committed configuration rema
   the deterministic terminal failure; official reviewer reproduction is still required
 - next bounded action: commit producer evidence, rerun clean-tree C05 authority tests, then review
   the durable commit from the reviewer worktree
+
+## Post-commit complete verification
+
+- actual start: Friday, 2026-08-28 08:51:21 AM CDT (-0500)
+- actual end: Friday, 2026-08-28 09:01:38 AM CDT (-0500)
+- elapsed: 10m17s
+- deadline/permission amendment: Andrew enabled full local permissions after the sandbox approval
+  delay and extended the hard stop from 1:00 PM to 5:00 PM CDT; no product scope changed
+- producer implementation commit: `1526540f2c790839dd547089edad0d7c3787deb9`
+- clean committed authority suite: 127 passed in 19.41s, exit 0
+- immutable reviewer probes: all five SHA-256 values equal the accepted C05E reviewer record; their
+  eight tests are included in the 127-pass run
+- full engine pytest first invocation: 3,877 passed, 1 skipped, 11 failed in 195.61s because the
+  command omitted the probes' mandatory `C05_PROD_ROOT`; root cause was deterministic command setup
+- corrected full engine pytest with `C05_PROD_ROOT` bound to the committed producer: 3,888 passed,
+  1 skipped in 199.05s, exit 0
+- full engine Ruff: exit 1, four pre-existing findings in immutable C05 probes (three I001, one
+  E501); probe bytes intentionally preserved
+- frontend build: exit 0; compiled, generated 25 static pages; one pre-existing React hook warning
+- frontend typecheck: exit 0
+- frontend lint: exit 0, zero errors and one pre-existing warning
+- frontend tests: 61 files passed; 553 passed, 4 skipped; exit 0
+- pipeline pytest: 157 passed in 5.78s; exit 0
+- client bundle audit: 63 chunks scanned, no service-role or secret tokens; exit 0
+- secret-pattern scan: one documentation-only placeholder `SUPABASE_SERVICE_ROLE_KEY=...`; no value
+- frozen experiment/promotion/evaluator diff from `9d71428`: empty; hashes match recorded values
+- bench-shape generator parity: exact; canonical hashes match recorded values
+- portable-path scan: five pre-existing `/Users/andrew/...` hits in C05/npm receipts, exit 0 with
+  findings; no C06-added username-specific home path
+- changed-path inventory: seven producer-owned C06 paths; `git diff --check` exit 0
+- original checkout: still `9192163b5be121e645e5574d7e04855725b4895f` on `main` with the same
+  user-owned `.serena/project.yml`, `.worktrees/`, `AGENTS.md`, and `tmp/` status; untouched
+- options after full verification: edit immutable probes/config and historical receipts; correct v5
+  strategy; preserve evidence and finish independent BLOCK review
+- selected: preserve evidence. The invalid-roster defect already blocks landing, and altering
+  immutable probes, accepted historical receipts, or v5 strategy would exceed C06's correction scope
+- next bounded action: commit this verification addendum, remove runtime dependency symlinks, and
+  begin artifact-first reviewer reproduction against the final producer SHA

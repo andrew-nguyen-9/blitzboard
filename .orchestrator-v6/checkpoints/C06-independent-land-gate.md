@@ -62,7 +62,20 @@ attempted.
   the committed clean producer tree
 - full engine Ruff: pre-existing four immutable-probe formatting findings
 - portable-path audit: pre-existing committed user-home paths in four C05/npm receipt files
-- full frontend, pipeline, and engine suites: not run after the deterministic terminal blocker
+
+Post-commit verification against `1526540f2c790839dd547089edad0d7c3787deb9`:
+
+- promotion plus every C05 test: 127 passed
+- full engine pytest with required producer-root binding: 3,888 passed, 1 skipped
+- frontend build/typecheck/lint/tests: exit 0; tests 553 passed, 4 skipped; lint has one warning
+- pipeline pytest: 157 passed
+- client bundle secret audit: passed; no service-role or secret token
+- frozen-file comparison and hashes: passed
+- browser/canonical bench-shape parity: exact
+- `git diff --check`: passed
+- full engine Ruff: failed only on four pre-existing immutable-probe formatting findings
+- portable-path audit: failed on five pre-existing user-home strings in historical C05/npm receipts
+- original checkout: unchanged from the recorded dirty `main` state
 
 ## Required disposition
 
