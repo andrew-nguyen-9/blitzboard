@@ -1,8 +1,8 @@
 # C03 public interface freeze v1
 
-Status: **frozen before C03 production implementation**  
-Accepted dependency: C02C `417af276dd4438d8a35f38d08bfc26206044925e`  
-Companion schema: `C03-public-interface-v1.schema.json`  
+Status: **frozen before C03 production implementation**
+Accepted dependency: C02C `417af276dd4438d8a35f38d08bfc26206044925e`
+Companion schema: `C03-public-interface-v1.schema.json`
 Companion TypeScript declarations: `C03-public-interface-v1.ts`
 
 This contract is the concurrency boundary for C03 producers and C04 consumers. Changing a field, export, status, hash rule, or fallback semantic requires a new `C03-public-interface-v2.*` freeze before implementation. V1 is never overwritten.

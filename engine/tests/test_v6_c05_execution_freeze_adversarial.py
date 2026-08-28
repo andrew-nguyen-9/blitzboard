@@ -41,4 +41,3 @@ def test_arm_runner_emits_accepted_c02_proxy_metrics() -> None:
     assert run.championship_proxy is not None
     assert len(run.playoff_proxy) == row["teams"]
     assert len(run.championship_proxy) == row["teams"]
-

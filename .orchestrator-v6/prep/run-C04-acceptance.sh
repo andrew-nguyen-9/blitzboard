@@ -10,4 +10,3 @@ npx vitest run \
 
 cd "$repo_root"
 git diff --check
-
