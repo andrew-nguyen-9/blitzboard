@@ -295,6 +295,23 @@ describe("candidatePool (Epic 4 auto-draft freeze fix)", () => {
     const pool = [mk("a", "RB", 100), mk("b", "WR", 90)];
     expect(candidatePool(pool, 80)).toHaveLength(2);
   });
+  it("keeps active rostered kickers reachable when higher-valued historical rows fill the cap", () => {
+    const pool: PlayerWithValue[] = [];
+    for (let i = 0; i < 80; i++) pool.push(mk(`wr${i}`, "WR", 300 - i, { nfl_team: "KC" }));
+    for (let i = 0; i < 8; i++) {
+      const retired = mk(`retired-k${i}`, "K", 160 - i, { nfl_team: "DAL" });
+      retired.status = "Retired";
+      pool.push(retired);
+    }
+    for (let i = 0; i < 8; i++) {
+      const active = mk(`active-k${i}`, "K", 140 - i, { nfl_team: "KC" });
+      active.status = "Active";
+      pool.push(active);
+    }
+
+    const capped = candidatePool(pool, 80);
+    expect(capped.filter((p) => p.id.startsWith("active-k"))).toHaveLength(8);
+  });
 });
 
 describe("soft K/DST penalty (4.6)", () => {

@@ -20,12 +20,15 @@ export type AvailabilityMap = Record<string, number>;
 // Mirrors blitz_engine.survival.availability.STATUS_P (report-status override, not a fitted prior).
 const STATUS_P: Record<string, number> = {
   active: 1, healthy: 1, probable: 0.95, questionable: 0.5, doubtful: 0.1,
-  out: 0, inactive: 0, dnp: 0, ir: 0, pup: 0, nfi: 0, susp: 0, sus: 0, suspended: 0,
+  out: 0, inactive: 0, retired: 0, non_roster: 0, cut: 0,
+  dnp: 0, ir: 0, pup: 0, nfi: 0, susp: 0, sus: 0, suspended: 0,
 };
 // Local proxy for e2a's FREE_AGENT roster-state ceiling until the real signal is published.
 const FREE_AGENT_P = 0.02;
 
 function localEstimate(p: PlayerWithValue): number {
+  const rosterStatus = (p.status ?? "").trim().toLowerCase().replace(/\s+/g, "_");
+  if (rosterStatus && STATUS_P[rosterStatus] === 0) return 0;
   if (p.nfl_team == null) return FREE_AGENT_P;
   const s = (p.injury_status ?? "").trim().toLowerCase();
   return s ? (STATUS_P[s] ?? NEUTRAL_AVAILABILITY) : NEUTRAL_AVAILABILITY;
