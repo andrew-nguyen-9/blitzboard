@@ -171,7 +171,7 @@ paths only in this uncommitted execution narrative; committed configuration rema
 - secret-pattern scan: one documentation-only placeholder `SUPABASE_SERVICE_ROLE_KEY=...`; no value
 - frozen experiment/promotion/evaluator diff from `9d71428`: empty; hashes match recorded values
 - bench-shape generator parity: exact; canonical hashes match recorded values
-- portable-path scan: five pre-existing `/Users/andrew/...` hits in C05/npm receipts, exit 0 with
+- portable-path scan: five pre-existing username-specific home-path hits in C05/npm receipts, exit 0 with
   findings; no C06-added username-specific home path
 - changed-path inventory: seven producer-owned C06 paths; `git diff --check` exit 0
 - original checkout: still `9192163b5be121e645e5574d7e04855725b4895f` on `main` with the same
@@ -182,3 +182,14 @@ paths only in this uncommitted execution narrative; committed configuration rema
   immutable probes, accepted historical receipts, or v5 strategy would exceed C06's correction scope
 - next bounded action: commit this verification addendum, remove runtime dependency symlinks, and
   begin artifact-first reviewer reproduction against the final producer SHA
+
+## Reviewer-discovered documentation correction
+
+- actual time: Friday, 2026-08-28 09:05:02 AM CDT (-0500)
+- finding: the producer log repeated the forbidden username-specific path pattern while describing
+  pre-existing findings, contradicting its claim that C06 added no such path
+- options: leave the contradiction and BLOCK it; remove the audit statement; replace only the path
+  literal with portable wording and preserve the finding
+- selected: replace only the literal with `username-specific home-path`; no evidence or conclusion
+  changed
+- next bounded action: commit the correction and restart artifact-first review at the new SHA
