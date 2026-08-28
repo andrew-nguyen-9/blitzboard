@@ -166,13 +166,21 @@ export function candidatePool(pool: PlayerWithValue[], n = 80): PlayerWithValue[
   const byProj = [...pool].sort((a, b) => proj(b) - proj(a));
   const top = byProj.slice(0, n);
   const have = new Set(top.map((p) => p.id));
+  // Projection ties are common at K/DST (unranked special-team rows share the
+  // same baseline). Build each positional reserve from viable players first so
+  // historical/free-agent rows cannot crowd every active option out of the cap.
+  const byAvailability = [...pool].sort(
+    (a, b) => availabilityOf(b) - availabilityOf(a) || proj(b) - proj(a),
+  );
   for (const want of POS_GROUPS) {
-    let kept = top.filter((q) => norm(q.position) === want).length;
-    for (const p of byProj) {
+    let kept = 0;
+    for (const p of byAvailability) {
       if (kept >= PER_POS) break;
-      if (norm(p.position) === want && !have.has(p.id)) {
-        top.push(p);
-        have.add(p.id);
+      if (norm(p.position) === want) {
+        if (!have.has(p.id)) {
+          top.push(p);
+          have.add(p.id);
+        }
         kept++;
       }
     }
