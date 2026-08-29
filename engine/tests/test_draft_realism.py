@@ -39,6 +39,7 @@ def test_specs_replay_exactly_and_cover_required_formats_and_seats() -> None:
     assert {s.row["bench_slots"] for s in a} == {4, 6, 8}
     assert {s.slot_band for s in a} == {"front", "middle", "back"}
     assert all(0 <= s.test_seat < s.row["teams"] for s in a)
+    assert {s.season for s in a} == {2024}
 
 
 def test_specs_change_meaningfully_but_stay_in_the_same_matrix() -> None:
@@ -130,6 +131,7 @@ def test_evaluate_draft_reports_required_reality_dimensions() -> None:
     spec = dr.draft_specs(20260828, 1)[0]
     result = dr.evaluate_draft(spec, dr.draft([spec])[0], n_seasons=2)
     assert result["synthetic_non_authoritative"] is True
+    assert result["season"] == 2024
     assert result["model_evaluator"] == dr.EVALUATOR
     assert len(result["player_selections"]) == spec.row["teams"]
     if not result["test_team"]["legal"]:

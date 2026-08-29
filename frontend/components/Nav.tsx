@@ -55,7 +55,7 @@ export default async function Nav() {
             </li>
           )}
         </ul>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           {/* Mobile nav menu — the desktop link bar is hidden below md, so on phones the
               sections are reachable here. Native <details> disclosure (no client JS,
               keeps Nav a Server Component); reuses the .a11y marker-reset + panel styling. */}

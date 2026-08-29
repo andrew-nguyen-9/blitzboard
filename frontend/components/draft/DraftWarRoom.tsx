@@ -160,6 +160,7 @@ export default function DraftWarRoom({
       const equity = equityImpact(myTeamPicks, p, roster);
       const mean = proj(p);
       const boom = projectionCeiling(p) ?? mean; // C01 unit fix: raw ceiling vs raw mean
+      const nextTurnEdge = sp.explanation.components.find((component) => component.name === "immediate_lineup")?.value ?? 0;
       return {
         player: p,
         equity,
@@ -168,7 +169,7 @@ export default function DraftWarRoom({
           need: needed.has(ppos),
           scarce: (scarce[ppos] ?? 99) <= numTeams,
           run: runs.hot.includes(ppos),
-          vona: equity >= 10,
+          vona: nextTurnEdge >= 10,
           upside: mean > 0 && boom > mean * 1.12,
           value: valueFlag(p) === "value",
         }),
@@ -324,14 +325,15 @@ export default function DraftWarRoom({
       {/* sync bar (unauth) */}
       {!authed && (
         <div className="glass mb-4 flex flex-wrap items-center gap-3 p-3">
-          <div className="inline-flex rounded-full border border-hairline p-1 text-label">
-            <button onClick={() => { setMode("manual"); setLiveSetup(null); }} className={`rounded-full px-3 py-1 transition ${mode === "manual" && !liveSetup ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}>Manual</button>
-            <button onClick={() => setLiveSetup("sleeper")} className={`rounded-full px-3 py-1 transition ${mode === "sleeper" || liveSetup === "sleeper" ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}>Sleeper Live</button>
-            <button onClick={() => setLiveSetup("espn")} className={`rounded-full px-3 py-1 transition ${mode === "espn" || liveSetup === "espn" ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}>ESPN Live</button>
+          <div className="inline-flex rounded-full border border-hairline p-1 text-label" role="group" aria-label="Draft input source">
+            <button aria-pressed={mode === "manual" && !liveSetup} onClick={() => { setMode("manual"); setLiveSetup(null); }} className={`rounded-full px-3 py-1 transition ${mode === "manual" && !liveSetup ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}>Manual</button>
+            <button aria-pressed={mode === "sleeper" || liveSetup === "sleeper"} onClick={() => setLiveSetup("sleeper")} className={`rounded-full px-3 py-1 transition ${mode === "sleeper" || liveSetup === "sleeper" ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}>Sleeper Live</button>
+            <button aria-pressed={mode === "espn" || liveSetup === "espn"} onClick={() => setLiveSetup("espn")} className={`rounded-full px-3 py-1 transition ${mode === "espn" || liveSetup === "espn" ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}>ESPN Live</button>
           </div>
           {liveSetup && (
             <div className="flex items-center gap-2">
-              <input value={idInput} onChange={(e) => setIdInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && connect(liveSetup)} autoFocus
+              <label htmlFor="draft-source-id" className="sr-only">{liveSetup === "espn" ? "ESPN league ID" : "Sleeper draft ID"}</label>
+              <input id="draft-source-id" value={idInput} onChange={(e) => setIdInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && connect(liveSetup)} autoFocus
                 placeholder={liveSetup === "espn" ? "ESPN league_id" : "Sleeper draft_id…"}
                 className="w-48 rounded-full border border-hairline bg-surface px-3 py-1.5 text-label outline-none focus:border-accent" />
               <button onClick={() => connect(liveSetup)} disabled={!idInput.trim()}
@@ -341,8 +343,8 @@ export default function DraftWarRoom({
             </div>
           )}
           {live && (
-            <span className="inline-flex items-center gap-2 rounded-full border border-hairline px-3 py-1.5 text-label">
-              <span className="h-2 w-2 rounded-full" style={{ background: live.status === "live" ? "#33D17A" : live.status === "error" ? "#E0573A" : "#E0A33A" }} />
+            <span className="inline-flex items-center gap-2 rounded-full border border-hairline px-3 py-1.5 text-label" aria-live="polite">
+              <span aria-hidden="true" className="h-2 w-2 rounded-full" style={{ background: live.status === "live" ? "#33D17A" : live.status === "error" ? "#E0573A" : "#E0A33A" }} />
               {mode === "espn" ? "ESPN" : "Sleeper"} {live.status}
             </span>
           )}
@@ -355,15 +357,15 @@ export default function DraftWarRoom({
       )}
 
       {live && live.status === "error" && (
-        <div className="mb-4 rounded-xl border border-red-400/40 bg-red-400/5 p-3 text-label text-red-300">
+        <div role="alert" className="mb-4 rounded-xl border border-red-400/40 bg-red-400/5 p-3 text-label text-red-300">
           {mode.toUpperCase()} feed stalled ({live.error}). Still retrying — or switch to manual to keep drafting.
         </div>
       )}
 
       {/* view tabs */}
-      <div className="mb-4 inline-flex rounded-full border border-hairline p-1 text-label">
+      <div className="mb-4 flex w-fit max-w-full flex-wrap rounded-full border border-hairline p-1 text-label" role="group" aria-label="Draft board view">
         {(["board", "teams", "log", "analysis"] as View[]).map((v) => (
-          <button key={v} onClick={() => setView(v)}
+          <button key={v} aria-pressed={view === v} onClick={() => setView(v)}
             className={`rounded-full px-4 py-1 capitalize transition ${view === v ? "bg-accent text-bg" : "text-ink-muted hover:text-ink"}`}>
             {v === "teams" ? "All teams" : v === "log" ? "Pick log" : v}
           </button>
@@ -379,60 +381,77 @@ export default function DraftWarRoom({
       {view === "analysis" && <DraftAnalysis picks={picks} config={config} mySlot={mySlot} />}
 
       {view === "board" && (
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-          <div>
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <section aria-label="Draft recommendations" className="min-w-0 lg:col-start-2 lg:row-start-1">
+            {!complete && <LiveRecommendations recs={recs} isMyPick={isMyPick} picksUntilMe={picksUntilMe} onDraft={mode === "manual" ? draft : undefined} />}
+          </section>
+
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1 lg:row-span-2">
             {/* status */}
             <div className="glass mb-4 flex flex-wrap items-center gap-4 p-4">
-              <div>
-                <div className="text-label text-ink-muted">ROUND {round} · PICK {currentPickNo}</div>
+              <div role="status" aria-live="polite" aria-atomic="true" aria-label="Draft status">
+                <div aria-hidden="true" className="text-label text-ink-muted">ROUND {round} · PICK {currentPickNo}</div>
                 <div className={`font-display text-heading ${isMyPick ? "text-accent" : ""}`}>
                   {complete ? "Draft complete" : isMyPick ? "YOUR PICK" : `${teamName(onClock)} on the clock`}
                 </div>
+                {picksUntilMe != null && !isMyPick && !complete && <div className="text-label text-ink-muted">your pick in {picksUntilMe}</div>}
               </div>
-              {picksUntilMe != null && !isMyPick && !complete && <div className="text-label text-ink-muted">your pick in {picksUntilMe}</div>}
               {mode === "manual" && (
-                <div className="ml-auto flex items-center gap-2">
+                <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
                   <button onClick={() => runSim(true)} disabled={complete} className="rounded-full border border-hairline px-3 py-1.5 text-label transition hover:bg-surface-elevated disabled:opacity-40">Sim to my pick</button>
-                  <button onClick={() => runSim(false)} disabled={complete} className="rounded-full border border-hairline px-3 py-1.5 text-label transition hover:bg-surface-elevated disabled:opacity-40">Auto-draft all</button>
                   <button onClick={undo} disabled={!manualPicks.length} className="rounded-full border border-hairline px-3 py-1.5 text-label transition hover:bg-surface-elevated disabled:opacity-40">Undo</button>
                   <button onClick={reset} disabled={!manualPicks.length} className="rounded-full border border-hairline px-3 py-1.5 text-label transition hover:bg-surface-elevated disabled:opacity-40">Reset</button>
+                  <details className="text-label">
+                    <summary>Simulation tools</summary>
+                    <div className="mt-2 max-w-64 rounded-xl border border-hairline bg-surface p-3">
+                      <p className="mb-2 text-ink-muted">Completes every remaining pick with the local simulation policy; this is not a forecast or recommendation authority.</p>
+                      <button onClick={() => runSim(false)} disabled={complete} className="rounded-full border border-hairline px-3 py-1.5 transition hover:bg-surface-elevated disabled:opacity-40">Auto-draft all</button>
+                    </div>
+                  </details>
                 </div>
               )}
             </div>
 
             {/* controls */}
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…"
+              <label htmlFor="available-player-search" className="sr-only">Search available players</label>
+              <input id="available-player-search" type="search" aria-label="Search available players" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…"
                 className="w-44 rounded-full border border-hairline bg-surface px-4 py-2 text-body outline-none focus:border-accent" />
-              {POSITIONS.map((p) => (
-                <button key={p} onClick={() => setPos(p)}
-                  className={`rounded-full px-3 py-1.5 text-label transition ${pos === p ? "bg-accent text-bg" : "border border-hairline text-ink-muted hover:text-ink"}`}>{p}</button>
-              ))}
+              <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter by position">
+                {POSITIONS.map((p) => (
+                  <button key={p} aria-pressed={pos === p} onClick={() => setPos(p)}
+                    className={`rounded-full px-3 py-1.5 text-label transition ${pos === p ? "bg-accent text-bg" : "border border-hairline text-ink-muted hover:text-ink"}`}>{p}</button>
+                ))}
+              </div>
             </div>
 
             {/* best available */}
-            <div className="glass overflow-hidden">
+            <div className="glass min-w-0">
+              <div role="region" aria-label="Available player table" tabIndex={0} className="overflow-x-auto">
               <table className="w-full text-left text-body">
+                <caption className="sr-only">Available players ranked by BlitzBoard</caption>
                 <thead className="border-b border-hairline text-label text-ink-muted">
                   <tr>
-                    <th className="px-3 py-2.5 font-normal">#</th>
-                    <th className="px-2 py-2.5 font-normal">Player</th>
-                    <th className="px-2 py-2.5 font-normal">Pos</th>
-                    <th className="px-2 py-2.5 text-right font-normal">Pts</th>
-                    <th className="px-3 py-2.5" />
+                    <th scope="col" className="px-3 py-2.5 font-normal"><span aria-hidden="true">Rank</span><span className="sr-only">BlitzBoard rank</span></th>
+                    <th scope="col" className="px-2 py-2.5 font-normal">Player</th>
+                    <th scope="col" className="px-2 py-2.5 font-normal">Pos</th>
+                    <th scope="col" className="px-2 py-2.5 text-right font-normal"><span aria-hidden="true">Proj pts</span><span className="sr-only">Projected fantasy points</span></th>
+                    <th scope="col" className="px-3 py-2.5"><span className="sr-only">Draft action</span></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {shown.map((p, i) => (
+                  {shown.map((p) => (
                     <tr key={p.id} className="border-b border-hairline/50 transition hover:bg-surface-elevated">
-                      <td className="px-3 py-2 font-mono text-ink-muted">{p.value?.rank ?? i + 1}</td>
-                      <td className="px-2 py-2"><Link href={`/players/${p.id}`} className="font-medium transition hover:text-accent">{p.full_name}</Link></td>
+                      <td className="px-3 py-2 font-mono text-ink-muted">
+                        {p.value?.rank ?? <><span aria-hidden="true">—</span><span className="sr-only">BlitzBoard rank unavailable</span></>}
+                      </td>
+                      <th scope="row" className="px-2 py-2 text-left font-normal"><Link href={`/players/${p.id}`} className="font-medium transition hover:text-accent">{p.full_name}</Link></th>
                       <td className="px-2 py-2 text-label text-ink-muted">{p.position === "DEF" ? "DST" : p.position ?? "—"}</td>
                       <td className="px-2 py-2 text-right font-mono text-label">{projPoints(p) > 0 ? projPoints(p).toFixed(0) : "—"}</td>
                       <td className="px-3 py-2 text-right">
                         {mode === "manual" ? (
-                          <button onClick={() => draft(p)} disabled={complete}
-                            className={`rounded-full px-3 py-1 text-label transition disabled:opacity-40 ${isMyPick ? "bg-accent text-bg" : "border border-hairline text-ink hover:bg-surface"}`}>
+                          <button aria-label={isMyPick ? `Draft ${p.full_name} to my team` : `Assign ${p.full_name} to ${teamName(onClock)}`} onClick={() => draft(p)} disabled={complete}
+                            className={`min-h-11 min-w-11 rounded-full px-3 py-1 text-label transition disabled:opacity-40 ${isMyPick ? "bg-accent text-bg" : "border border-hairline text-ink hover:bg-surface"}`}>
                             {isMyPick ? "Draft" : `→ ${teamName(onClock).slice(0, 6)}`}
                           </button>
                         ) : (
@@ -446,13 +465,12 @@ export default function DraftWarRoom({
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
 
-          {/* SIDEBAR — the war room */}
-          <aside className="space-y-6">
-            {!complete && <LiveRecommendations recs={recs} isMyPick={isMyPick} picksUntilMe={picksUntilMe} onDraft={mode === "manual" ? draft : undefined} />}
-
+          {/* SIDEBAR — secondary support panels */}
+          <aside aria-label="Draft support panels" className="min-w-0 space-y-6 lg:col-start-2 lg:row-start-2">
             <RosterHealthPanel health={health} projectedPoints={myRoster.projectedPoints} lastEquity={lastEquity} />
 
             <BenchPanel health={benchHp} drops={benchDrops} superflex={superflex} />
@@ -460,7 +478,7 @@ export default function DraftWarRoom({
             {!complete && <PreDraftPlan plan={plan} replanCount={replanCount} lastTrigger={lastTrigger} />}
 
             <div className="glass p-4">
-              <h3 className="mb-3 text-label text-ink-muted">MY ROSTER</h3>
+              <h2 className="mb-3 text-label text-ink-muted">MY ROSTER</h2>
               <div className="space-y-1.5 text-body">
                 {myRoster.starters.map((s, i) => (
                   <div key={i} className="flex items-center justify-between">
@@ -475,7 +493,7 @@ export default function DraftWarRoom({
             </div>
 
             <div className="glass p-4">
-              <h3 className="mb-3 text-label text-ink-muted">SETTINGS</h3>
+              <h2 className="mb-3 text-label text-ink-muted">SETTINGS</h2>
               <label className="flex items-center justify-between py-1 text-body">
                 My slot
                 <input type="number" min={1} max={numTeams} value={mySlot} onChange={(e) => setMySlot(+e.target.value)}
@@ -490,7 +508,7 @@ export default function DraftWarRoom({
             </div>
 
             <div className="glass p-4">
-              <h3 className="mb-3 text-label text-ink-muted">RECENT PICKS</h3>
+              <h2 className="mb-3 text-label text-ink-muted">RECENT PICKS</h2>
               <div className="space-y-1 text-label">
                 {picks.slice(-8).reverse().map((p) => (
                   <div key={p.pickNo} className="flex items-center gap-2">

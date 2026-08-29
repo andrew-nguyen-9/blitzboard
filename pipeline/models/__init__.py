@@ -5,7 +5,7 @@ P1 ships real projectors + a working VORP engine; Monte Carlo lands in P7.
 """
 from .scoring import score_stats, score_kicking, score_defense, POSITION_FLOOR
 from .league_rules import LeagueRules, load_league_rules
-from .adp import fetch_ffc_adp, positional_order
+from .adp import fetch_ffc_adp, load_draft_sheet, positional_order
 from .projector import (
     Projection,
     Projector,
@@ -29,7 +29,7 @@ from .factors import (
 from .special_teams import KickerProjector, DefenseProjector
 from .predictability import Predictability, td_turnover_share
 from .sentiment import SentimentScorer, VaderScorer, PlayerMatcher, SentimentResult
-from .value_engine import ValueEngine, VorpEngine, MonteCarloEngine, PlayerValue
+from .value_engine import ValueEngine, VorpEngine, MonteCarloEngine, PlayerValue, blend_rankings
 from .season_sim import SeasonSimulator, SeasonOutcome, SimInput, from_per_game, from_projection
 
 __all__ = [
@@ -69,9 +69,11 @@ __all__ = [
     "score_kicking",
     "score_defense",
     "fetch_ffc_adp",
+    "load_draft_sheet",
     "positional_order",
     "ValueEngine",
     "VorpEngine",
     "MonteCarloEngine",
     "PlayerValue",
+    "blend_rankings",
 ]

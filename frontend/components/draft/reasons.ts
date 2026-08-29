@@ -14,19 +14,25 @@ export interface WhyChip {
 export interface ReasonInput {
   need?: boolean; // fills one of my open starter slots
   scarce?: boolean; // starter-caliber supply at the position is thin
-  run?: boolean; // a positional run is underway → get ahead of it
-  vona?: boolean; // large value over the player I'd still get next turn
-  upside?: boolean; // ceiling well above median
-  value?: boolean; // falling past ADP → market value
+  run?: boolean; // recent picks are concentrated at this position
+  vona?: boolean; // projected lineup value over the estimated next-turn replacement
+  upside?: boolean; // ceiling at least 12% above projection mean
+  value?: boolean; // BlitzBoard rank is 12+ picks earlier than stored ADP
 }
 
 const CHIP: Record<WhyKey, { label: string; title: string }> = {
-  vona: { label: "VONA", title: "Big value over the next available at this position" },
+  vona: {
+    label: "next-turn edge",
+    title: "Projected lineup value over the estimated next-turn replacement; next-turn survival probability unavailable",
+  },
   scarce: { label: "scarce", title: "Starter-caliber supply here is running thin" },
-  run: { label: "run-risk", title: "A run is underway — get ahead of it" },
+  run: { label: "recent run", title: "Recent picks are concentrated at this position" },
   need: { label: "fills need", title: "Fills one of your open starting slots" },
-  upside: { label: "upside", title: "Ceiling well above the median outcome" },
-  value: { label: "ADP value", title: "Falling past ADP — a market value" },
+  upside: { label: "upside", title: "Projection ceiling is at least 12% above projection mean; not a probability" },
+  value: {
+    label: "rank/ADP gap · source/date unknown",
+    title: "BlitzBoard rank is 12+ picks earlier than stored ADP; source/date unavailable",
+  },
 };
 
 // Order reflects decision priority: need first, then the market forces.
@@ -34,5 +40,5 @@ const ORDER: WhyKey[] = ["need", "vona", "scarce", "run", "value", "upside"];
 
 export function reasonChips(input: ReasonInput): WhyChip[] {
   const chips = ORDER.filter((k) => input[k]).map((k) => ({ key: k, ...CHIP[k] }));
-  return chips.length ? chips : [{ key: "value", label: "best value", title: "Best available value on the board" }];
+  return chips.length ? chips : [{ key: "value", label: "board alternative", title: "One of the four current BlitzBoard options" }];
 }

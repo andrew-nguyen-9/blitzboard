@@ -164,9 +164,33 @@ describe("C04 consumer of frozen C03 ResolveBenchShape", () => {
       breakout: { value: null, basis: null, evidenceIds: [], degradedInputs: ["missing_ceiling"] },
     });
     const text = formatDraftExplanation(payload).join(" ");
+    expect(text).toContain(
+      "Next-turn edge: 3.00 projected lineup points over the estimated next-turn positional replacement; next-turn survival probability unavailable.",
+    );
     expect(text).not.toContain("Contingent behind");
     expect(text).not.toContain("Upside basis");
-    expect(text).toContain("missing_ceiling");
+    expect(text).toContain("ceiling projection unavailable");
+    expect(text).not.toContain("missing_ceiling");
+  });
+
+  it("humanizes and deduplicates degraded inputs without changing the raw payload", () => {
+    const raw = [
+      "accepted_c02_c03_have_no_candidate_transaction_evidence",
+      "aggregate_only_no_candidate_transactions",
+      "missing_league_key",
+      "unsupported_evidence",
+      "missing_bye_metadata",
+      "missing_ceiling",
+      "missing_authoritative_depth",
+      "depth chart order missing or non-authoritative",
+      "unrecognized_internal_code",
+    ];
+    const payload = { ...buildDraftExplanation(input(() => unsupportedResolution())), degradedInputs: raw };
+
+    expect(formatDraftExplanation(payload).at(-1)).toBe(
+      "Limitations: candidate-level waiver/churn evidence unavailable; matching league evidence unavailable; league evidence is not supported for this configuration; bye-week data unavailable; ceiling projection unavailable; authoritative depth-role evidence unavailable; additional evidence unavailable.",
+    );
+    expect(payload.degradedInputs).toEqual(raw);
   });
 
   it("produces deterministic producer-blind traces", () => {

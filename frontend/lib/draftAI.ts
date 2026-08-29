@@ -542,3 +542,79 @@ export function pickAdp(ctx: AIContext): PlayerWithValue | null {
   }
   return best ?? ctx.pool[0] ?? null;
 }
+
+export interface HumanAdpOptions {
+  // 1 exactly follows the provider ranking; larger values model bounded human reaches.
+  topK?: number;
+}
+
+function marketAdp(player: PlayerWithValue): number {
+  const adp = player.value?.adp;
+  return typeof adp === "number" && Number.isFinite(adp) ? adp : Infinity;
+}
+
+function eligibleForSlot(player: PlayerWithValue, slot: RosterSlot): boolean {
+  const pos = norm(player.position);
+  return slot.eligible.some((eligible) => norm(eligible) === pos);
+}
+
+// Maximum bipartite matching between bodies and starting slots. This deliberately
+// consumes position only: using fillRoster here would leak model VOR through its sort.
+function starterCapacity(players: PlayerWithValue[], roster: RosterSlot[]): number {
+  const playerAtSlot = Array<number>(roster.length).fill(-1);
+  const place = (playerIndex: number, visited: boolean[]): boolean => {
+    for (let slotIndex = 0; slotIndex < roster.length; slotIndex++) {
+      if (visited[slotIndex] || !eligibleForSlot(players[playerIndex], roster[slotIndex])) continue;
+      visited[slotIndex] = true;
+      if (playerAtSlot[slotIndex] < 0 || place(playerAtSlot[slotIndex], visited)) {
+        playerAtSlot[slotIndex] = playerIndex;
+        return true;
+      }
+    }
+    return false;
+  };
+  let matched = 0;
+  for (let i = 0; i < players.length; i++) {
+    if (place(i, Array<boolean>(roster.length).fill(false))) matched++;
+  }
+  return matched;
+}
+
+// A source-isolated opponent for blind competitive benchmarks. It may observe only
+// provider ADP, identity, position, the opponent's roster, and a caller-supplied RNG.
+// It cannot observe BlitzBoard scores, projections, availability, or explanations.
+export function pickHumanAdp(
+  ctx: AIContext,
+  options: HumanAdpOptions = {},
+): PlayerWithValue | null {
+  const ownedSpecial = new Set(
+    ctx.teamPicks
+      .map((player) => norm(player.position))
+      .filter((pos) => pos === "K" || pos === "DST"),
+  );
+  let candidates = ctx.pool.filter((player) => {
+    const pos = norm(player.position);
+    return !((pos === "K" || pos === "DST") && ownedSpecial.has(pos));
+  });
+  if (candidates.length === 0) return null;
+
+  const currentCapacity = starterCapacity(ctx.teamPicks, ctx.roster);
+  const missingStarters = Math.max(0, ctx.roster.length - currentCapacity);
+  const picksRemaining = Math.max(1, ctx.totalRounds - ctx.round + 1);
+  if (missingStarters >= picksRemaining) {
+    const starterFillers = candidates.filter(
+      (player) => starterCapacity([...ctx.teamPicks, player], ctx.roster) > currentCapacity,
+    );
+    if (starterFillers.length > 0) candidates = starterFillers;
+  }
+
+  candidates.sort(
+    (a, b) => marketAdp(a) - marketAdp(b) || a.id.localeCompare(b.id),
+  );
+  const requested = options.topK ?? 8;
+  const topK = Math.max(1, Math.min(candidates.length, Math.floor(requested) || 1));
+  if (topK === 1) return candidates[0];
+  const rng = ctx.rng ?? Math.random;
+  const index = Math.floor(rng() * rng() * topK);
+  return candidates[index] ?? candidates[0];
+}

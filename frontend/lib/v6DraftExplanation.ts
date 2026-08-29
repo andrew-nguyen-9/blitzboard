@@ -186,6 +186,17 @@ function replacementComponent(evidence: ReplacementChurnEvidence): DraftScoreCom
   return component("waiver_replacement_churn", null, "unsupported", [], [evidence.reason]);
 }
 
+const DEGRADED_LIMITATION: Record<string, string> = {
+  accepted_c02_c03_have_no_candidate_transaction_evidence: "candidate-level waiver/churn evidence unavailable",
+  aggregate_only_no_candidate_transactions: "candidate-level waiver/churn evidence unavailable",
+  missing_league_key: "matching league evidence unavailable",
+  unsupported_evidence: "league evidence is not supported for this configuration",
+  missing_bye_metadata: "bye-week data unavailable",
+  missing_ceiling: "ceiling projection unavailable",
+  missing_authoritative_depth: "authoritative depth-role evidence unavailable",
+  "depth chart order missing or non-authoritative": "authoritative depth-role evidence unavailable",
+};
+
 export function formatC02OutcomeRef(ref: AcceptedC02OutcomeRef): string {
   return [
     ref.producerCommit,
@@ -272,7 +283,11 @@ export function buildDraftExplanation(input: DraftExplanationInput): DraftExplan
 export function formatDraftExplanation(payload: DraftExplanationPayload): readonly string[] {
   const lines: string[] = [];
   const immediate = payload.components.find((item) => item.name === "immediate_lineup");
-  if (immediate?.value) lines.push(`Immediate lineup contribution: ${immediate.value.toFixed(2)}.`);
+  if (immediate?.value) {
+    lines.push(
+      `Next-turn edge: ${immediate.value.toFixed(2)} projected lineup points over the estimated next-turn positional replacement; next-turn survival probability unavailable.`,
+    );
+  }
   for (const covered of payload.coveredAssignments) {
     lines.push(`Covers ${covered.slot} in week ${covered.week} for starter ${covered.starterId}.`);
   }
@@ -293,6 +308,7 @@ export function formatDraftExplanation(payload: DraftExplanationPayload): readon
     lines.push(`Soft redundancy cost (${redundancy.state}): ${Math.abs(redundancy.value).toFixed(2)}.`);
   }
   lines.push(`League evidence: ${payload.leagueEvidence.presentationState}.`);
-  if (payload.degradedInputs.length) lines.push(`Degraded inputs: ${payload.degradedInputs.join(", ")}.`);
+  const limitations = [...new Set(payload.degradedInputs.map((code) => DEGRADED_LIMITATION[code] ?? "additional evidence unavailable"))];
+  if (limitations.length) lines.push(`Limitations: ${limitations.join("; ")}.`);
   return lines;
 }
