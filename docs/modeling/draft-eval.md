@@ -144,6 +144,11 @@ before baking.
 
 ## 7. Related
 
+- `docs/modeling/blind-market-benchmark.md` — source-isolated historical human-market opponents,
+  augmented preseason player universe, campaign design, and current external-cohort verdict.
+- `docs/modeling/probabilistic-preseason-experiments.md` — causal point/distribution screens and
+  the component availability experiment. The historical appearance proxy is rejected as a draft
+  input even though the evaluation bridge can scope a validated map to a candidate arm.
 - `docs/modeling/experiments.md` — every fit, seed and command.
 - `docs/modeling/backtest-report.md` — the retired metric, kept and marked superseded.
 - `docs/design/v5-static-dynamic.md` — E12's cross-tier measurement built on this metric.

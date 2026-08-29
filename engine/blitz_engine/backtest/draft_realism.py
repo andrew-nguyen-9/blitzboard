@@ -1,4 +1,5 @@
 """C06 draft-realism land gate over the shipped TypeScript v5 policy."""
+
 from __future__ import annotations
 
 import argparse
@@ -44,6 +45,7 @@ class DraftSpec:
     row: dict[str, Any]
     test_seat: int
     slot_band: str
+    season: int = 2024
 
 
 def row(row_id: str) -> dict[str, Any]:
@@ -143,10 +145,7 @@ def classify_team(
     winnable = started_points >= league_median or delta_ci[1] >= 0
     strength = started_points / league_median if league_median else 0.0
     dominated = (
-        strength < 0.85
-        and delta_ci[1] < 0
-        and h2h < 0.40
-        and playoff < 0.5 * playoff_baseline
+        strength < 0.85 and delta_ci[1] < 0 and h2h < 0.40 and playoff < 0.5 * playoff_baseline
     )
     if dominated:
         label = "UNACCEPTABLE"
@@ -167,11 +166,17 @@ def _normal_ci(values: np.ndarray) -> tuple[float, float]:
 
 
 def evaluate_draft(
-    spec: DraftSpec, result: dict[str, Any], *, n_seasons: int = 4
+    spec: DraftSpec,
+    result: dict[str, Any],
+    *,
+    n_seasons: int = 4,
+    seat_policy: list[str] | None = None,
+    evaluator: str = EVALUATOR,
+    pool_override: list[se.SeasonPlayer] | None = None,
 ) -> dict[str, Any]:
     """Evaluate one shipped-v5 draft against its own autodraft cohort."""
     started = time.perf_counter()
-    pool = se.build_players(2024, spec.row["id"])
+    pool = pool_override or se.build_players(spec.season, spec.row["id"])
     by_id = {p.player_id: p for p in pool}
     rosters = [[by_id[pid] for pid in ids] for ids in result["rosters"]]
     flat = [p.player_id for roster_ in rosters for p in roster_]
@@ -197,7 +202,7 @@ def evaluate_draft(
         pool,
         rosters,
         spec.row,
-        seat_policy=["v5"] * len(rosters),
+        seat_policy=seat_policy or ["v5"] * len(rosters),
         config=se.EvalConfig(n_seasons=n_seasons, seed=spec.derived_seed),
     )
     seat = spec.test_seat
@@ -256,6 +261,7 @@ def evaluate_draft(
     }
     return {
         "index": spec.index,
+        "season": spec.season,
         "base_seed": spec.base_seed,
         "derived_seed": spec.derived_seed,
         "format_fixture": spec.row["id"],
@@ -273,7 +279,7 @@ def evaluate_draft(
         "all_rosters_legal": all(item["legal"] for item in legality),
         "duplicate_free": duplicate_free,
         "elapsed_seconds": round(time.perf_counter() - started, 4),
-        "model_evaluator": EVALUATOR,
+        "model_evaluator": evaluator,
         "synthetic_non_authoritative": True,
     }
 

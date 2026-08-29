@@ -18,7 +18,8 @@
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { pickForTeam, candidatePool, DEFAULT_POLICY } from "../lib/draftAI";
+import { pickForTeam, pickHumanAdp, candidatePool, DEFAULT_POLICY } from "../lib/draftAI";
+import { scoreBoardWithExplanations } from "../lib/v6DraftLiveScoring";
 import {
   GENERAL_WEIGHTS,
   GENERAL_PENALTIES,
@@ -122,14 +123,95 @@ function draftJob(year, job) {
   const rounds = roster.length + row.bench_slots;
   const total = row.teams * rounds;
   const rng = mulberry32(job.seed);
-  const players = poolFor(year, row);
+  const cachedPlayers = poolFor(year, row);
+  const known = new Set(cachedPlayers.map((player) => player.id));
+  const extras = (job.extra_players ?? []).filter((player) => !known.has(player.id));
+  const overrides = job.player_overrides ?? {};
+  let draftPlayers = cachedPlayers;
+  if (extras.length || Object.keys(overrides).length) {
+    const base = [
+      ...cachedPlayers.map((player) => {
+        const override = overrides[player.id];
+        const projection = override?.projection ?? player.value.vor + player.value.replacement;
+        const boom = override?.boom ?? player.value.boom;
+        const bust = override?.bust ?? player.value.bust;
+        if (override && (
+          ![projection, boom, bust].every(Number.isFinite)
+          || bust > projection
+          || projection > boom
+        )) {
+          throw new Error(
+            `player override for ${player.id} must be ordered finite bust <= projection <= boom`,
+          );
+        }
+        return { ...player, projection, boom, bust };
+      }),
+      ...extras,
+    ];
+    const levels = replacementLevels(base, row);
+    draftPlayers = [...base]
+      .sort((a, b) => b.projection - a.projection || a.id.localeCompare(b.id))
+      .map((player, index) => ({
+        id: player.id,
+        full_name: player.full_name,
+        position: player.position,
+        nfl_team: player.nfl_team,
+        bye_week: player.bye_week,
+        injury_status: null,
+        metadata: {},
+        value: {
+          player_id: player.id,
+          engine: "vorp",
+          value: player.projection,
+          vor: Number((player.projection - (levels[player.position] ?? 0)).toFixed(2)),
+          replacement: Number((levels[player.position] ?? 0).toFixed(2)),
+          boom: player.boom,
+          bust: player.bust,
+          adp: null,
+          rank: index + 1,
+        },
+      }));
+  }
+  // Clone per job: poolFor is cached and static-fit jobs must not inherit another
+  // benchmark's market snapshot. ADP is the only external input visible to human_adp.
+  const players = draftPlayers.map((player) => ({
+    ...player,
+    value: {
+      ...player.value,
+      adp: Number.isFinite(job.market_adp?.[player.id]) ? job.market_adp[player.id] : null,
+    },
+  }));
   const arms = Object.fromEntries(
-    Object.entries(job.arms).map(([name, patch]) => [
-      name, { policy: { ...DEFAULT_POLICY, ...(patch.policy ?? {}) }, bench: patch.bench ?? {} },
-    ]),
+    Object.entries(job.arms).map(([name, patch]) => {
+      const chooser = patch.chooser ?? "v5";
+      if (chooser !== "v5" && chooser !== "human_adp") {
+        throw new Error(`unknown chooser: ${chooser}`);
+      }
+      const availability = job.availability_by_arm?.[name];
+      if (availability && Object.values(availability).some(
+        (value) => !Number.isFinite(value) || value < 0 || value > 1
+      )) {
+        throw new Error(`availability for ${name} must contain finite probabilities in [0, 1]`);
+      }
+      return [name, {
+        chooser,
+        topK: patch.top_k ?? 8,
+        policy: { ...DEFAULT_POLICY, ...(patch.policy ?? {}) },
+        bench: patch.bench ?? {},
+        // Market arms never receive model fields, even if a caller includes a map.
+        availability: chooser === "v5" ? availability : undefined,
+      }];
+    }),
   );
 
   const picks = [];
+  const recommendations = [];
+  const recommendationArms = new Set(job.recommendation_arms ?? []);
+  for (const name of recommendationArms) {
+    if (arms[name]?.chooser !== "v5") {
+      throw new Error(`recommendation trace requires a model arm: ${name}`);
+    }
+  }
   const taken = new Set();
   const nextPickAfter = (team, from) => {
     for (let n = from + 1; n <= total; n++) if (teamOnClock(n, row.teams) === team) return n;
@@ -139,11 +221,14 @@ function draftJob(year, job) {
   while (picks.length < total) {
     const pickNo = picks.length + 1;
     const team = teamOnClock(pickNo, row.teams);
-    const arm = arms[job.assign[team - 1]];
+    const armName = job.assign[team - 1];
+    const arm = arms[armName];
     const available = players.filter((p) => !taken.has(p.id));
     if (!available.length) break;
     const ctx = {
-      pool: candidatePool(available),
+      // Market opponents must see the provider's complete ranked board. candidatePool
+      // is projection-sorted and would breach the source-independence contract.
+      pool: arm.chooser === "human_adp" ? available : candidatePool(available),
       teamPicks: picks.filter((p) => p.team === team).map((p) => p.player),
       roster,
       benchSize: row.bench_slots,
@@ -154,15 +239,61 @@ function draftJob(year, job) {
       totalRounds: rounds,
       randomness: 0.05,
       rng,
+      availability: arm.availability,
     };
-    const chosen = withBench(arm.bench, () => pickForTeam(ctx, arm.policy)) ?? available[0];
-    picks.push({ pickNo, team, player: chosen });
-    taken.add(chosen.id);
+    let chosen;
+    if (recommendationArms.has(armName)) {
+      const ranked = withBench(arm.bench, () => scoreBoardWithExplanations(
+        { ...ctx, randomness: 0 },
+        { leagueConfigKey: row.id },
+        arm.policy,
+      ).slice(0, 4));
+      // The trace mirrors the live zero-jitter board, while the synthetic draft keeps
+      // its existing seeded 5% policy jitter. Zero jitter consumes no RNG, so opting in
+      // cannot alter the selected pick or any downstream draft state.
+      chosen = withBench(arm.bench, () => pickForTeam(ctx, arm.policy));
+      const selected = chosen ?? available[0];
+      recommendations.push({
+        pick_no: pickNo,
+        team,
+        arm: armName,
+        recommendation_randomness: 0,
+        selected_player_id: selected.id,
+        candidates: ranked.map((candidate) => ({
+          player_id: candidate.player.id,
+          position: candidate.player.position,
+          score: candidate.score,
+          market_adp: Number.isFinite(candidate.player.value?.adp)
+            ? candidate.player.value.adp
+            : null,
+          explanation: candidate.explanation,
+        })),
+      });
+    } else {
+      chosen = arm.chooser === "human_adp"
+        ? pickHumanAdp(ctx, { topK: arm.topK })
+        : withBench(arm.bench, () => pickForTeam(ctx, arm.policy));
+    }
+    const resolved = chosen ?? available[0];
+    picks.push({ pickNo, team, player: resolved, chooser: arm.chooser });
+    taken.add(resolved.id);
   }
 
   const rosters = Array.from({ length: row.teams }, () => []);
   for (const pk of picks) rosters[pk.team - 1].push(pk.player.id);
-  return { row_id: row.id, arm_of_seat: job.assign, rosters };
+  const result = { row_id: row.id, arm_of_seat: job.assign, rosters };
+  if (job.include_picks) {
+    result.picks = picks.map((pick) => ({
+      pick_no: pick.pickNo,
+      team: pick.team,
+      player_id: pick.player.id,
+      position: pick.player.position,
+      chooser: pick.chooser,
+      market_adp: Number.isFinite(pick.player.value?.adp) ? pick.player.value.adp : null,
+    }));
+  }
+  if (job.recommendation_arms) result.recommendations = recommendations;
+  return result;
 }
 
 const stdin = readFileSync(0, "utf8");
