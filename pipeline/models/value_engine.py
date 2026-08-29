@@ -15,7 +15,8 @@ import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from .league_rules import LeagueRules, BASE_POSITIONS
+from .adp import normalize_player_name
+from .league_rules import BASE_POSITIONS, LeagueRules
 from .projector import Projection
 
 # ── Value-shaping constants (#4: non-linear positional weighting + future value) ─
@@ -110,6 +111,57 @@ class ValueEngine(ABC):
         """projections: player_id→Projection; positions: player_id→pos;
         meta: player_id→{age, years_exp, adp} (optional, drives future-value)."""
         ...
+
+
+def blend_rankings(
+    values: list[PlayerValue],
+    *,
+    names: dict[str, str],
+    positions: dict[str, str],
+    rankings: dict[str, dict],
+    weight: float = 0.75,
+) -> list[PlayerValue]:
+    """Reorder matched players while preserving the model's existing value slots."""
+    if not 0.0 <= weight <= 1.0:
+        raise ValueError("ranking blend weight must be between 0 and 1")
+    keys = {value.player_id: normalize_player_name(names.get(value.player_id, "")) for value in values}
+    matched = [value for value in values if (
+        (entry := rankings.get(keys[value.player_id]))
+        and entry.get("position") == positions.get(value.player_id)
+    )]
+    if len(matched) < 2 or weight == 0.0:
+        return values
+    current = {
+        value.player_id: rank
+        for rank, value in enumerate(sorted(matched, key=lambda v: (-v.value, v.player_id)), 1)
+    }
+    source = {
+        value.player_id: rank
+        for rank, value in enumerate(sorted(matched, key=lambda v: (
+            -rankings[keys[v.player_id]]["value"],
+            rankings[keys[v.player_id]]["tier"],
+            rankings[keys[v.player_id]]["position_rank"],
+            v.player_id,
+        )), 1)
+    }
+    order = sorted(
+        matched,
+        key=lambda value: (
+            (1.0 - weight) * current[value.player_id] + weight * source[value.player_id],
+            value.player_id,
+        ),
+    )
+    for value, score in zip(order, sorted((v.value for v in matched), reverse=True), strict=True):
+        value.value = score
+    values.sort(key=lambda value: (-value.value, value.player_id))
+    by_pos: dict[str, list[PlayerValue]] = {}
+    for rank, value in enumerate(values, 1):
+        value.rank = rank
+        value.tier = None
+        by_pos.setdefault(positions.get(value.player_id, "?"), []).append(value)
+    for position_values in by_pos.values():
+        _assign_tiers(position_values)
+    return values
 
 
 class VorpEngine(ValueEngine):

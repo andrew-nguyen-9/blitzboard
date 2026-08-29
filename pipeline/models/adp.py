@@ -8,7 +8,72 @@ fmt options: 'standard' | 'ppr' | 'half-ppr' | '2qb' (superflex).
 """
 from __future__ import annotations
 
+import csv
+import math
+import re
+import unicodedata
 from functools import lru_cache
+from pathlib import Path
+
+_DRAFT_SHEET_BLOCKS = (1, 11, 21)
+_DRAFT_SHEET_POSITIONS = {
+    "QUARTERBACK": "QB",
+    "RUNNING BACK": "RB",
+    "WIDE RECEIVER": "WR",
+    "TIGHT END": "TE",
+}
+
+
+def normalize_player_name(name: str) -> str:
+    """Stable player-name key: ASCII, punctuation-free, and without suffixes."""
+    text = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()
+    text = re.sub(r"[^a-z0-9 ]", "", text)
+    text = re.sub(r"\s+(jr|sr|ii|iii|iv|v)$", "", text.strip())
+    return re.sub(r"\s+", " ", text)
+
+
+def load_draft_sheet(path: str | Path) -> dict[str, dict]:
+    """Read the visible QB/RB/WR/TE blocks from a private DraftSheet CSV export."""
+    positions: dict[int, str] = {}
+    players: dict[str, dict] = {}
+    with Path(path).open(newline="", encoding="utf-8-sig") as handle:
+        for row in csv.reader(handle):
+            for start in _DRAFT_SHEET_BLOCKS:
+                cell = row[start].strip() if start < len(row) else ""
+                if cell in _DRAFT_SHEET_POSITIONS:
+                    positions[start] = _DRAFT_SHEET_POSITIONS[cell]
+                    continue
+                if start not in positions or start + 6 >= len(row):
+                    continue
+                name = row[start + 1].strip()
+                ecr = row[start + 6].strip().upper()
+                try:
+                    tier = int(row[start])
+                    points = float(row[start + 3])
+                    value = float(row[start + 4])
+                    position_rank = float(ecr.removeprefix(positions[start]))
+                except (TypeError, ValueError):
+                    continue
+                if (
+                    not name or tier < 1 or position_rank < 1
+                    or not all(map(math.isfinite, (points, value, position_rank)))
+                ):
+                    continue
+                entry = {
+                    "name": name,
+                    "position": positions[start],
+                    "points": points,
+                    "value": value,
+                    "tier": tier,
+                    "position_rank": position_rank,
+                }
+                key = normalize_player_name(name)
+                if key in players and players[key] != entry:
+                    raise ValueError(f"conflicting DraftSheet rows for {name}")
+                players[key] = entry
+    if not players:
+        raise ValueError("DraftSheet contains no usable player rows")
+    return players
 
 
 @lru_cache(maxsize=8)

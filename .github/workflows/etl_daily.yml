@@ -102,11 +102,30 @@ jobs:
         continue-on-error: true
         run: python articles_generate.py
 
+      - name: Prepare private DraftSheet overlay
+        env:
+          DRAFT_SHEET_GZIP_B64: ${{ secrets.DRAFT_SHEET_GZIP_B64 }}
+        run: |
+          if [ -n "$DRAFT_SHEET_GZIP_B64" ]; then
+            printf '%s' "$DRAFT_SHEET_GZIP_B64" | base64 --decode | gzip --decompress > "$RUNNER_TEMP/DraftSheet.csv"
+            echo "DRAFT_SHEET_PATH=$RUNNER_TEMP/DraftSheet.csv" >> "$GITHUB_ENV"
+          fi
+
       - name: Compute projections + player values (VORP, superflex-aware)
-        run: python value_engine_run.py --engine vorp
+        run: |
+          args=()
+          if [ -n "${DRAFT_SHEET_PATH:-}" ]; then
+            args+=(--draft-sheet "$DRAFT_SHEET_PATH" --draft-sheet-weight 1.0)
+          fi
+          python value_engine_run.py --engine vorp "${args[@]}"
 
       - name: Compute player values (Monte Carlo, percentile-based)
-        run: python value_engine_run.py --engine monte_carlo
+        run: |
+          args=()
+          if [ -n "${DRAFT_SHEET_PATH:-}" ]; then
+            args+=(--draft-sheet "$DRAFT_SHEET_PATH" --draft-sheet-weight 1.0)
+          fi
+          python value_engine_run.py --engine monte_carlo "${args[@]}"
 
       - name: Publish CDN player snapshots + manifest (v2.3)
         run: python publish_snapshot.py --engines vorp monte_carlo

@@ -14,20 +14,22 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 
-from common import console, get_supabase, upsert, fetch_all
+from common import console, fetch_all, get_supabase, upsert
 from models import (
-    HistoryStore,
-    HeuristicProjector,
-    RegressionProjector,
     ConsensusProjector,
-    EnsembleProjector,
-    KickerProjector,
     DefenseProjector,
-    Predictability,
-    VorpEngine,
+    EnsembleProjector,
+    HeuristicProjector,
+    HistoryStore,
+    KickerProjector,
     MonteCarloEngine,
-    load_league_rules,
+    Predictability,
+    RegressionProjector,
+    VorpEngine,
+    blend_rankings,
     fetch_ffc_adp,
+    load_draft_sheet,
+    load_league_rules,
 )
 
 CURRENT_YEAR = dt.date.today().year
@@ -107,7 +109,14 @@ def main() -> None:
     ap.add_argument("--season", type=int, default=CURRENT_YEAR)
     ap.add_argument("--league", default=None, help="league_id (default: the one seeded league)")
     ap.add_argument("--no-consensus", action="store_true", help="skip FFC ADP fetch")
+    ap.add_argument("--draft-sheet", help="private Smores superflex DraftSheet CSV to blend into the final board")
+    ap.add_argument("--draft-sheet-weight", type=float, default=0.5,
+                    help="private ranking weight (default: 0.5)")
     args = ap.parse_args()
+    if args.no_consensus and args.draft_sheet:
+        ap.error("--draft-sheet cannot be combined with --no-consensus")
+    if not 0.0 <= args.draft_sheet_weight <= 1.0:
+        ap.error("--draft-sheet-weight must be between 0 and 1")
 
     sb = get_supabase()
     if sb is None:
@@ -116,6 +125,8 @@ def main() -> None:
     rules = load_league_rules(args.league)
     if rules is None:
         return
+    if args.draft_sheet and (rules.league_size != 12 or not rules.is_superflex):
+        ap.error("this DraftSheet is valid only for the 12-team Smores superflex league")
 
     enrich_byes(sb, args.season)
     players = _load_players(sb)
@@ -128,8 +139,14 @@ def main() -> None:
         (HeuristicProjector(store, rules, args.season), 1.0),
         (RegressionProjector(store, rules, args.season), 1.0),
     ]
+    rankings = load_draft_sheet(args.draft_sheet) if args.draft_sheet else None
     if not args.no_consensus:
         subs.append((ConsensusProjector(store, rules, args.season, teams=rules.league_size), 1.0))
+    if rankings is not None:
+        console.print(
+            f"[cyan]private DraftSheet ranking: {len(rankings)} players "
+            f"at {args.draft_sheet_weight:.0%} weight[/cyan]"
+        )
     ensemble = EnsembleProjector(subs)
 
     # K and D/ST get their own dedicated projectors (not the offense ensemble)
@@ -204,6 +221,14 @@ def main() -> None:
     )
     console.print(f"[cyan]running {engine.name} engine …[/cyan]")
     values = engine.compute(projections, positions, rules, meta)
+    if rankings is not None:
+        values = blend_rankings(
+            values,
+            names={p["id"]: p.get("full_name") or "" for p in players},
+            positions=positions,
+            rankings=rankings,
+            weight=args.draft_sheet_weight,
+        )
     value_rows = [{
         "player_id": v.player_id, "league_id": rules.league_id, "engine": v.engine,
         "scoring_profile": "default", "value": round(v.value, 2), "vor": round(v.vor, 2),
