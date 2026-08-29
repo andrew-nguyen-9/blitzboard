@@ -20,14 +20,14 @@ export default function RosterHealthPanel({
 }) {
   return (
     <div className="glass p-4">
-      <h3 className="mb-3 text-label text-ink-muted">ROSTER HEALTH</h3>
+      <h2 className="mb-3 text-label text-ink-muted">ROSTER HEALTH</h2>
       <ul className="space-y-2">
         {health.invariants.map((inv) => (
           <li key={inv.key} className="flex items-start gap-2 text-body">
             <span
               className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
               style={{ background: DOT[inv.status] }}
-              aria-label={inv.status}
+              aria-hidden="true"
             />
             <span className="min-w-0 flex-1">
               <span className="text-ink">{inv.label}</span>

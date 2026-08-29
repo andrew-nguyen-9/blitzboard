@@ -38,7 +38,7 @@ export default function PreDraftPlan({
   return (
     <div className="glass p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-label text-ink-muted">PLAN &amp; STRATEGY</h3>
+        <h2 className="text-label text-ink-muted">PLAN &amp; STRATEGY</h2>
         <span
           className="text-[10px] text-ink-muted/70"
           title={`Re-planned ${replanCount}× — only consequential picks trigger a re-plan${lastTrigger ? ` · last: ${lastTrigger}` : ""}`}

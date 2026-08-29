@@ -71,7 +71,7 @@ export default function BenchPanel({
   return (
     <div className="glass p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-label text-ink-muted">BENCH VALUE</h3>
+        <h2 className="text-label text-ink-muted">BENCH VALUE</h2>
         {superflex && (
           <span className="rounded-full border border-hairline px-2 py-0.5 text-label text-ink-muted">
             superflex
@@ -90,7 +90,7 @@ export default function BenchPanel({
                 <span
                   className="h-2 w-2 shrink-0 rounded-full"
                   style={{ background: DOT[band] }}
-                  aria-label={band}
+                  aria-hidden="true"
                 />
                 <span className="min-w-0 flex-1 truncate text-ink">
                   {e.name}
@@ -118,7 +118,7 @@ export default function BenchPanel({
         )}
         {health.coverage.length === 0 ? (
           <div className="flex items-center gap-2 text-label text-ink-muted">
-            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: DOT.ok }} aria-label="ok" />
+            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: DOT.ok }} aria-hidden="true" />
             All signals live
           </div>
         ) : (
@@ -126,7 +126,7 @@ export default function BenchPanel({
             <li className="text-label text-ink-muted">Signals degraded (neutral fill):</li>
             {health.coverage.map((term) => (
               <li key={term} className="flex items-center gap-2 text-label text-ink-muted">
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: DOT.warn }} aria-label="warn" />
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: DOT.warn }} aria-hidden="true" />
                 {humanizeSignal(term)}
               </li>
             ))}
